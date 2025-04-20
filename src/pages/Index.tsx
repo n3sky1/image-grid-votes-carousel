@@ -1,30 +1,22 @@
-
 import { useState } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { sampleImages } from "@/data/sampleImages";
-
 const Index = () => {
   const [showInstructions, setShowInstructions] = useState(true);
-  
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm py-4 px-6 mb-6">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Staff Image Voting</h1>
-            <p className="text-gray-600">Compare and vote on image options</p>
+            <h1 className="text-2xl font-bold text-gray-800">Staff Design Voting</h1>
+            <p className="text-gray-600">Compare and vote on t-shirt options</p>
           </div>
-          <button 
-            onClick={() => setShowInstructions(prev => !prev)}
-            className="text-sm text-blue-600 hover:underline"
-          >
+          <button onClick={() => setShowInstructions(prev => !prev)} className="text-sm text-blue-600 hover:underline">
             {showInstructions ? 'Hide' : 'Show'} Instructions
           </button>
         </div>
       </header>
       
-      {showInstructions && (
-        <div className="max-w-6xl mx-auto px-6 mb-6">
+      {showInstructions && <div className="max-w-6xl mx-auto px-6 mb-6">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800">
             <h2 className="font-medium mb-2">How it works:</h2>
             <ol className="list-decimal list-inside space-y-1 text-sm">
@@ -40,8 +32,7 @@ const Index = () => {
               <li>Continue until you've voted on all images</li>
             </ol>
           </div>
-        </div>
-      )}
+        </div>}
       
       <main>
         <ImageVotingGrid initialImages={sampleImages} />
@@ -54,8 +45,6 @@ const Index = () => {
           </p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
