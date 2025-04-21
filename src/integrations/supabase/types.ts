@@ -9,7 +9,164 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      concepts: {
+        Row: {
+          concept_id: string
+          concept_url: string
+          created_at: string | null
+          hearts: number
+          status: string
+          tshirt_asin: string
+          updated_at: string | null
+          votes_down: number
+          votes_up: number
+        }
+        Insert: {
+          concept_id?: string
+          concept_url: string
+          created_at?: string | null
+          hearts?: number
+          status?: string
+          tshirt_asin: string
+          updated_at?: string | null
+          votes_down?: number
+          votes_up?: number
+        }
+        Update: {
+          concept_id?: string
+          concept_url?: string
+          created_at?: string | null
+          hearts?: number
+          status?: string
+          tshirt_asin?: string
+          updated_at?: string | null
+          votes_down?: number
+          votes_up?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concepts_tshirt_asin_fkey"
+            columns: ["tshirt_asin"]
+            isOneToOne: false
+            referencedRelation: "tshirts"
+            referencedColumns: ["asin"]
+          },
+        ]
+      }
+      tshirts: {
+        Row: {
+          asin: string
+          avg_180_day_bsr: number | null
+          avg_30_day_bsr: number | null
+          avg_90_day_bsr: number | null
+          brand: string | null
+          buy_box_price_cents: number | null
+          category_ids: number[] | null
+          category_tree: Json | null
+          created_at: string | null
+          current_bsr: number | null
+          current_new_price_cents: number | null
+          current_rating: number | null
+          current_review_count: number | null
+          description: string | null
+          fba_offer_count: number | null
+          fbm_offer_count: number | null
+          features: string[] | null
+          generated_concept_urls: string[] | null
+          generated_image_description: string | null
+          is_merch_on_demand: boolean | null
+          item_type_keyword: string | null
+          keepa_last_update_timestamp: string | null
+          listed_since_timestamp: string | null
+          manufacturer: string | null
+          material: string | null
+          monthly_sold: number | null
+          original_image_url: string | null
+          pattern: string | null
+          sales_rank_drops_30_day: number | null
+          sales_rank_drops_90_day: number | null
+          status: string
+          style: string | null
+          title: string | null
+          total_offer_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          asin: string
+          avg_180_day_bsr?: number | null
+          avg_30_day_bsr?: number | null
+          avg_90_day_bsr?: number | null
+          brand?: string | null
+          buy_box_price_cents?: number | null
+          category_ids?: number[] | null
+          category_tree?: Json | null
+          created_at?: string | null
+          current_bsr?: number | null
+          current_new_price_cents?: number | null
+          current_rating?: number | null
+          current_review_count?: number | null
+          description?: string | null
+          fba_offer_count?: number | null
+          fbm_offer_count?: number | null
+          features?: string[] | null
+          generated_concept_urls?: string[] | null
+          generated_image_description?: string | null
+          is_merch_on_demand?: boolean | null
+          item_type_keyword?: string | null
+          keepa_last_update_timestamp?: string | null
+          listed_since_timestamp?: string | null
+          manufacturer?: string | null
+          material?: string | null
+          monthly_sold?: number | null
+          original_image_url?: string | null
+          pattern?: string | null
+          sales_rank_drops_30_day?: number | null
+          sales_rank_drops_90_day?: number | null
+          status?: string
+          style?: string | null
+          title?: string | null
+          total_offer_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          asin?: string
+          avg_180_day_bsr?: number | null
+          avg_30_day_bsr?: number | null
+          avg_90_day_bsr?: number | null
+          brand?: string | null
+          buy_box_price_cents?: number | null
+          category_ids?: number[] | null
+          category_tree?: Json | null
+          created_at?: string | null
+          current_bsr?: number | null
+          current_new_price_cents?: number | null
+          current_rating?: number | null
+          current_review_count?: number | null
+          description?: string | null
+          fba_offer_count?: number | null
+          fbm_offer_count?: number | null
+          features?: string[] | null
+          generated_concept_urls?: string[] | null
+          generated_image_description?: string | null
+          is_merch_on_demand?: boolean | null
+          item_type_keyword?: string | null
+          keepa_last_update_timestamp?: string | null
+          listed_since_timestamp?: string | null
+          manufacturer?: string | null
+          material?: string | null
+          monthly_sold?: number | null
+          original_image_url?: string | null
+          pattern?: string | null
+          sales_rank_drops_30_day?: number | null
+          sales_rank_drops_90_day?: number | null
+          status?: string
+          style?: string | null
+          title?: string | null
+          total_offer_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

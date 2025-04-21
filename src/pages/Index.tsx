@@ -1,11 +1,15 @@
 
 import { useState } from "react";
+
+// CHANGE: Remove sampleImages import
+// import ImageVotingGrid from "@/components/ImageVotingGrid";
+// import { sampleImages } from "@/data/sampleImages";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
-import { sampleImages } from "@/data/sampleImages";
+
+const DEMO_ASIN = "B01N4HS7B8"; // <- You may want to make this dynamic later!
 
 const Index = () => {
   const [showInstructions, setShowInstructions] = useState(false);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
       <header className="bg-white/70 shadow-md py-7 px-6 mb-10 rounded-b-xl border-b border-gray-200 
@@ -18,13 +22,12 @@ const Index = () => {
             </h1>
             <p className="text-lg mt-1 text-gray-600">Compare and vote on t-shirt options</p>
           </div>
-          {/* You can add a logo or fun icon here for more branding/customization if you wish */}
         </div>
       </header>
 
-      {/* Voting grid sits here. It's already styled and encapsulated. */}
+      {/* Voting grid sits here. Now pulls by ASIN */}
       <main>
-        <ImageVotingGrid initialImages={sampleImages} />
+        <ImageVotingGrid asin={DEMO_ASIN} />
       </main>
 
       <footer className="mt-14 py-7 border-t bg-white/60 bg-gradient-to-bl from-[#ede8f6] to-[#fff8] 
