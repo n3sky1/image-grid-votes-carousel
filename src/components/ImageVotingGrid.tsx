@@ -8,6 +8,7 @@ import VotingLoading from "./VotingLoading";
 import { Card } from "@/components/ui/card";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
+import { toast } from "@/components/ui/sonner";
 
 const ImageVotingGrid = ({ asin }: { asin: string }) => {
   const {
