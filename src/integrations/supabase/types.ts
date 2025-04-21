@@ -55,6 +55,16 @@ export type Database = {
       }
       tshirts: {
         Row: {
+          ai_analysis_timestamp: string | null
+          ai_copyright_check_passed: boolean | null
+          ai_copyright_flag_reason: string | null
+          ai_image_description: string | null
+          ai_is_blank: boolean | null
+          ai_is_tshirt: boolean | null
+          ai_processing_status: string | null
+          ai_recommendation_reason: string | null
+          ai_recommended_background_color: string | null
+          ai_recommended_model: string | null
           asin: string
           avg_180_day_bsr: number | null
           avg_30_day_bsr: number | null
@@ -92,6 +102,16 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_analysis_timestamp?: string | null
+          ai_copyright_check_passed?: boolean | null
+          ai_copyright_flag_reason?: string | null
+          ai_image_description?: string | null
+          ai_is_blank?: boolean | null
+          ai_is_tshirt?: boolean | null
+          ai_processing_status?: string | null
+          ai_recommendation_reason?: string | null
+          ai_recommended_background_color?: string | null
+          ai_recommended_model?: string | null
           asin: string
           avg_180_day_bsr?: number | null
           avg_30_day_bsr?: number | null
@@ -129,6 +149,16 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_analysis_timestamp?: string | null
+          ai_copyright_check_passed?: boolean | null
+          ai_copyright_flag_reason?: string | null
+          ai_image_description?: string | null
+          ai_is_blank?: boolean | null
+          ai_is_tshirt?: boolean | null
+          ai_processing_status?: string | null
+          ai_recommendation_reason?: string | null
+          ai_recommended_background_color?: string | null
+          ai_recommended_model?: string | null
           asin?: string
           avg_180_day_bsr?: number | null
           avg_30_day_bsr?: number | null

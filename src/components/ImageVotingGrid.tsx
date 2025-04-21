@@ -1,9 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
-import ImageCarousel from "./ImageCarousel";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import VotingCompleted from "./VotingCompleted";
@@ -11,6 +9,7 @@ import VotingProgress from "./VotingProgress";
 import VotingError from "./VotingError";
 import VotingLoading from "./VotingLoading";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface ImageVotingGridProps {
   asin: string;
@@ -160,7 +159,9 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
       ...prev,
       [id]: vote
     }));
-    setConceptImages(prev => prev.filter(img => img.id !== id));
+    
+    // Keeping the images visible in the grid even after voting
+    // so users can compare their choices
 
     const voteText = vote === 'like' ? 'Liked' : vote === 'dislike' ? 'Disliked' : 'Loved';
     toast(voteText, {
@@ -210,7 +211,8 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
 
   return (
     <div className="w-full max-w-6xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+      <div className="grid grid-cols-1 gap-6 p-6">
+        {/* Original Image Section */}
         <div className="flex flex-col">
           <h2 className="text-xl font-semibold mb-3">Original Image</h2>
           {originalImage ? (
@@ -251,19 +253,69 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <h2 className="text-xl font-semibold mb-3">New Designs</h2>
-          <div className="flex-1 flex items-start">
-            <ImageCarousel images={conceptImages} onVote={handleVote} />
-          </div>
-          <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImages.length} />
-        </div>
-
-        {/* PROMPT BOX: Spanning both columns */}
-        <div className="col-span-1 md:col-span-2 mt-6">
+        {/* PROMPT BOX */}
+        <div className="mt-2 mb-4">
           <div className="bg-gray-50 border rounded-lg p-5 shadow-sm">
             <div className="text-base font-bold mb-2">Prompt</div>
             <div className="text-gray-700">{promptText}</div>
+          </div>
+        </div>
+
+        {/* New Designs Grid Section */}
+        <div className="flex flex-col">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-semibold">New Designs</h2>
+            <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImages.length} />
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {conceptImages.map(image => (
+              <div key={image.id} className="flex flex-col gap-2">
+                <ImageCard image={image} className="aspect-square object-cover shadow-md" />
+                
+                <div className="flex justify-center gap-2 mt-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleVote(image.id, 'dislike')}
+                    className="flex-1"
+                  >
+                    <ThumbsDown size={16} className="mr-1" />
+                    Dislike
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleVote(image.id, 'like')}
+                    className="flex-1"
+                  >
+                    <ThumbsUp size={16} className="mr-1" />
+                    Like
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleVote(image.id, 'love')}
+                    className="flex-1"
+                  >
+                    <Heart size={16} className="mr-1" />
+                    Love
+                  </Button>
+                </div>
+                
+                {votedImages[image.id] && (
+                  <Badge variant="secondary" className="self-center">
+                    {getVoteIcon(votedImages[image.id])}
+                    <span className="ml-1">
+                      {votedImages[image.id] === 'like' ? 'Liked' : 
+                       votedImages[image.id] === 'dislike' ? 'Disliked' : 'Loved'}
+                    </span>
+                  </Badge>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -272,4 +324,3 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
 };
 
 export default ImageVotingGrid;
-
