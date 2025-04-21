@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Textarea } from "@/components/ui/textarea";
+import Comments from "./Comments";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
@@ -167,6 +168,9 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
                         >
                           <ArrowRight size={16} />
                         </Button>
+                      </div>
+                      <div className="mt-6 border-t pt-4">
+                        <Comments conceptId={expandedImageId} />
                       </div>
                     </div>
                   </div>
