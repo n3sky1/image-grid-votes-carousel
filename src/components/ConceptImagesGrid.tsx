@@ -18,7 +18,6 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
     onVote(id, vote);
     
-    // Automatically navigate to the next image after voting
     const currentIndex = conceptImages.findIndex(img => img.id === id);
     if (currentIndex !== -1 && conceptImages.length > 1) {
       const nextIndex = (currentIndex + 1) % conceptImages.length;
@@ -59,7 +58,6 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                   className="w-full h-full object-cover transition-all duration-300" 
                 />
                 
-                {/* Checkmark for voted images in grid view */}
                 {votedImages[image.id] && (
                   <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1 shadow-md z-10">
                     <Check size={16} className="text-green-500" />
@@ -68,7 +66,6 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
               </AspectRatio>
             </div>
             
-            {/* Enlarged image view */}
             {expandedImageId === image.id && (
               <div className="fixed inset-0 flex items-center justify-center z-50">
                 <div className="bg-white shadow-2xl rounded-lg p-4 relative max-w-[95vw] max-h-[95vh] overflow-auto">
@@ -81,9 +78,8 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                     <X size={20} />
                   </Button>
                   
-                  {/* Checkmark for voted images in popup view - moved to upper-right and enlarged */}
                   {votedImages[image.id] && (
-                    <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-10">
+                    <div className="absolute top-2 right-2 bg-white/90 rounded-full p-4 shadow-md z-10">
                       <Check size={48} className="text-green-500" />
                     </div>
                   )}
