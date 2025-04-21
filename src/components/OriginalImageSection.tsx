@@ -2,7 +2,7 @@
 import { ImageData } from "@/types/image";
 import { Button } from "@/components/ui/button";
 import ImageCard from "./ImageCard";
-import { Card } from "@/components/ui/card";
+import { PenIcon } from "lucide-react";
 
 interface OriginalImageSectionProps {
   originalImage: ImageData | null;
@@ -23,7 +23,6 @@ const OriginalImageSection = ({
 }: OriginalImageSectionProps) => {
   return (
     <div className="flex flex-col md:flex-row w-full">
-      {/* Left side - Original Image */}
       <div className="md:w-1/2 p-6 bg-gradient-to-br from-purple-50 to-blue-50">
         {originalImage ? (
           <div className="rounded-lg overflow-hidden">
@@ -39,10 +38,18 @@ const OriginalImageSection = ({
         )}
       </div>
 
-      {/* Right side - Controls */}
       <div className="md:w-1/2 p-6 bg-gradient-to-br from-blue-50 to-purple-50 space-y-6">
-        <div className="bg-white/80 rounded-lg p-5 shadow-sm border border-blue-100">
-          <div className="text-base font-bold mb-2 text-gray-800">Generation Prompt</div>
+        <div className="bg-white/80 rounded-lg p-5 shadow-sm border border-blue-100 relative group">
+          <div className="text-base font-bold mb-2 text-gray-800 flex justify-between items-center">
+            <span>Generation Prompt</span>
+            <button 
+              onClick={onEditPrompt}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+              aria-label="Edit prompt"
+            >
+              <PenIcon className="h-4 w-4 text-gray-500" />
+            </button>
+          </div>
           <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">{promptText}</div>
         </div>
         
@@ -67,13 +74,6 @@ const OriginalImageSection = ({
             className="bg-white hover:bg-gray-50"
           >
             Can't Design
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onEditPrompt}
-            className="bg-white hover:bg-gray-50"
-          >
-            Edit Prompt
           </Button>
           <Button
             variant={useTestData ? "default" : "outline"}
