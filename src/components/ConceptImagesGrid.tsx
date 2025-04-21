@@ -1,11 +1,10 @@
-
+import { useState } from "react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { useState } from "react";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
@@ -82,10 +81,10 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                     <X size={20} />
                   </Button>
                   
-                  {/* Checkmark for voted images in popup view */}
+                  {/* Checkmark for voted images in popup view - moved to upper-right and enlarged */}
                   {votedImages[image.id] && (
-                    <div className="absolute left-2 top-2 bg-white/90 rounded-full p-1 shadow-md z-10">
-                      <Check size={16} className="text-green-500" />
+                    <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-10">
+                      <Check size={48} className="text-green-500" />
                     </div>
                   )}
                   
