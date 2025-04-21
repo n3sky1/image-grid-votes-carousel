@@ -79,7 +79,7 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                   </Button>
                   
                   {votedImages[image.id] && (
-                    <div className="absolute top-4 right-4 bg-white/90 rounded-full p-4 shadow-md z-10">
+                    <div className="absolute top-[26px] right-[26px] bg-white/90 rounded-full p-4 shadow-md z-10">
                       <Check size={48} className="text-green-500" />
                     </div>
                   )}
