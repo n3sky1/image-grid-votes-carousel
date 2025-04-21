@@ -1,5 +1,6 @@
+
 import { useEffect, useState } from "react";
-import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Heart, Copyright } from "lucide-react";  // Added Copyright here as well
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import ImageCarousel from "./ImageCarousel";
@@ -10,7 +11,6 @@ import VotingProgress from "./VotingProgress";
 import VotingError from "./VotingError";
 import VotingLoading from "./VotingLoading";
 import { Button } from "@/components/ui/button";
-import { Copyright } from "lucide-react";
 
 interface ImageVotingGridProps {
   asin: string;
@@ -186,6 +186,13 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     });
   };
 
+  const handleEditPrompt = () => {
+    toast("Edit Prompt clicked!", {
+      description: "This feature is under development.",
+      position: "bottom-right",
+    });
+  };
+
   if (loading) {
     return <VotingLoading />;
   }
@@ -233,6 +240,12 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
             >
               Can't Design
             </Button>
+            <Button
+              variant="outline"
+              onClick={handleEditPrompt}
+            >
+              Edit Prompt
+            </Button>
           </div>
         </div>
 
@@ -249,3 +262,4 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
 };
 
 export default ImageVotingGrid;
+
