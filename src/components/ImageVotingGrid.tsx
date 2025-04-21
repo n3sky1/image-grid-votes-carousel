@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { ThumbsUp, ThumbsDown, Heart, Copyright } from "lucide-react";  // Added Copyright here as well
+import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import ImageCarousel from "./ImageCarousel";
@@ -23,6 +23,7 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
   const [allVoted, setAllVoted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [promptText, setPromptText] = useState<string>("");
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -35,34 +36,34 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           .select("asin")
           .eq("asin", asin)
           .maybeSingle();
-        
+
         if (checkError) {
           console.error("Error checking for tshirt:", checkError);
         }
-        
+
         if (!existingTshirt) {
           console.log("Tshirt doesn't exist, initializing...");
           const { error: insertError } = await supabase
             .from("tshirts")
-            .insert({ 
-              asin: asin, 
+            .insert({
+              asin: asin,
               original_image_url: "https://m.media-amazon.com/images/I/71zAlj7yDrL._AC_UL1500_.jpg",
               title: `Demo T-shirt (${asin})`
             });
-          
+
           if (insertError) {
             console.error("Error initializing tshirt:", insertError);
             setError("Failed to initialize the database. Please try again.");
             setLoading(false);
             return;
           }
-          
+
           const conceptUrls = [
             "https://m.media-amazon.com/images/I/61pDu-GrM6L._AC_UL1500_.jpg",
             "https://m.media-amazon.com/images/I/61HMbj5KySL._AC_UL1500_.jpg",
             "https://m.media-amazon.com/images/I/71nfRQUb3uL._AC_UL1500_.jpg"
           ];
-          
+
           for (const url of conceptUrls) {
             await supabase
               .from("concepts")
@@ -71,13 +72,14 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
                 concept_url: url
               });
           }
-          
+
           console.log("Sample concepts added");
         }
 
+        // Get tshirt info including generated_image_description
         const { data: tshirt, error: tshirtError } = await supabase
           .from("tshirts")
-          .select("original_image_url, asin")
+          .select("original_image_url, asin, generated_image_description")
           .eq("asin", asin)
           .maybeSingle();
 
@@ -100,6 +102,8 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           alt: "Original T-shirt Design",
           isOriginal: true,
         });
+
+        setPromptText(tshirt.generated_image_description || "No description available.");
 
         const { data: concepts, error: conceptError } = await supabase
           .from("concepts")
@@ -182,7 +186,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     toast(toastMsg, {
       description: `You selected: ${toastMsg.replace("Marked as ", "")}`,
       position: "bottom-right",
-      icon: action === "copyrighted" ? <Copyright size={16} /> : undefined,
     });
   };
 
@@ -225,7 +228,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
               variant="outline"
               onClick={() => handleOriginalAction("copyrighted")}
             >
-              <Copyright size={16} className="mr-2" />
               Copyrighted
             </Button>
             <Button
@@ -255,6 +257,14 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
             <ImageCarousel images={conceptImages} onVote={handleVote} />
           </div>
           <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImages.length} />
+        </div>
+
+        {/* PROMPT BOX: Spanning both columns */}
+        <div className="col-span-1 md:col-span-2 mt-6">
+          <div className="bg-gray-50 border rounded-lg p-5 shadow-sm">
+            <div className="text-base font-bold mb-2">Prompt</div>
+            <div className="text-gray-700">{promptText}</div>
+          </div>
         </div>
       </div>
     </div>
