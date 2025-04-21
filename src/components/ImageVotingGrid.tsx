@@ -60,10 +60,6 @@ const ImageVotingGrid = ({ asin }: { asin: string }) => {
       <div className="p-4 space-y-8">
         <Card className="overflow-hidden shadow-lg border-0">
           <div className="space-y-6 p-6">
-            <VotingProgress 
-              votedImages={votedImages} 
-              conceptImagesCount={conceptImages.length} 
-            />
             <OriginalImageSection
               originalImage={originalImage}
               promptText={promptText}
@@ -71,6 +67,10 @@ const ImageVotingGrid = ({ asin }: { asin: string }) => {
               onEditPrompt={handleEditPrompt}
               onToggleDataSource={toggleDataSource}
               useTestData={useTestData}
+            />
+            <VotingProgress 
+              votedImages={votedImages} 
+              conceptImagesCount={conceptImages.length} 
             />
           </div>
         </Card>

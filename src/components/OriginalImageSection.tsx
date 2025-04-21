@@ -1,4 +1,3 @@
-
 import { ImageData } from "@/types/image";
 import { Button } from "@/components/ui/button";
 import ImageCard from "./ImageCard";
@@ -118,19 +117,16 @@ const OriginalImageSection = ({
           <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">{promptText}</div>
         </div>
         
-        <div className="flex flex-wrap gap-3">
-          <Button
-            variant={useTestData ? "default" : "outline"}
-            onClick={onToggleDataSource}
-            className={useTestData ? "bg-blue-500 hover:bg-blue-600" : "bg-white hover:bg-gray-50"}
-          >
-            {useTestData ? "Using Test Data" : "Use Test Data"}
-          </Button>
-        </div>
+        <Button
+          variant={useTestData ? "default" : "outline"}
+          onClick={onToggleDataSource}
+          className={useTestData ? "bg-blue-500 hover:bg-blue-600" : "bg-white hover:bg-gray-50"}
+        >
+          {useTestData ? "Using Test Data" : "Use Test Data"}
+        </Button>
       </div>
     </div>
   );
 };
 
 export default OriginalImageSection;
-
