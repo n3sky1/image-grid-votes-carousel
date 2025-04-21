@@ -217,24 +217,19 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     <div className="w-full max-w-6xl mx-auto">
       <div className="p-4 space-y-8">
         <Card className="overflow-hidden shadow-lg border-0">
-          <div className="flex flex-col md:flex-row">
-            <div className="md:w-1/3 bg-gradient-to-br from-purple-50 to-blue-50 p-6 space-y-5">
-              <VotingProgress 
-                votedImages={votedImages} 
-                conceptImagesCount={conceptImages.length} 
-              />
-              <OriginalImageSection
-                originalImage={originalImage}
-                promptText={promptText}
-                onOriginalAction={handleOriginalAction}
-                onEditPrompt={handleEditPrompt}
-                onToggleDataSource={toggleDataSource}
-                useTestData={useTestData}
-              />
-            </div>
-            <div className="md:w-2/3 p-6">
-              {/* Optional: If you want to keep anything here in the future */}
-            </div>
+          <div className="space-y-6 p-6">
+            <VotingProgress 
+              votedImages={votedImages} 
+              conceptImagesCount={conceptImages.length} 
+            />
+            <OriginalImageSection
+              originalImage={originalImage}
+              promptText={promptText}
+              onOriginalAction={handleOriginalAction}
+              onEditPrompt={handleEditPrompt}
+              onToggleDataSource={toggleDataSource}
+              useTestData={useTestData}
+            />
           </div>
         </Card>
         <ConceptImagesGrid
