@@ -8,18 +8,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-interface OriginalImageSectionProps {
-  originalImage: ImageData | null;
-  promptText: string;
-  onOriginalAction: (action: "copyrighted" | "no-design" | "cant-design") => void;
-  onEditPrompt: () => void;
-  onToggleDataSource: () => void;
-  useTestData: boolean;
-}
+import { OriginalImageSectionProps } from "@/types/props";
 
 const OriginalImageSection = ({
   originalImage,
+  promptText,
+  onOriginalAction,
+  onEditPrompt,
+  onToggleDataSource,
+  useTestData
 }: OriginalImageSectionProps) => {
   return (
     <>

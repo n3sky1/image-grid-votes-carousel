@@ -1,3 +1,4 @@
+
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -8,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { toast } from "@/components/ui/sonner";
-import { PencilIcon } from "@heroicons/react/24/outline";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ImageVotingGrid = ({ asin }: { asin: string }) => {
@@ -84,7 +85,7 @@ const ImageVotingGrid = ({ asin }: { asin: string }) => {
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
                         aria-label="Edit prompt"
                       >
-                        <PencilIcon className="h-4 w-4 text-gray-500" />
+                        <Pencil className="h-4 w-4 text-gray-500" />
                       </button>
                     </div>
                     <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">
