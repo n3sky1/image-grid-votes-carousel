@@ -1,4 +1,3 @@
-
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -9,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { toast } from "@/components/ui/sonner";
+import { PencilIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/button";
 
 const ImageVotingGrid = ({ asin }: { asin: string }) => {
   const {
@@ -59,19 +60,53 @@ const ImageVotingGrid = ({ asin }: { asin: string }) => {
     <div className="w-full max-w-6xl mx-auto">
       <div className="p-4 space-y-8">
         <Card className="overflow-hidden shadow-lg border-0">
-          <div className="space-y-6 p-6">
-            <OriginalImageSection
-              originalImage={originalImage}
-              promptText={promptText}
-              onOriginalAction={handleOriginalAction}
-              onEditPrompt={handleEditPrompt}
-              onToggleDataSource={toggleDataSource}
-              useTestData={useTestData}
-            />
-            <VotingProgress 
-              votedImages={votedImages} 
-              conceptImagesCount={conceptImages.length} 
-            />
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row w-full">
+              <div className="md:w-1/2 bg-gradient-to-br from-purple-50 to-blue-50">
+                <div className="p-6">
+                  <OriginalImageSection
+                    originalImage={originalImage}
+                    promptText={promptText}
+                    onOriginalAction={handleOriginalAction}
+                    onEditPrompt={handleEditPrompt}
+                    onToggleDataSource={toggleDataSource}
+                    useTestData={useTestData}
+                  />
+                </div>
+              </div>
+              <div className="md:w-1/2 bg-gradient-to-br from-blue-50 to-purple-50">
+                <div className="p-6 space-y-6">
+                  <div className="bg-white/80 rounded-lg p-5 shadow-sm border border-blue-100 relative group">
+                    <div className="text-base font-bold mb-2 text-gray-800 flex justify-between items-center">
+                      <span>Generation Prompt</span>
+                      <button 
+                        onClick={handleEditPrompt}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                        aria-label="Edit prompt"
+                      >
+                        <PencilIcon className="h-4 w-4 text-gray-500" />
+                      </button>
+                    </div>
+                    <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">
+                      {promptText}
+                    </div>
+                  </div>
+                  
+                  <VotingProgress 
+                    votedImages={votedImages} 
+                    conceptImagesCount={conceptImages.length} 
+                  />
+                  
+                  <Button
+                    variant={useTestData ? "default" : "outline"}
+                    onClick={toggleDataSource}
+                    className={useTestData ? "bg-blue-500 hover:bg-blue-600" : "bg-white hover:bg-gray-50"}
+                  >
+                    {useTestData ? "Using Test Data" : "Use Test Data"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </Card>
         <ConceptImagesGrid
