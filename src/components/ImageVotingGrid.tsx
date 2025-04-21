@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { ImageData } from "@/types/image";
@@ -10,6 +9,8 @@ import VotingCompleted from "./VotingCompleted";
 import VotingProgress from "./VotingProgress";
 import VotingError from "./VotingError";
 import VotingLoading from "./VotingLoading";
+import { Button } from "@/components/ui/button";
+import { Copyright } from "lucide-react";
 
 interface ImageVotingGridProps {
   asin: string;
@@ -23,14 +24,12 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch original image and concept images from Supabase
   useEffect(() => {
     const fetchImages = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Check if tshirt exists, if not create it
         const { data: existingTshirt, error: checkError } = await supabase
           .from("tshirts")
           .select("asin")
@@ -41,14 +40,13 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           console.error("Error checking for tshirt:", checkError);
         }
         
-        // Initialize tshirt if it doesn't exist
         if (!existingTshirt) {
           console.log("Tshirt doesn't exist, initializing...");
           const { error: insertError } = await supabase
             .from("tshirts")
             .insert({ 
               asin: asin, 
-              original_image_url: "https://m.media-amazon.com/images/I/71zAlj7yDrL._AC_UL1500_.jpg", // Sample image URL
+              original_image_url: "https://m.media-amazon.com/images/I/71zAlj7yDrL._AC_UL1500_.jpg",
               title: `Demo T-shirt (${asin})`
             });
           
@@ -59,7 +57,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
             return;
           }
           
-          // Add some sample concepts
           const conceptUrls = [
             "https://m.media-amazon.com/images/I/61pDu-GrM6L._AC_UL1500_.jpg",
             "https://m.media-amazon.com/images/I/61HMbj5KySL._AC_UL1500_.jpg",
@@ -78,7 +75,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           console.log("Sample concepts added");
         }
 
-        // Fetch tshirt data
         const { data: tshirt, error: tshirtError } = await supabase
           .from("tshirts")
           .select("original_image_url, asin")
@@ -98,7 +94,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           return;
         }
 
-        // Set the original image
         setOriginalImage({
           id: `original-${tshirt.asin}`,
           src: tshirt.original_image_url,
@@ -106,7 +101,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           isOriginal: true,
         });
 
-        // Fetch concept images for this ASIN
         const { data: concepts, error: conceptError } = await supabase
           .from("concepts")
           .select("concept_id, concept_url")
@@ -119,7 +113,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           return;
         }
 
-        // Map concept images to ImageData
         setConceptImages(
           (concepts || []).map((c: any) => ({
             id: c.concept_id,
@@ -139,7 +132,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     fetchImages();
   }, [asin]);
 
-  // Check if all images have been voted
   useEffect(() => {
     const nonOriginalCount = conceptImages.length;
     const votedCount = Object.keys(votedImages).length;
@@ -174,6 +166,26 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     });
   };
 
+  const handleOriginalAction = (action: "copyrighted" | "no-design" | "cant-design") => {
+    let toastMsg = "";
+    switch (action) {
+      case "copyrighted":
+        toastMsg = "Marked as Copyrighted!";
+        break;
+      case "no-design":
+        toastMsg = "Marked as No Design!";
+        break;
+      case "cant-design":
+        toastMsg = "Marked as Can't Design!";
+        break;
+    }
+    toast(toastMsg, {
+      description: `You selected: ${toastMsg.replace("Marked as ", "")}`,
+      position: "bottom-right",
+      icon: action === "copyrighted" ? <Copyright size={16} /> : undefined,
+    });
+  };
+
   if (loading) {
     return <VotingLoading />;
   }
@@ -189,7 +201,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-        {/* Original image */}
         <div className="flex flex-col">
           <h2 className="text-xl font-semibold mb-3">Original Image</h2>
           {originalImage ? (
@@ -201,16 +212,35 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
               <p className="text-gray-500">No original image available</p>
             </div>
           )}
+
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => handleOriginalAction("copyrighted")}
+            >
+              <Copyright size={16} className="mr-2" />
+              Copyrighted
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleOriginalAction("no-design")}
+            >
+              No Design
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleOriginalAction("cant-design")}
+            >
+              Can't Design
+            </Button>
+          </div>
         </div>
 
-        {/* Comparison images carousel */}
         <div className="flex flex-col">
           <h2 className="text-xl font-semibold mb-3">New Designs</h2>
           <div className="flex-1 flex items-start">
             <ImageCarousel images={conceptImages} onVote={handleVote} />
           </div>
-
-          {/* Voting statistics */}
           <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImages.length} />
         </div>
       </div>
