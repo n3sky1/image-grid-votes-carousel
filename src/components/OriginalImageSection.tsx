@@ -1,3 +1,4 @@
+
 import { ImageData } from "@/types/image";
 import { Button } from "@/components/ui/button";
 import ImageCard from "./ImageCard";
@@ -37,17 +38,17 @@ const OriginalImageSection = ({
                 className="w-full h-auto max-h-[350px] object-contain mx-auto shadow-sm"
               />
             </div>
-            <div className="flex justify-center gap-6 pt-2">
+            <div className="flex justify-center gap-4 pt-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onOriginalAction("copyrighted")}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
+                      className="flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm"
                       aria-label="Mark as copyrighted"
                     >
                       <CopyrightIcon 
-                        className="h-6 w-6 text-gray-500 group-hover:text-blue-500 transition-colors" 
+                        className="h-6 w-6 text-gray-600" 
                         strokeWidth={1.5} 
                       />
                     </button>
@@ -61,11 +62,11 @@ const OriginalImageSection = ({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onOriginalAction("no-design")}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
+                      className="flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm"
                       aria-label="Mark as no design"
                     >
                       <BanIcon 
-                        className="h-6 w-6 text-gray-500 group-hover:text-red-500 transition-colors" 
+                        className="h-6 w-6 text-gray-600" 
                         strokeWidth={1.5} 
                       />
                     </button>
@@ -79,11 +80,11 @@ const OriginalImageSection = ({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onOriginalAction("cant-design")}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
+                      className="flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm"
                       aria-label="Mark as can't design"
                     >
                       <XIcon 
-                        className="h-6 w-6 text-gray-500 group-hover:text-red-500 transition-colors" 
+                        className="h-6 w-6 text-gray-600" 
                         strokeWidth={1.5} 
                       />
                     </button>
@@ -132,3 +133,4 @@ const OriginalImageSection = ({
 };
 
 export default OriginalImageSection;
+
