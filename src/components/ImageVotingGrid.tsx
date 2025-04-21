@@ -1,4 +1,6 @@
+
 import { useEffect, useState } from "react";
+import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import ImageCarousel from "./ImageCarousel";
