@@ -40,20 +40,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
-      <header className="bg-white/70 shadow-md py-7 px-6 mb-10 rounded-b-xl border-b border-gray-200 
-        bg-gradient-to-br from-[#e2d1c3] to-[#ede8f6] backdrop-blur-lg
-      ">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-tight font-playfair drop-shadow-sm bg-gradient-to-r from-purple-600 via-blue-600 to-yellow-400 inline-block text-transparent bg-clip-text">
-              Staff Design Voting
-            </h1>
-            <p className="text-lg mt-1 text-gray-600">Compare and vote on t-shirt options</p>
-          </div>
-        </div>
-      </header>
-
-      {/* Voting grid sits here. Now pulls by ASIN */}
       <main>
         {loading ? (
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
@@ -78,3 +64,4 @@ const Index = () => {
 };
 
 export default Index;
+
