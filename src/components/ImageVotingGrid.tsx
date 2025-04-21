@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from "react";
-import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Heart, Wrench } from "lucide-react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import { toast } from "@/components/ui/sonner";
@@ -195,27 +194,16 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     });
   };
 
-  if (loading) {
-    return <VotingLoading />;
-  }
-
-  if (error) {
-    return <VotingError error={error} />;
-  }
-
-  if (allVoted) {
-    return <VotingCompleted votedImages={votedImages} />;
-  }
+  if (loading) return <VotingLoading />;
+  if (error) return <VotingError error={error} />;
+  if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="p-4 space-y-8">
-        {/* Original Image Section */}
         <Card className="overflow-hidden shadow-lg border-0">
           <div className="flex flex-col md:flex-row">
-            {/* Original Image Container */}
             <div className="md:w-1/3 bg-gradient-to-br from-purple-50 to-blue-50 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Original Design</h2>
               {originalImage ? (
                 <div className="rounded-lg overflow-hidden">
                   <ImageCard
@@ -230,7 +218,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
               )}
             </div>
 
-            {/* Controls and Info */}
             <div className="md:w-2/3 p-6 space-y-5">
               <div className="flex flex-wrap gap-3 mb-5">
                 <Button
@@ -273,58 +260,58 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           </div>
         </Card>
 
-        {/* New Designs Grid Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 px-2">New Design Options</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {conceptImages.map(image => (
-              <Card key={image.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="p-4">
-                  <div className="rounded-lg overflow-hidden mb-3">
-                    <ImageCard 
-                      image={image} 
-                      className="aspect-square object-cover w-full" 
-                    />
-                  </div>
-                  
-                  {!votedImages[image.id] ? (
-                    <div className="flex justify-between gap-2 mt-3">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleVote(image.id, 'dislike')}
-                        className="flex-1 bg-white hover:bg-red-50 hover:text-red-600 border-gray-200"
-                      >
-                        <ThumbsDown size={16} className="mr-1" />
-                        Dislike
-                      </Button>
-                      
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleVote(image.id, 'like')}
-                        className="flex-1 bg-white hover:bg-green-50 hover:text-green-600 border-gray-200"
-                      >
-                        <ThumbsUp size={16} className="mr-1" />
-                        Like
-                      </Button>
-                      
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleVote(image.id, 'love')}
-                        className="flex-1 bg-white hover:bg-pink-50 hover:text-pink-600 border-gray-200"
-                      >
-                        <Heart size={16} className="mr-1" />
-                        Love
-                      </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {conceptImages.map(image => (
+            <Card key={image.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+              <CardContent className="p-4">
+                <div className="relative rounded-lg overflow-hidden group">
+                  <ImageCard 
+                    image={image} 
+                    className="aspect-square object-cover w-full" 
+                  />
+                  {!votedImages[image.id] && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVote(image.id, 'dislike')}
+                          className="bg-white/90 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <ThumbsDown size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVote(image.id, 'like')}
+                          className="bg-white/90 hover:bg-green-50 hover:text-green-600"
+                        >
+                          <ThumbsUp size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVote(image.id, 'love')}
+                          className="bg-white/90 hover:bg-pink-50 hover:text-pink-600"
+                        >
+                          <Heart size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-white/90 hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <Wrench size={16} />
+                        </Button>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="flex justify-center mt-3">
+                  )}
+                  {votedImages[image.id] && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
                       <Badge variant={
                         votedImages[image.id] === 'like' ? "secondary" :
                         votedImages[image.id] === 'dislike' ? "destructive" : "default"
-                      } className={`py-2 px-3 ${
+                      } className={`w-full justify-center py-2 ${
                         votedImages[image.id] === 'love' ? "bg-pink-500 hover:bg-pink-600" :
                         votedImages[image.id] === 'like' ? "bg-green-500 hover:bg-green-600" :
                         "bg-gray-400 hover:bg-gray-500"
@@ -337,10 +324,10 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
                       </Badge>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
