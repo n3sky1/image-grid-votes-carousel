@@ -75,7 +75,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           console.log("Sample concepts added");
         }
 
-        // Get tshirt info including generated_image_description
         const { data: tshirt, error: tshirtError } = await supabase
           .from("tshirts")
           .select("original_image_url, asin, generated_image_description")
@@ -160,9 +159,6 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
       [id]: vote
     }));
     
-    // Keeping the images visible in the grid even after voting
-    // so users can compare their choices
-
     const voteText = vote === 'like' ? 'Liked' : vote === 'dislike' ? 'Disliked' : 'Loved';
     toast(voteText, {
       description: `You ${voteText.toLowerCase()} this image`,
@@ -212,63 +208,60 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="grid grid-cols-1 gap-6 p-6">
-        {/* Original Image Section */}
-        <div className="flex flex-col">
-          <h2 className="text-xl font-semibold mb-3">Original Image</h2>
-          {originalImage ? (
-            <div className="flex-1 flex items-center justify-center bg-white rounded-lg p-4 shadow-md">
-              <ImageCard image={originalImage} className="max-h-[500px] w-auto" />
-            </div>
-          ) : (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 border rounded-lg p-8">
-              <p className="text-gray-500">No original image available</p>
-            </div>
-          )}
-
-          <div className="flex gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => handleOriginalAction("copyrighted")}
-            >
-              Copyrighted
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleOriginalAction("no-design")}
-            >
-              No Design
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleOriginalAction("cant-design")}
-            >
-              Can't Design
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleEditPrompt}
-            >
-              Edit Prompt
-            </Button>
+        <div className="flex flex-col md:flex-row gap-6 mb-6">
+          <div className="md:w-1/2">
+            <h2 className="text-xl font-semibold mb-3">Original Image</h2>
+            {originalImage ? (
+              <div className="bg-white rounded-lg p-4 shadow-md">
+                <ImageCard image={originalImage} className="max-h-[400px] w-auto mx-auto" />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center bg-gray-50 border rounded-lg p-8">
+                <p className="text-gray-500">No original image available</p>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* PROMPT BOX */}
-        <div className="mt-2 mb-4">
-          <div className="bg-gray-50 border rounded-lg p-5 shadow-sm">
-            <div className="text-base font-bold mb-2">Prompt</div>
-            <div className="text-gray-700">{promptText}</div>
-          </div>
-        </div>
+          <div className="md:w-1/2 space-y-4">
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="outline"
+                onClick={() => handleOriginalAction("copyrighted")}
+              >
+                Copyrighted
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleOriginalAction("no-design")}
+              >
+                No Design
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleOriginalAction("cant-design")}
+              >
+                Can't Design
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleEditPrompt}
+              >
+                Edit Prompt
+              </Button>
+            </div>
 
-        {/* New Designs Grid Section */}
-        <div className="flex flex-col">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-xl font-semibold">New Designs</h2>
+            <div className="bg-gray-50 border rounded-lg p-5 shadow-sm">
+              <div className="text-base font-bold mb-2">Prompt</div>
+              <div className="text-gray-700">{promptText}</div>
+            </div>
+
             <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImages.length} />
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-3">New Designs</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {conceptImages.map(image => (
               <div key={image.id} className="flex flex-col gap-2">
                 <ImageCard image={image} className="aspect-square object-cover shadow-md" />
