@@ -22,6 +22,7 @@ interface CommentsProps {
 
 const Comments = ({ conceptId }: CommentsProps) => {
   const [newComment, setNewComment] = useState('');
+  const [showCommentForm, setShowCommentForm] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: comments = [], isLoading } = useQuery({
@@ -70,6 +71,7 @@ const Comments = ({ conceptId }: CommentsProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', conceptId] });
       setNewComment('');
+      setShowCommentForm(false);
       toast('Comment added successfully');
     },
     onError: () => {
@@ -118,23 +120,43 @@ const Comments = ({ conceptId }: CommentsProps) => {
 
   return (
     <div className="space-y-4 p-4">
-      <form onSubmit={handleSubmit} className="space-y-2">
-        <Textarea
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment..."
-          className="min-h-[80px]"
-        />
+      {!showCommentForm ? (
         <Button 
-          type="submit" 
-          disabled={!newComment.trim() || addCommentMutation.isPending}
+          variant="ghost" 
+          onClick={() => setShowCommentForm(true)}
+          className="w-full"
         >
           <MessageCircle className="mr-2" />
-          Post Comment
+          Add a Comment
         </Button>
-      </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add a comment..."
+            className="min-h-[80px]"
+          />
+          <div className="flex justify-end space-x-2">
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={() => setShowCommentForm(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={!newComment.trim() || addCommentMutation.isPending}
+            >
+              <MessageCircle className="mr-2" />
+              Post Comment
+            </Button>
+          </div>
+        </form>
+      )}
 
-      <div className="space-y-4">
+      <div className="space-y-4 mt-4">
         {comments.map((comment) => (
           <div key={comment.id} className="border rounded-lg p-4 space-y-2">
             <div className="text-sm text-gray-600">
