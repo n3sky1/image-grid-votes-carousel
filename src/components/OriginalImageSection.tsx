@@ -22,20 +22,26 @@ const OriginalImageSection = ({
   useTestData,
 }: OriginalImageSectionProps) => {
   return (
-    <div className="md:w-1/3 bg-gradient-to-br from-purple-50 to-blue-50 p-6">
+    <div className="md:w-1/3 bg-gradient-to-br from-purple-50 to-blue-50 p-6 flex flex-col">
       {originalImage ? (
-        <div className="rounded-lg overflow-hidden">
+        <div className="rounded-lg overflow-hidden mb-5">
           <ImageCard
             image={originalImage}
             className="w-full h-auto max-h-[350px] object-contain mx-auto shadow-sm"
           />
         </div>
       ) : (
-        <div className="flex items-center justify-center bg-gray-50 border rounded-lg p-8 h-[200px]">
+        <div className="flex items-center justify-center bg-gray-50 border rounded-lg p-8 h-[200px] mb-5">
           <p className="text-gray-500">No original image available</p>
         </div>
       )}
-      <div className="flex flex-wrap gap-3 mb-5 mt-5">
+      
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-5 shadow-sm border border-blue-100 mb-5">
+        <div className="text-base font-bold mb-2 text-gray-800">Generation Prompt</div>
+        <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">{promptText}</div>
+      </div>
+      
+      <div className="flex flex-wrap gap-3 mt-auto">
         <Button
           variant="outline"
           onClick={() => onOriginalAction("copyrighted")}
@@ -71,10 +77,6 @@ const OriginalImageSection = ({
         >
           {useTestData ? "Using Test Data" : "Use Test Data"}
         </Button>
-      </div>
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-5 shadow-sm border border-blue-100">
-        <div className="text-base font-bold mb-2 text-gray-800">Generation Prompt</div>
-        <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">{promptText}</div>
       </div>
     </div>
   );
