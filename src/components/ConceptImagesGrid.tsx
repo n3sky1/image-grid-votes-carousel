@@ -5,15 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
   votedImages: Record<string, 'like' | 'dislike' | 'love'>;
   onVote: (id: string, vote: 'like' | 'dislike' | 'love') => void;
+  originalImage: ImageData | null;
 }
 
-const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImagesGridProps) => {
+const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }: ConceptImagesGridProps) => {
   const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
+  const [comment, setComment] = useState<string>("");
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
     onVote(id, vote);
@@ -77,68 +80,95 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                   >
                     <X size={20} />
                   </Button>
-                  
-                  {votedImages[image.id] && (
-                    <div className="absolute top-[26px] right-[26px] bg-white/90 rounded-full p-4 shadow-md z-10">
-                      <Check size={48} className="text-green-500" />
+
+                  <div className="flex gap-4">
+                    {originalImage && (
+                      <div className="w-1/4 space-y-4">
+                        <div className="rounded-lg overflow-hidden border border-gray-200">
+                          <AspectRatio ratio={1}>
+                            <ImageCard 
+                              image={originalImage} 
+                              className="w-full h-full object-cover" 
+                            />
+                          </AspectRatio>
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="comment" className="text-sm font-medium text-gray-700 block">
+                            Add Comment
+                          </label>
+                          <Textarea
+                            id="comment"
+                            placeholder="Enter your comments here..."
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            className="min-h-[100px] resize-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="relative rounded-lg overflow-hidden mb-3">
+                        <img 
+                          src={conceptImages.find(img => img.id === expandedImageId)?.src} 
+                          alt={conceptImages.find(img => img.id === expandedImageId)?.alt}
+                          className="w-auto h-auto"
+                        />
+                      </div>
+                      {votedImages[expandedImageId] && (
+                        <div className="absolute top-[26px] right-[26px] bg-white/90 rounded-full p-4 shadow-md z-10">
+                          <Check size={48} className="text-green-500" />
+                        </div>
+                      )}
+                      <div className="flex justify-center gap-2 pt-2 bg-white">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleNavigate('prev')}
+                          className="hover:bg-gray-100"
+                        >
+                          <ArrowLeft size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVote(image.id, 'dislike')}
+                          className="hover:bg-red-50 hover:text-red-600"
+                        >
+                          <ThumbsDown size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVote(image.id, 'like')}
+                          className="hover:bg-green-50 hover:text-green-600"
+                        >
+                          <ThumbsUp size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVote(image.id, 'love')}
+                          className="hover:bg-pink-50 hover:text-pink-600"
+                        >
+                          <Heart size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <Wrench size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleNavigate('next')}
+                          className="hover:bg-gray-100"
+                        >
+                          <ArrowRight size={16} />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                  
-                  <div className="relative rounded-lg overflow-hidden mb-3">
-                    <img 
-                      src={image.src} 
-                      alt={image.alt}
-                      className="w-auto h-auto"
-                    />
-                  </div>
-                  <div className="flex justify-center gap-2 pt-2 bg-white">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleNavigate('prev')}
-                      className="hover:bg-gray-100"
-                    >
-                      <ArrowLeft size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleVote(image.id, 'dislike')}
-                      className="hover:bg-red-50 hover:text-red-600"
-                    >
-                      <ThumbsDown size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleVote(image.id, 'like')}
-                      className="hover:bg-green-50 hover:text-green-600"
-                    >
-                      <ThumbsUp size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleVote(image.id, 'love')}
-                      className="hover:bg-pink-50 hover:text-pink-600"
-                    >
-                      <Heart size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      <Wrench size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleNavigate('next')}
-                      className="hover:bg-gray-100"
-                    >
-                      <ArrowRight size={16} />
-                    </Button>
                   </div>
                 </div>
                 <div 

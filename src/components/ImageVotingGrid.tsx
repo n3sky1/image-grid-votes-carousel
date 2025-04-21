@@ -1,4 +1,3 @@
-
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -114,6 +113,7 @@ const ImageVotingGrid = ({ asin }: { asin: string }) => {
           conceptImages={conceptImages}
           votedImages={votedImages}
           onVote={handleVote}
+          originalImage={originalImage}
         />
       </div>
     </div>
