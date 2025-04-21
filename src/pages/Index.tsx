@@ -1,15 +1,43 @@
 
-import { useState } from "react";
-
-// CHANGE: Remove sampleImages import
-// import ImageVotingGrid from "@/components/ImageVotingGrid";
-// import { sampleImages } from "@/data/sampleImages";
+import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
+import { supabase } from "@/integrations/supabase/client";
 
-const DEMO_ASIN = "B01N4HS7B8"; // <- You may want to make this dynamic later!
+const DEMO_ASIN = "B01N4HS7B8"; // Fallback ASIN if we can't fetch one
 
 const Index = () => {
   const [showInstructions, setShowInstructions] = useState(false);
+  const [asin, setAsin] = useState(DEMO_ASIN);
+  const [loading, setLoading] = useState(true);
+
+  // Try to get an ASIN from the database
+  useEffect(() => {
+    const fetchFirstAsin = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("tshirts")
+          .select("asin")
+          .limit(1)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Error fetching ASIN:", error);
+          return; // Keep using the default ASIN
+        }
+        
+        if (data && data.asin) {
+          setAsin(data.asin);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFirstAsin();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
       <header className="bg-white/70 shadow-md py-7 px-6 mb-10 rounded-b-xl border-b border-gray-200 
@@ -27,7 +55,13 @@ const Index = () => {
 
       {/* Voting grid sits here. Now pulls by ASIN */}
       <main>
-        <ImageVotingGrid asin={DEMO_ASIN} />
+        {loading ? (
+          <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
+            Loading...
+          </div>
+        ) : (
+          <ImageVotingGrid asin={asin} />
+        )}
       </main>
 
       <footer className="mt-14 py-7 border-t bg-white/60 bg-gradient-to-bl from-[#ede8f6] to-[#fff8] 

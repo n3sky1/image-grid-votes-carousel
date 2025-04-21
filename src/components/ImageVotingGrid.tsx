@@ -25,50 +25,111 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
       setLoading(true);
       setError(null);
 
-      // Fetch tshirt row for this ASIN
-      const { data: tshirt, error: tshirtError } = await supabase
-        .from("tshirts")
-        .select("original_image_url, asin")
-        .eq("asin", asin)
-        .maybeSingle();
+      try {
+        // Check if tshirt exists, if not create it
+        const { data: existingTshirt, error: checkError } = await supabase
+          .from("tshirts")
+          .select("asin")
+          .eq("asin", asin)
+          .maybeSingle();
+        
+        if (checkError) {
+          console.error("Error checking for tshirt:", checkError);
+        }
+        
+        // Initialize tshirt if it doesn't exist
+        if (!existingTshirt) {
+          console.log("Tshirt doesn't exist, initializing...");
+          const { error: insertError } = await supabase
+            .from("tshirts")
+            .insert({ 
+              asin: asin, 
+              original_image_url: "https://m.media-amazon.com/images/I/71zAlj7yDrL._AC_UL1500_.jpg", // Sample image URL
+              title: `Demo T-shirt (${asin})`
+            });
+          
+          if (insertError) {
+            console.error("Error initializing tshirt:", insertError);
+            setError("Failed to initialize the database. Please try again.");
+            setLoading(false);
+            return;
+          }
+          
+          // Add some sample concepts
+          const conceptUrls = [
+            "https://m.media-amazon.com/images/I/61pDu-GrM6L._AC_UL1500_.jpg",
+            "https://m.media-amazon.com/images/I/61HMbj5KySL._AC_UL1500_.jpg",
+            "https://m.media-amazon.com/images/I/71nfRQUb3uL._AC_UL1500_.jpg"
+          ];
+          
+          for (const url of conceptUrls) {
+            await supabase
+              .from("concepts")
+              .insert({
+                tshirt_asin: asin,
+                concept_url: url
+              });
+          }
+          
+          console.log("Sample concepts added");
+        }
 
-      if (tshirtError || !tshirt) {
-        setError("Failed to load the original image for this ASIN.");
+        // Fetch tshirt data
+        const { data: tshirt, error: tshirtError } = await supabase
+          .from("tshirts")
+          .select("original_image_url, asin")
+          .eq("asin", asin)
+          .maybeSingle();
+
+        if (tshirtError) {
+          console.error("Error fetching tshirt:", tshirtError);
+          setError("Failed to load the original image for this ASIN.");
+          setLoading(false);
+          return;
+        }
+
+        if (!tshirt || !tshirt.original_image_url) {
+          setError("No image found for this ASIN.");
+          setLoading(false);
+          return;
+        }
+
+        // Set the original image
+        setOriginalImage({
+          id: `original-${tshirt.asin}`,
+          src: tshirt.original_image_url,
+          alt: "Original T-shirt Design",
+          isOriginal: true,
+        });
+
+        // Fetch concept images for this ASIN
+        const { data: concepts, error: conceptError } = await supabase
+          .from("concepts")
+          .select("concept_id, concept_url")
+          .eq("tshirt_asin", asin);
+
+        if (conceptError) {
+          console.error("Error fetching concepts:", conceptError);
+          setError("Failed to load concept images.");
+          setLoading(false);
+          return;
+        }
+
+        // Map concept images to ImageData
+        setConceptImages(
+          (concepts || []).map((c: any) => ({
+            id: c.concept_id,
+            src: c.concept_url,
+            alt: "Concept Design",
+            isOriginal: false,
+          }))
+        );
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        setError("An unexpected error occurred. Please try again later.");
+      } finally {
         setLoading(false);
-        return;
       }
-
-      // Set the original image
-      setOriginalImage({
-        id: `original-${tshirt.asin}`,
-        src: tshirt.original_image_url,
-        alt: "Original T-shirt Design",
-        isOriginal: true,
-      });
-
-      // Fetch concept images for this ASIN
-      const { data: concepts, error: conceptError } = await supabase
-        .from("concepts")
-        .select("concept_id, concept_url")
-        .eq("tshirt_asin", asin);
-
-      if (conceptError) {
-        setError("Failed to load concept images.");
-        setLoading(false);
-        return;
-      }
-
-      // Map concept images to ImageData
-      setConceptImages(
-        (concepts || []).map((c: any) => ({
-          id: c.concept_id,
-          src: c.concept_url,
-          alt: "Concept Design",
-          isOriginal: false,
-        }))
-      );
-
-      setLoading(false);
     };
 
     fetchImages();
