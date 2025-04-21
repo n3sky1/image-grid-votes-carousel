@@ -1,8 +1,7 @@
-
 import { ImageData } from "@/types/image";
 import { Button } from "@/components/ui/button";
 import ImageCard from "./ImageCard";
-import { PenIcon, CopyrightIcon, BanIcon, XIcon } from "lucide-react";
+import { CopyrightIcon, BanIcon, XIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -44,10 +43,13 @@ const OriginalImageSection = ({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onOriginalAction("copyrighted")}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
                       aria-label="Mark as copyrighted"
                     >
-                      <CopyrightIcon className="h-6 w-6 text-gray-600" />
+                      <CopyrightIcon 
+                        className="h-6 w-6 text-gray-500 group-hover:text-blue-500 transition-colors" 
+                        strokeWidth={1.5} 
+                      />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -59,10 +61,13 @@ const OriginalImageSection = ({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onOriginalAction("no-design")}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
                       aria-label="Mark as no design"
                     >
-                      <BanIcon className="h-6 w-6 text-gray-600" />
+                      <BanIcon 
+                        className="h-6 w-6 text-gray-500 group-hover:text-red-500 transition-colors" 
+                        strokeWidth={1.5} 
+                      />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -74,10 +79,13 @@ const OriginalImageSection = ({
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onOriginalAction("cant-design")}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
                       aria-label="Mark as can't design"
                     >
-                      <XIcon className="h-6 w-6 text-gray-600" />
+                      <XIcon 
+                        className="h-6 w-6 text-gray-500 group-hover:text-red-500 transition-colors" 
+                        strokeWidth={1.5} 
+                      />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
