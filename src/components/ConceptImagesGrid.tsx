@@ -3,8 +3,9 @@ import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, Heart, Wrench, Check } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Heart, Wrench, X } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { useState } from "react";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
@@ -13,12 +14,22 @@ interface ConceptImagesGridProps {
 }
 
 const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImagesGridProps) => {
+  const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
+
+  const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
+    onVote(id, vote);
+    setExpandedImageId(null);
+  };
+
   return (
     <div className="grid grid-cols-5 grid-rows-2 gap-4">
       {conceptImages.map(image => (
         <Card key={image.id} className="overflow-visible border-0 shadow-md group relative h-full">
           <CardContent className="p-2 h-full">
-            <div className="relative rounded-lg overflow-hidden h-full">
+            <div 
+              className="relative rounded-lg overflow-hidden h-full cursor-pointer"
+              onClick={() => setExpandedImageId(image.id)}
+            >
               <AspectRatio ratio={1 / 1}>
                 <ImageCard 
                   image={image} 
@@ -33,25 +44,30 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
               </AspectRatio>
             </div>
             
-            {/* Enlarged hover state with voting controls */}
-            <div className="fixed inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 
-                          ease-in-out scale-0 group-hover:scale-100 origin-center pointer-events-none group-hover:pointer-events-auto
-                          flex items-center justify-center z-50">
-              <div className="bg-white shadow-2xl rounded-lg max-w-[90vw] max-h-[90vh]">
-                <div className="p-4 flex flex-col">
-                  <div className="flex-grow relative rounded-lg overflow-hidden mb-3">
-                    <AspectRatio ratio={1 / 1} className="w-full max-w-[80vh]">
-                      <ImageCard 
-                        image={image} 
-                        className="w-full h-full object-contain"
-                      />
-                    </AspectRatio>
+            {/* Enlarged image view */}
+            {expandedImageId === image.id && (
+              <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="bg-white shadow-2xl rounded-lg p-4 relative max-w-[95vw] max-h-[95vh] overflow-auto">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute right-2 top-2 z-10"
+                    onClick={() => setExpandedImageId(null)}
+                  >
+                    <X size={20} />
+                  </Button>
+                  <div className="relative rounded-lg overflow-hidden mb-3">
+                    <img 
+                      src={image.src} 
+                      alt={image.alt}
+                      className="max-w-full max-h-[80vh] object-contain"
+                    />
                   </div>
                   <div className="flex justify-center gap-2 pt-2 bg-white">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onVote(image.id, 'dislike')}
+                      onClick={() => handleVote(image.id, 'dislike')}
                       className="hover:bg-red-50 hover:text-red-600"
                     >
                       <ThumbsDown size={16} />
@@ -59,7 +75,7 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onVote(image.id, 'like')}
+                      onClick={() => handleVote(image.id, 'like')}
                       className="hover:bg-green-50 hover:text-green-600"
                     >
                       <ThumbsUp size={16} />
@@ -67,7 +83,7 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onVote(image.id, 'love')}
+                      onClick={() => handleVote(image.id, 'love')}
                       className="hover:bg-pink-50 hover:text-pink-600"
                     >
                       <Heart size={16} />
@@ -81,10 +97,12 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                     </Button>
                   </div>
                 </div>
+                <div 
+                  className="fixed inset-0 bg-black/20 -z-10"
+                  onClick={() => setExpandedImageId(null)}
+                />
               </div>
-              {/* Add a backdrop overlay */}
-              <div className="fixed inset-0 bg-black/20 -z-10"></div>
-            </div>
+            )}
           </CardContent>
         </Card>
       ))}
