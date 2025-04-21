@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
@@ -93,17 +94,8 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
                             />
                           </AspectRatio>
                         </div>
-                        <div className="space-y-2">
-                          <label htmlFor="comment" className="text-sm font-medium text-gray-700 block">
-                            Add Comment
-                          </label>
-                          <Textarea
-                            id="comment"
-                            placeholder="Enter your comments here..."
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            className="min-h-[100px] resize-none"
-                          />
+                        <div className="mt-4">
+                          <Comments conceptId={expandedImageId} />
                         </div>
                       </div>
                     )}
@@ -168,9 +160,6 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
                         >
                           <ArrowRight size={16} />
                         </Button>
-                      </div>
-                      <div className="mt-6 border-t pt-4">
-                        <Comments conceptId={expandedImageId} />
                       </div>
                     </div>
                   </div>

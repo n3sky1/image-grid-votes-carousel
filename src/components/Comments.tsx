@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, ThumbsUp } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Comment {
   id: string;
@@ -22,7 +23,7 @@ interface CommentsProps {
 
 const Comments = ({ conceptId }: CommentsProps) => {
   const [newComment, setNewComment] = useState('');
-  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: comments = [], isLoading } = useQuery({
@@ -71,7 +72,7 @@ const Comments = ({ conceptId }: CommentsProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', conceptId] });
       setNewComment('');
-      setShowCommentForm(false);
+      setIsCommentFormOpen(false);
       toast('Comment added successfully');
     },
     onError: () => {
@@ -115,70 +116,89 @@ const Comments = ({ conceptId }: CommentsProps) => {
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center text-gray-500">Loading comments...</div>;
+    return <div className="text-center text-gray-500 text-sm">Loading comments...</div>;
   }
 
   return (
-    <div className="space-y-4 p-4">
-      {!showCommentForm ? (
-        <Button 
-          variant="ghost" 
-          onClick={() => setShowCommentForm(true)}
-          className="w-full"
-        >
-          <MessageCircle className="mr-2" />
-          Add a Comment
-        </Button>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <Textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add a comment..."
-            className="min-h-[80px]"
-          />
-          <div className="flex justify-end space-x-2">
-            <Button 
-              type="button" 
-              variant="ghost" 
-              onClick={() => setShowCommentForm(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={!newComment.trim() || addCommentMutation.isPending}
-            >
-              <MessageCircle className="mr-2" />
-              Post Comment
-            </Button>
-          </div>
-        </form>
-      )}
-
-      <div className="space-y-4 mt-4">
-        {comments.map((comment) => (
-          <div key={comment.id} className="border rounded-lg p-4 space-y-2">
-            <div className="text-sm text-gray-600">
-              {new Date(comment.created_at).toLocaleDateString()}
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium text-gray-700">Comments ({comments.length})</h3>
+      
+      <Collapsible 
+        open={isCommentFormOpen} 
+        onOpenChange={setIsCommentFormOpen}
+        className="w-full"
+      >
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="w-full justify-start text-xs h-7 px-2 mb-1"
+          >
+            <MessageCircle className="h-3 w-3 mr-1" />
+            Add comment
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <form onSubmit={handleSubmit} className="space-y-2">
+            <Textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Write a comment..."
+              className="min-h-[60px] text-xs"
+            />
+            <div className="flex justify-end space-x-1">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsCommentFormOpen(false)}
+                className="text-xs h-7 px-2"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                size="sm"
+                disabled={!newComment.trim() || addCommentMutation.isPending}
+                className="text-xs h-7 px-2"
+              >
+                Post
+              </Button>
             </div>
-            <p className="text-gray-800">{comment.content}</p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => toggleLikeMutation.mutate({
-                commentId: comment.id,
-                isLiked: comment.user_has_liked
-              })}
-              disabled={toggleLikeMutation.isPending}
-            >
-              <ThumbsUp 
-                className={comment.user_has_liked ? "text-blue-500 fill-blue-500" : ""} 
-              />
-              <span className="ml-2">{comment.likes}</span>
-            </Button>
-          </div>
-        ))}
+          </form>
+        </CollapsibleContent>
+      </Collapsible>
+
+      <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+        {comments.length === 0 ? (
+          <p className="text-xs text-gray-500 italic text-center">No comments yet</p>
+        ) : (
+          comments.map((comment) => (
+            <div key={comment.id} className="border rounded p-2 space-y-1 bg-gray-50/80">
+              <p className="text-xs text-gray-800">{comment.content}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] text-gray-500">
+                  {new Date(comment.created_at).toLocaleDateString()}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleLikeMutation.mutate({
+                    commentId: comment.id,
+                    isLiked: comment.user_has_liked
+                  })}
+                  disabled={toggleLikeMutation.isPending}
+                  className="h-6 px-1"
+                >
+                  <ThumbsUp 
+                    className={`h-3 w-3 ${comment.user_has_liked ? "text-blue-500 fill-blue-500" : ""}`} 
+                  />
+                  <span className="ml-1 text-[10px]">{comment.likes}</span>
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
