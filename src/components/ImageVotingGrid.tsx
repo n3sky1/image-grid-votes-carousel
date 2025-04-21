@@ -1,18 +1,16 @@
-
 import { useEffect, useState } from "react";
-import { ThumbsUp, ThumbsDown, Heart, Wrench, Check } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { ImageData } from "@/types/image";
-import ImageCard from "./ImageCard";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import VotingCompleted from "./VotingCompleted";
 import VotingProgress from "./VotingProgress";
 import VotingError from "./VotingError";
 import VotingLoading from "./VotingLoading";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { sampleImages } from "@/data/sampleImages";
+import OriginalImageSection from "./OriginalImageSection";
+import ConceptImagesGrid from "./ConceptImagesGrid";
 
 interface ImageVotingGridProps {
   asin: string;
@@ -26,7 +24,7 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [promptText, setPromptText] = useState<string>("");
-  const [useTestData, setUseTestData] = useState(true); // Flag to use test data
+  const [useTestData, setUseTestData] = useState(true);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -220,131 +218,24 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
       <div className="p-4 space-y-8">
         <Card className="overflow-hidden shadow-lg border-0">
           <div className="flex flex-col md:flex-row">
-            <div className="md:w-1/3 bg-gradient-to-br from-purple-50 to-blue-50 p-6">
-              {originalImage ? (
-                <div className="rounded-lg overflow-hidden">
-                  <ImageCard
-                    image={originalImage}
-                    className="w-full h-auto max-h-[350px] object-contain mx-auto shadow-sm"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center bg-gray-50 border rounded-lg p-8 h-[200px]">
-                  <p className="text-gray-500">No original image available</p>
-                </div>
-              )}
-            </div>
-
+            <OriginalImageSection
+              originalImage={originalImage}
+              promptText={promptText}
+              onOriginalAction={handleOriginalAction}
+              onEditPrompt={handleEditPrompt}
+              onToggleDataSource={toggleDataSource}
+              useTestData={useTestData}
+            />
             <div className="md:w-2/3 p-6 space-y-5">
-              <div className="flex flex-wrap gap-3 mb-5">
-                <Button
-                  variant="outline"
-                  onClick={() => handleOriginalAction("copyrighted")}
-                  className="bg-white hover:bg-gray-50"
-                >
-                  Copyrighted
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleOriginalAction("no-design")}
-                  className="bg-white hover:bg-gray-50"
-                >
-                  No Design
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleOriginalAction("cant-design")}
-                  className="bg-white hover:bg-gray-50"
-                >
-                  Can't Design
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleEditPrompt}
-                  className="bg-white hover:bg-gray-50"
-                >
-                  Edit Prompt
-                </Button>
-                <Button
-                  variant={useTestData ? "default" : "outline"}
-                  onClick={toggleDataSource}
-                  className={useTestData ? "bg-blue-500 hover:bg-blue-600" : "bg-white hover:bg-gray-50"}
-                >
-                  {useTestData ? "Using Test Data" : "Use Test Data"}
-                </Button>
-              </div>
-
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-5 shadow-sm border border-blue-100">
-                <div className="text-base font-bold mb-2 text-gray-800">Generation Prompt</div>
-                <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">{promptText}</div>
-              </div>
-
               <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImages.length} />
             </div>
           </div>
         </Card>
-
-        {/* Updated Grid Layout: 2x5 with hover effects */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {conceptImages.map(image => (
-            <Card key={image.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-              <CardContent className="p-2">
-                <div className="relative rounded-lg overflow-hidden group">
-                  <div className="aspect-square relative overflow-hidden">
-                    <ImageCard 
-                      image={image} 
-                      className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110" 
-                    />
-                    
-                    {/* Vote checkmark indicator */}
-                    {votedImages[image.id] && (
-                      <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1 shadow-md z-10">
-                        <Check size={16} className="text-green-500" />
-                      </div>
-                    )}
-                    
-                    {/* Hover overlay with voting buttons */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVote(image.id, 'dislike')}
-                          className="bg-white/90 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <ThumbsDown size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVote(image.id, 'like')}
-                          className="bg-white/90 hover:bg-green-50 hover:text-green-600"
-                        >
-                          <ThumbsUp size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVote(image.id, 'love')}
-                          className="bg-white/90 hover:bg-pink-50 hover:text-pink-600"
-                        >
-                          <Heart size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-white/90 hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          <Wrench size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <ConceptImagesGrid
+          conceptImages={conceptImages}
+          votedImages={votedImages}
+          onVote={handleVote}
+        />
       </div>
     </div>
   );
