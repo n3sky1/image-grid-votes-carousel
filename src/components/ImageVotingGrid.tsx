@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { ThumbsUp, ThumbsDown, Heart, Wrench } from "lucide-react";
 import { ImageData } from "@/types/image";
@@ -33,13 +32,9 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
       setLoading(true);
       setError(null);
 
-      // Use test data if the flag is set
       if (useTestData) {
-        // Find the original image
         const original = sampleImages.find(img => img.isOriginal);
         setOriginalImage(original || null);
-        
-        // Set the rest as concept images
         setConceptImages(sampleImages.filter(img => !img.isOriginal));
         setPromptText("This is a sample prompt for demonstration purposes. It would normally contain the description used to generate the t-shirt designs.");
         setLoading(false);
@@ -288,70 +283,59 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
           </div>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 gap-4">
           {conceptImages.map(image => (
             <Card key={image.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
               <CardContent className="p-4">
                 <div className="relative rounded-lg overflow-hidden group">
-                  <ImageCard 
-                    image={image} 
-                    className="aspect-square object-cover w-full" 
-                  />
-                  {!votedImages[image.id] && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <div className="flex justify-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVote(image.id, 'dislike')}
-                          className="bg-white/90 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <ThumbsDown size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVote(image.id, 'like')}
-                          className="bg-white/90 hover:bg-green-50 hover:text-green-600"
-                        >
-                          <ThumbsUp size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVote(image.id, 'love')}
-                          className="bg-white/90 hover:bg-pink-50 hover:text-pink-600"
-                        >
-                          <Heart size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-white/90 hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          <Wrench size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {votedImages[image.id] && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                      <Badge variant={
-                        votedImages[image.id] === 'like' ? "secondary" :
-                        votedImages[image.id] === 'dislike' ? "destructive" : "default"
-                      } className={`w-full justify-center py-2 ${
-                        votedImages[image.id] === 'love' ? "bg-pink-500 hover:bg-pink-600" :
-                        votedImages[image.id] === 'like' ? "bg-green-500 hover:bg-green-600" :
-                        "bg-gray-400 hover:bg-gray-500"
-                      }`}>
+                  <div className="aspect-square relative overflow-hidden">
+                    <ImageCard 
+                      image={image} 
+                      className="w-full h-full transition-transform duration-300 group-hover:scale-110" 
+                    />
+                    {votedImages[image.id] && (
+                      <div className="absolute top-3 right-3 bg-white/90 rounded-full p-1 shadow-md">
                         {getVoteIcon(votedImages[image.id])}
-                        <span className="ml-1">
-                          {votedImages[image.id] === 'like' ? 'Liked' : 
-                           votedImages[image.id] === 'dislike' ? 'Disliked' : 'Loved'}
-                        </span>
-                      </Badge>
-                    </div>
-                  )}
+                      </div>
+                    )}
+                    {!votedImages[image.id] && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleVote(image.id, 'dislike')}
+                            className="bg-white/90 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <ThumbsDown size={16} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleVote(image.id, 'like')}
+                            className="bg-white/90 hover:bg-green-50 hover:text-green-600"
+                          >
+                            <ThumbsUp size={16} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleVote(image.id, 'love')}
+                            className="bg-white/90 hover:bg-pink-50 hover:text-pink-600"
+                          >
+                            <Heart size={16} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-white/90 hover:bg-blue-50 hover:text-blue-600"
+                          >
+                            <Wrench size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
