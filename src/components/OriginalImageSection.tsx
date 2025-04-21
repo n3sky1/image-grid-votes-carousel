@@ -1,7 +1,7 @@
 import { ImageData } from "@/types/image";
 import { Button } from "@/components/ui/button";
 import ImageCard from "./ImageCard";
-import { CopyrightIcon, BanIcon, XIcon } from "lucide-react";
+import { PencilIcon, CopyrightIcon, BanIcon, XIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -111,7 +111,7 @@ const OriginalImageSection = ({
               className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
               aria-label="Edit prompt"
             >
-              <PenIcon className="h-4 w-4 text-gray-500" />
+              <PencilIcon className="h-4 w-4 text-gray-500" />
             </button>
           </div>
           <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">{promptText}</div>
