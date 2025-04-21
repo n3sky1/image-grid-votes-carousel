@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { ThumbsUp, ThumbsDown, Heart, Wrench } from "lucide-react";
 import { ImageData } from "@/types/image";
@@ -11,6 +12,7 @@ import VotingLoading from "./VotingLoading";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { sampleImages } from "@/data/sampleImages";
 
 interface ImageVotingGridProps {
   asin: string;
@@ -24,11 +26,25 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [promptText, setPromptText] = useState<string>("");
+  const [useTestData, setUseTestData] = useState(true); // Flag to use test data
 
   useEffect(() => {
     const fetchImages = async () => {
       setLoading(true);
       setError(null);
+
+      // Use test data if the flag is set
+      if (useTestData) {
+        // Find the original image
+        const original = sampleImages.find(img => img.isOriginal);
+        setOriginalImage(original || null);
+        
+        // Set the rest as concept images
+        setConceptImages(sampleImages.filter(img => !img.isOriginal));
+        setPromptText("This is a sample prompt for demonstration purposes. It would normally contain the description used to generate the t-shirt designs.");
+        setLoading(false);
+        return;
+      }
 
       try {
         const { data: existingTshirt, error: checkError } = await supabase
@@ -133,7 +149,7 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     };
 
     fetchImages();
-  }, [asin]);
+  }, [asin, useTestData]);
 
   useEffect(() => {
     const nonOriginalCount = conceptImages.length;
@@ -194,6 +210,11 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
     });
   };
 
+  const toggleDataSource = () => {
+    setUseTestData(prev => !prev);
+    setVotedImages({});
+  };
+
   if (loading) return <VotingLoading />;
   if (error) return <VotingError error={error} />;
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
@@ -247,6 +268,13 @@ const ImageVotingGrid = ({ asin }: ImageVotingGridProps) => {
                   className="bg-white hover:bg-gray-50"
                 >
                   Edit Prompt
+                </Button>
+                <Button
+                  variant={useTestData ? "default" : "outline"}
+                  onClick={toggleDataSource}
+                  className={useTestData ? "bg-blue-500 hover:bg-blue-600" : "bg-white hover:bg-gray-50"}
+                >
+                  {useTestData ? "Using Test Data" : "Use Test Data"}
                 </Button>
               </div>
 
