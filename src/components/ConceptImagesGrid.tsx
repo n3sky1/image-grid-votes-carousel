@@ -34,13 +34,13 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
             </div>
             
             {/* Enlarged hover state with voting controls */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 
-                          ease-in-out scale-0 group-hover:scale-100 origin-center pointer-events-none group-hover:pointer-events-auto">
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                            w-[200%] h-auto bg-white shadow-2xl rounded-lg z-30">
+            <div className="fixed inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 
+                          ease-in-out scale-0 group-hover:scale-100 origin-center pointer-events-none group-hover:pointer-events-auto
+                          flex items-center justify-center z-50">
+              <div className="bg-white shadow-2xl rounded-lg max-w-[90vw] max-h-[90vh]">
                 <div className="p-4 flex flex-col">
                   <div className="flex-grow relative rounded-lg overflow-hidden mb-3">
-                    <AspectRatio ratio={1 / 1}>
+                    <AspectRatio ratio={1 / 1} className="w-full max-w-[80vh]">
                       <ImageCard 
                         image={image} 
                         className="w-full h-full object-contain"
@@ -82,6 +82,8 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                   </div>
                 </div>
               </div>
+              {/* Add a backdrop overlay */}
+              <div className="fixed inset-0 bg-black/20 -z-10"></div>
             </div>
           </CardContent>
         </Card>
