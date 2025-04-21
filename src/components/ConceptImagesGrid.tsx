@@ -4,6 +4,7 @@ import ImageCard from "./ImageCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Heart, Wrench, Check } from "lucide-react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
@@ -13,12 +14,12 @@ interface ConceptImagesGridProps {
 
 const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImagesGridProps) => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-5 grid-rows-2 gap-4">
       {conceptImages.map(image => (
         <Card key={image.id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
           <CardContent className="p-2">
             <div className="relative rounded-lg overflow-hidden group">
-              <div className="aspect-square relative overflow-hidden">
+              <AspectRatio ratio={1 / 1}>
                 <ImageCard 
                   image={image} 
                   className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110" 
@@ -65,7 +66,7 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                     </Button>
                   </div>
                 </div>
-              </div>
+              </AspectRatio>
             </div>
           </CardContent>
         </Card>
