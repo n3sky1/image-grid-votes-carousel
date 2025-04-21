@@ -3,7 +3,7 @@ import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useState } from "react";
 
@@ -18,7 +18,15 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
     onVote(id, vote);
-    setExpandedImageId(null);
+    
+    // Automatically navigate to the next image after voting
+    const currentIndex = conceptImages.findIndex(img => img.id === id);
+    if (currentIndex !== -1 && conceptImages.length > 1) {
+      const nextIndex = (currentIndex + 1) % conceptImages.length;
+      setExpandedImageId(conceptImages[nextIndex].id);
+    } else {
+      setExpandedImageId(null);
+    }
   };
 
   const handleNavigate = (direction: 'prev' | 'next') => {
@@ -51,6 +59,13 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                   image={image} 
                   className="w-full h-full object-cover transition-all duration-300" 
                 />
+                
+                {/* Checkmark for voted images in grid view */}
+                {votedImages[image.id] && (
+                  <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1 shadow-md z-10">
+                    <Check size={16} className="text-green-500" />
+                  </div>
+                )}
               </AspectRatio>
             </div>
             
@@ -66,6 +81,14 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                   >
                     <X size={20} />
                   </Button>
+                  
+                  {/* Checkmark for voted images in popup view */}
+                  {votedImages[image.id] && (
+                    <div className="absolute left-2 top-2 bg-white/90 rounded-full p-1 shadow-md z-10">
+                      <Check size={16} className="text-green-500" />
+                    </div>
+                  )}
+                  
                   <div className="relative rounded-lg overflow-hidden mb-3">
                     <img 
                       src={image.src} 
