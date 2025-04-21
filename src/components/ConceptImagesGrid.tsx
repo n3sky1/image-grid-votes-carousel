@@ -16,9 +16,9 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
   return (
     <div className="grid grid-cols-5 grid-rows-2 gap-4">
       {conceptImages.map(image => (
-        <Card key={image.id} className="overflow-hidden border-0 shadow-md group relative">
-          <CardContent className="p-2">
-            <div className="relative rounded-lg overflow-hidden">
+        <Card key={image.id} className="overflow-visible border-0 shadow-md group relative h-full">
+          <CardContent className="p-2 h-full">
+            <div className="relative rounded-lg overflow-hidden h-full">
               <AspectRatio ratio={1 / 1}>
                 <ImageCard 
                   image={image} 
@@ -34,16 +34,20 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
             </div>
             
             {/* Enlarged hover state with voting controls */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20">
-              <div className="absolute inset-0 -m-4 bg-white shadow-xl rounded-lg">
-                <div className="p-4 h-full flex flex-col">
-                  <div className="flex-grow relative rounded-lg overflow-hidden">
-                    <ImageCard 
-                      image={image} 
-                      className="w-full h-full object-contain"
-                    />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 
+                          ease-in-out scale-0 group-hover:scale-100 origin-center pointer-events-none group-hover:pointer-events-auto">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                            w-[200%] h-auto bg-white shadow-2xl rounded-lg z-30">
+                <div className="p-4 flex flex-col">
+                  <div className="flex-grow relative rounded-lg overflow-hidden mb-3">
+                    <AspectRatio ratio={1 / 1}>
+                      <ImageCard 
+                        image={image} 
+                        className="w-full h-full object-contain"
+                      />
+                    </AspectRatio>
                   </div>
-                  <div className="flex justify-center gap-2 pt-2 bg-white/90">
+                  <div className="flex justify-center gap-2 pt-2 bg-white">
                     <Button
                       size="sm"
                       variant="outline"
