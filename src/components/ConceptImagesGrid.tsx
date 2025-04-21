@@ -3,7 +3,7 @@ import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, Heart, Wrench, X } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useState } from "react";
 
@@ -21,6 +21,22 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
     setExpandedImageId(null);
   };
 
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (!expandedImageId) return;
+    
+    const currentIndex = conceptImages.findIndex(img => img.id === expandedImageId);
+    if (currentIndex === -1) return;
+    
+    let newIndex;
+    if (direction === 'prev') {
+      newIndex = currentIndex === 0 ? conceptImages.length - 1 : currentIndex - 1;
+    } else {
+      newIndex = currentIndex === conceptImages.length - 1 ? 0 : currentIndex + 1;
+    }
+    
+    setExpandedImageId(conceptImages[newIndex].id);
+  };
+
   return (
     <div className="grid grid-cols-5 grid-rows-2 gap-4">
       {conceptImages.map(image => (
@@ -35,12 +51,6 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                   image={image} 
                   className="w-full h-full object-cover transition-all duration-300" 
                 />
-                
-                {votedImages[image.id] && (
-                  <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1 shadow-md z-10">
-                    <Check size={16} className="text-green-500" />
-                  </div>
-                )}
               </AspectRatio>
             </div>
             
@@ -60,10 +70,18 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                     <img 
                       src={image.src} 
                       alt={image.alt}
-                      className="max-w-full max-h-[80vh] object-contain"
+                      className="w-auto h-auto"
                     />
                   </div>
                   <div className="flex justify-center gap-2 pt-2 bg-white">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleNavigate('prev')}
+                      className="hover:bg-gray-100"
+                    >
+                      <ArrowLeft size={16} />
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -94,6 +112,14 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote }: ConceptImages
                       className="hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Wrench size={16} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleNavigate('next')}
+                      className="hover:bg-gray-100"
+                    >
+                      <ArrowRight size={16} />
                     </Button>
                   </div>
                 </div>
