@@ -11,6 +11,11 @@ interface TagVotingProps {
   suggestedTags: string[];
 }
 
+interface TagVote {
+  tag_name: string;
+  votes: number;
+}
+
 const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
   const [tagVotes, setTagVotes] = useState<Record<string, number>>({});
 
@@ -28,8 +33,8 @@ const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
         return;
       }
 
-      if (data) {
-        const votesMap = data.reduce((acc: Record<string, number>, curr: any) => {
+      if (data && Array.isArray(data)) {
+        const votesMap = data.reduce((acc: Record<string, number>, curr: TagVote) => {
           acc[curr.tag_name] = curr.votes;
           return acc;
         }, {});
