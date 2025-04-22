@@ -26,39 +26,61 @@ const Comments = ({ conceptId }: CommentsProps) => {
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  // Check if the conceptId is a valid UUID format
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conceptId);
+
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', conceptId],
     queryFn: async () => {
-      const { data: comments, error } = await supabase
-        .from('comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          comment_likes (count)
-        `)
-        .eq('concept_id', conceptId);
+      // If not a valid UUID, return empty array to prevent database errors
+      if (!isValidUUID) {
+        console.log(`Invalid UUID format for conceptId: ${conceptId}`);
+        return [];
+      }
 
-      if (error) throw error;
-      
-      const { data: userLikes } = await supabase
-        .from('comment_likes')
-        .select('comment_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+      try {
+        const { data: comments, error } = await supabase
+          .from('comments')
+          .select(`
+            id,
+            content,
+            created_at,
+            user_id,
+            comment_likes (count)
+          `)
+          .eq('concept_id', conceptId);
 
-      const userLikedComments = new Set(userLikes?.map(like => like.comment_id));
+        if (error) throw error;
+        
+        const { data: userLikes } = await supabase
+          .from('comment_likes')
+          .select('comment_id')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
-      return comments.map(comment => ({
-        ...comment,
-        likes: comment.comment_likes?.[0]?.count || 0,
-        user_has_liked: userLikedComments.has(comment.id)
-      }));
-    }
+        const userLikedComments = new Set(userLikes?.map(like => like.comment_id));
+
+        return comments.map(comment => ({
+          ...comment,
+          likes: comment.comment_likes?.[0]?.count || 0,
+          user_has_liked: userLikedComments.has(comment.id)
+        }));
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        return [];
+      }
+    },
+    // Reduce refetch frequency to prevent excessive requests
+    staleTime: 10000, // 10 seconds
+    retry: 1, // Only retry once if there's an error
+    enabled: isValidUUID // Only run the query if the UUID is valid
   });
 
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
+      if (!isValidUUID) {
+        throw new Error('Invalid concept ID format');
+      }
+
       const { error } = await supabase
         .from('comments')
         .insert({
@@ -75,7 +97,8 @@ const Comments = ({ conceptId }: CommentsProps) => {
       setIsCommentFormOpen(false);
       toast('Comment added successfully');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to add comment:', error);
       toast('Failed to add comment', {
         description: 'Please try again later'
       });
@@ -114,6 +137,10 @@ const Comments = ({ conceptId }: CommentsProps) => {
     if (!newComment.trim()) return;
     addCommentMutation.mutate(newComment);
   };
+
+  if (!isValidUUID) {
+    return <div className="text-center text-gray-500 text-sm">Comments not available for this concept</div>;
+  }
 
   if (isLoading) {
     return <div className="text-center text-gray-500 text-sm">Loading comments...</div>;
