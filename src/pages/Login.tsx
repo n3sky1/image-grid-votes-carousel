@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,23 +8,20 @@ import { toast } from "@/components/ui/sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Check if input is already an email or just a username
-      const loginEmail = email.includes('@') ? email : `${email}@internal.com`;
-      console.log(`Attempting login with: ${loginEmail}`);
-      
-      // Try to login
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password,
+      // Use magic link authentication instead of password
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
       });
 
       if (error) {
@@ -33,10 +29,12 @@ const Login = () => {
         toast.error("Login failed", {
           description: error.message
         });
-      } else if (data?.user) {
-        console.log("Login successful", data);
-        toast.success("Login successful");
-        navigate("/");
+      } else {
+        console.log("Magic link sent successfully");
+        toast.success("Magic link sent", {
+          description: "Check your email for the login link"
+        });
+        setMagicLinkSent(true);
       }
     } catch (error) {
       console.error("Unexpected error:", error);
@@ -51,39 +49,46 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-100">
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email or username"
-                required
-              />
+          
+          {magicLinkSent ? (
+            <div className="text-center space-y-4">
+              <div className="text-green-600 font-medium">Magic link sent!</div>
+              <p className="text-gray-600">
+                Check your email for a login link. Click the link to sign in.
+              </p>
+              <Button 
+                className="mt-4"
+                variant="outline"
+                onClick={() => setMagicLinkSent(false)}
+              >
+                Send another link
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Login"}
-            </Button>
-          </form>
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? "Sending magic link..." : "Send magic link"}
+              </Button>
+            </form>
+          )}
+          
           <p className="mt-4 text-sm text-center text-gray-600">
-            Please contact an administrator if you need access.
+            We'll send you a magic link for passwordless login.
           </p>
         </div>
       </div>
