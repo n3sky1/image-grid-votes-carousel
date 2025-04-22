@@ -18,8 +18,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Try to sign in even if email is not confirmed
-      // This works for admin-created accounts where email confirmation isn't needed
+      // Try to sign in with email password
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -28,10 +27,10 @@ const Login = () => {
       if (error) {
         console.error("Login error:", error);
         
-        // Special handling for "Email not confirmed" errors
-        if (error.message === "Email not confirmed") {
-          toast.error("Admin access only", {
-            description: "This application only allows pre-authorized users to login."
+        if (error.message.includes("Email not confirmed")) {
+          // For email confirmation issues, provide clear guidance
+          toast.error("Email not confirmed", {
+            description: "Your admin account needs to be confirmed. Please check the Supabase dashboard."
           });
         } else {
           toast.error("Login failed", {
