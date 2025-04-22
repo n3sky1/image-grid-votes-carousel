@@ -1,28 +1,26 @@
-
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
 
-const DEMO_ASIN = "B01N4HS7B8"; // Fallback ASIN if we can't fetch one
+const DEMO_ASIN = "B01N4HS7B8";
 
 const Index = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [asin, setAsin] = useState(DEMO_ASIN);
   const [loading, setLoading] = useState(true);
 
-  // Try to get an ASIN from the database
   useEffect(() => {
     const fetchFirstAsin = async () => {
       try {
         const { data, error } = await supabase
           .from("tshirts")
-          .select("asin")
+          .select("asin, ai_suggested_tags")
           .limit(1)
           .maybeSingle();
         
         if (error) {
           console.error("Error fetching ASIN:", error);
-          return; // Keep using the default ASIN
+          return;
         }
         
         if (data && data.asin) {
@@ -64,4 +62,3 @@ const Index = () => {
 };
 
 export default Index;
-

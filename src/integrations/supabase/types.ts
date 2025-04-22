@@ -129,6 +129,7 @@ export type Database = {
           ai_recommendation_reason: string | null
           ai_recommended_background_color: string | null
           ai_recommended_model: string | null
+          ai_suggested_tags: string[] | null
           asin: string
           avg_180_day_bsr: number | null
           avg_30_day_bsr: number | null
@@ -176,6 +177,7 @@ export type Database = {
           ai_recommendation_reason?: string | null
           ai_recommended_background_color?: string | null
           ai_recommended_model?: string | null
+          ai_suggested_tags?: string[] | null
           asin: string
           avg_180_day_bsr?: number | null
           avg_30_day_bsr?: number | null
@@ -223,6 +225,7 @@ export type Database = {
           ai_recommendation_reason?: string | null
           ai_recommended_background_color?: string | null
           ai_recommended_model?: string | null
+          ai_suggested_tags?: string[] | null
           asin?: string
           avg_180_day_bsr?: number | null
           avg_30_day_bsr?: number | null
