@@ -48,21 +48,17 @@ const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
 
   const handleTagVote = async (tagName: string) => {
     try {
-      // Call the increment_tag_vote function
-      const response = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_tag_vote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.getSession()}`
-        },
-        body: JSON.stringify({
+      // Call the increment_tag_vote_count function
+      const { error } = await supabase
+        .rpc('increment_tag_vote_count', {
           p_tag_name: tagName,
           p_tshirt_asin: asin
-        })
-      });
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to increment tag vote');
+      if (error) {
+        console.error('Error voting for tag:', error);
+        toast.error('Failed to register your vote');
+        return;
       }
 
       // Update local state

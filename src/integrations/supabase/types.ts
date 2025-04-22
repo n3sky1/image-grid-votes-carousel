@@ -117,6 +117,41 @@ export type Database = {
           },
         ]
       }
+      tag_votes: {
+        Row: {
+          created_at: string
+          id: string
+          tag_name: string
+          tshirt_asin: string
+          updated_at: string
+          votes: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag_name: string
+          tshirt_asin: string
+          updated_at?: string
+          votes?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag_name?: string
+          tshirt_asin?: string
+          updated_at?: string
+          votes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_votes_tshirt_asin_fkey"
+            columns: ["tshirt_asin"]
+            isOneToOne: false
+            referencedRelation: "tshirts"
+            referencedColumns: ["asin"]
+          },
+        ]
+      }
       tshirts: {
         Row: {
           ai_analysis_timestamp: string | null
@@ -269,7 +304,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_tag_votes: {
+        Args: { p_tshirt_asin: string }
+        Returns: {
+          tag_name: string
+          votes: number
+        }[]
+      }
+      increment_tag_vote_count: {
+        Args: { p_tag_name: string; p_tshirt_asin: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
