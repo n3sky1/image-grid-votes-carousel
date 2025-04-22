@@ -18,19 +18,24 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log(`Attempting login with: ${username}@internal.com`);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: `${username}@internal.com`,
         password: password,
       });
 
       if (error) {
+        console.error("Login error:", error);
         toast.error("Login failed", {
           description: error.message
         });
-      } else {
+      } else if (data?.user) {
+        console.log("Login successful", data);
+        toast.success("Login successful");
         navigate("/");
       }
     } catch (error) {
+      console.error("Unexpected error:", error);
       toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -73,6 +78,9 @@ const Login = () => {
               {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
+          <p className="mt-4 text-sm text-center text-gray-600">
+            Please contact an administrator if you need access.
+          </p>
         </div>
       </div>
     </div>
