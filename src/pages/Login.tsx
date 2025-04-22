@@ -18,14 +18,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Try to sign in with email password and bypass email confirmation check
+      // Try to sign in with email password
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          // This bypasses the email confirmation requirement
-          emailRedirectTo: window.location.origin,
-        }
+        password
       });
 
       if (error) {
