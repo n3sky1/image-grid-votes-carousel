@@ -87,12 +87,12 @@ const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
           <Badge
             key={tag}
             variant="outline"
-            className="cursor-pointer hover:bg-gray-100"
+            className="cursor-pointer hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 transition-colors duration-200 group"
             onClick={() => handleTagVote(tag)}
           >
             {tag}
             {tagVotes[tag] > 0 && (
-              <span className="ml-1.5 text-xs text-gray-500">
+              <span className="ml-1.5 text-xs text-gray-500 group-hover:text-blue-700">
                 {tagVotes[tag]}
               </span>
             )}
