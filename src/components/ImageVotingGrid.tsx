@@ -1,3 +1,4 @@
+
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -11,7 +12,11 @@ import { toast } from "@/components/ui/sonner";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ImageVotingGrid = ({ asin }: { asin: string }) => {
+interface ExtendedImageVotingGridProps extends ImageVotingGridProps {
+  suggestedTags?: string[];
+}
+
+const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridProps) => {
   const {
     originalImage,
     conceptImages,
@@ -55,6 +60,9 @@ const ImageVotingGrid = ({ asin }: { asin: string }) => {
   if (loading) return <VotingLoading />;
   if (error) return <VotingError error={error} />;
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
+
+  // Use provided tags or default test tags
+  const tagsToUse = suggestedTags.length > 0 ? suggestedTags : ["Funny", "Vintage", "Graphic", "Summer"];
 
   return (
     <div className="w-full max-w-6xl mx-auto">

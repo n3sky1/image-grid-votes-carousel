@@ -3,6 +3,7 @@ import { ImageData } from "./image";
 
 export interface ImageVotingGridProps {
   asin: string;
+  suggestedTags?: string[];
 }
 
 export interface OriginalImageSectionProps {

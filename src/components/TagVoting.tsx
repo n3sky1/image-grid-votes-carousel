@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tag } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 interface TagVotingProps {
   asin: string;
@@ -18,40 +19,58 @@ const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
   }, [asin]);
 
   const fetchTagVotes = async () => {
-    const { data, error } = await supabase
-      .from('tag_votes')
-      .select('tag_name, votes')
-      .eq('tshirt_asin', asin);
+    try {
+      const { data, error } = await supabase
+        .rpc('get_tag_votes', { p_tshirt_asin: asin });
 
-    if (error) {
-      console.error('Error fetching tag votes:', error);
-      return;
+      if (error) {
+        console.error('Error fetching tag votes:', error);
+        return;
+      }
+
+      if (data) {
+        const votesMap = data.reduce((acc: Record<string, number>, curr: any) => {
+          acc[curr.tag_name] = curr.votes;
+          return acc;
+        }, {});
+        
+        setTagVotes(votesMap);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching tag votes:', err);
     }
-
-    const votesMap = data.reduce((acc, curr) => {
-      acc[curr.tag_name] = curr.votes;
-      return acc;
-    }, {} as Record<string, number>);
-
-    setTagVotes(votesMap);
   };
 
   const handleTagVote = async (tagName: string) => {
-    const { error } = await supabase
-      .rpc('increment_tag_vote', {
-        p_tag_name: tagName,
-        p_tshirt_asin: asin
+    try {
+      // Call the increment_tag_vote function
+      const response = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_tag_vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.auth.getSession()}`
+        },
+        body: JSON.stringify({
+          p_tag_name: tagName,
+          p_tshirt_asin: asin
+        })
       });
 
-    if (error) {
-      console.error('Error voting for tag:', error);
-      return;
-    }
+      if (!response.ok) {
+        throw new Error('Failed to increment tag vote');
+      }
 
-    setTagVotes(prev => ({
-      ...prev,
-      [tagName]: (prev[tagName] || 0) + 1
-    }));
+      // Update local state
+      setTagVotes(prev => ({
+        ...prev,
+        [tagName]: (prev[tagName] || 0) + 1
+      }));
+
+      toast.success(`Voted for tag: ${tagName}`);
+    } catch (err) {
+      console.error('Error voting for tag:', err);
+      toast.error('Failed to register your vote');
+    }
   };
 
   if (!suggestedTags?.length) return null;

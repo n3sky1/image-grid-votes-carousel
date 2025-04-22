@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ const Index = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [asin, setAsin] = useState(DEMO_ASIN);
   const [loading, setLoading] = useState(true);
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchFirstAsin = async () => {
@@ -25,6 +27,14 @@ const Index = () => {
         
         if (data && data.asin) {
           setAsin(data.asin);
+          
+          // Set the suggested tags if they exist in data
+          if (data.ai_suggested_tags && Array.isArray(data.ai_suggested_tags)) {
+            setSuggestedTags(data.ai_suggested_tags);
+          } else {
+            // Default tags if none exist in the database
+            setSuggestedTags(["Funny", "Vintage", "Graphic", "Summer"]);
+          }
         }
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -44,7 +54,7 @@ const Index = () => {
             Loading...
           </div>
         ) : (
-          <ImageVotingGrid asin={asin} />
+          <ImageVotingGrid asin={asin} suggestedTags={suggestedTags} />
         )}
       </main>
 

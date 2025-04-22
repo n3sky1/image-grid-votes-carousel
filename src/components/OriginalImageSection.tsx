@@ -19,6 +19,9 @@ const OriginalImageSection = ({
   onToggleDataSource,
   useTestData
 }: OriginalImageSectionProps) => {
+  // Sample tags for testing
+  const testTags = ["Funny", "Vintage", "Graphic", "Summer"];
+  
   return (
     <>
       {originalImage ? (
@@ -88,7 +91,7 @@ const OriginalImageSection = ({
           </div>
           <TagVoting 
             asin={originalImage.id.replace('original-', '')} 
-            suggestedTags={[]} // We'll populate this from the parent
+            suggestedTags={testTags} 
           />
         </div>
       ) : (
