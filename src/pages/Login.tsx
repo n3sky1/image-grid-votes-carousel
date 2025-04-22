@@ -6,16 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setEmailNotConfirmed(false);
 
     try {
       // Try to sign in with email password
@@ -27,10 +30,15 @@ const Login = () => {
       if (error) {
         console.error("Login error:", error);
         
-        // Generic error message for failed logins - don't expose specific reasons
-        toast.error("Login failed", {
-          description: "Please check your credentials and try again."
-        });
+        // Check if the error is due to email not being confirmed
+        if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
+          setEmailNotConfirmed(true);
+        } else {
+          // Generic error message for other failed logins
+          toast.error("Login failed", {
+            description: "Please check your credentials and try again."
+          });
+        }
       } else if (data?.user) {
         console.log("Login successful", data);
         toast.success("Login successful");
@@ -49,6 +57,15 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-100">
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Admin Login</h2>
+          
+          {emailNotConfirmed && (
+            <Alert className="mb-4 bg-amber-50 border-amber-200">
+              <AlertDescription className="text-amber-800">
+                Your email address has not been confirmed. Please check your inbox for a confirmation email or contact the administrator.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
