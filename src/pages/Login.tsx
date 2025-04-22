@@ -18,11 +18,39 @@ const Login = () => {
     setLoading(true);
 
     try {
-      console.log(`Attempting login with: ${username}@internal.com`);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${username}@internal.com`,
-        password: password,
+      const email = `${username}@internal.com`;
+      console.log(`Attempting login with: ${email}`);
+      
+      // First try to login
+      let { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      // If user doesn't exist, create them
+      if (error?.status === 400) {
+        console.log("User doesn't exist, creating new user...");
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          }
+        });
+
+        if (signUpError) {
+          console.error("Signup error:", signUpError);
+          toast.error("Account creation failed", {
+            description: signUpError.message
+          });
+        } else if (signUpData?.user) {
+          // Try logging in immediately after signup
+          ({ data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          }));
+        }
+      }
 
       if (error) {
         console.error("Login error:", error);
