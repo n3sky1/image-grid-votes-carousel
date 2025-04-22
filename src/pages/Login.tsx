@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,39 +18,15 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const email = `${username}@internal.com`;
-      console.log(`Attempting login with: ${email}`);
+      // Check if input is already an email or just a username
+      const loginEmail = email.includes('@') ? email : `${email}@internal.com`;
+      console.log(`Attempting login with: ${loginEmail}`);
       
-      // First try to login
-      let { data, error } = await supabase.auth.signInWithPassword({
-        email,
+      // Try to login
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
         password,
       });
-
-      // If user doesn't exist, create them
-      if (error?.status === 400) {
-        console.log("User doesn't exist, creating new user...");
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-          }
-        });
-
-        if (signUpError) {
-          console.error("Signup error:", signUpError);
-          toast.error("Account creation failed", {
-            description: signUpError.message
-          });
-        } else if (signUpData?.user) {
-          // Try logging in immediately after signup
-          ({ data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          }));
-        }
-      }
 
       if (error) {
         console.error("Login error:", error);
@@ -77,13 +53,13 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
+                id="email"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email or username"
                 required
               />
             </div>
