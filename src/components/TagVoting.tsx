@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tag } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { useAuth } from "./AuthProvider";
 
 interface TagVotingProps {
   asin: string;
@@ -18,6 +18,7 @@ interface TagVote {
 
 const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
   const [tagVotes, setTagVotes] = useState<Record<string, number>>({});
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchTagVotes();
@@ -47,12 +48,17 @@ const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
   };
 
   const handleTagVote = async (tagName: string) => {
+    if (!user) {
+      toast.error('You must be logged in to vote');
+      return;
+    }
+
     try {
-      // Call the increment_tag_vote_count function
       const { error } = await supabase
         .rpc('increment_tag_vote_count', {
           p_tag_name: tagName,
-          p_tshirt_asin: asin
+          p_tshirt_asin: asin,
+          p_user_id: user.id
         });
 
       if (error) {
@@ -61,7 +67,6 @@ const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
         return;
       }
 
-      // Update local state
       setTagVotes(prev => ({
         ...prev,
         [tagName]: (prev[tagName] || 0) + 1

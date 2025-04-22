@@ -117,6 +117,27 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
       tag_votes: {
         Row: {
           created_at: string
@@ -124,6 +145,7 @@ export type Database = {
           tag_name: string
           tshirt_asin: string
           updated_at: string
+          user_id: string | null
           votes: number
         }
         Insert: {
@@ -132,6 +154,7 @@ export type Database = {
           tag_name: string
           tshirt_asin: string
           updated_at?: string
+          user_id?: string | null
           votes?: number
         }
         Update: {
@@ -140,6 +163,7 @@ export type Database = {
           tag_name?: string
           tshirt_asin?: string
           updated_at?: string
+          user_id?: string | null
           votes?: number
         }
         Relationships: [
@@ -312,7 +336,9 @@ export type Database = {
         }[]
       }
       increment_tag_vote_count: {
-        Args: { p_tag_name: string; p_tshirt_asin: string }
+        Args:
+          | { p_tag_name: string; p_tshirt_asin: string }
+          | { p_tag_name: string; p_tshirt_asin: string; p_user_id: string }
         Returns: undefined
       }
     }
