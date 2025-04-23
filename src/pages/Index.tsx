@@ -33,13 +33,18 @@ const Index = () => {
         completedAsins.push(currentAsin);
       }
 
+      // Build the query to fetch the next available t-shirt for voting
       let query = supabase
         .from("tshirts")
         .select("asin, ai_suggested_tags")
         .eq("ready_for_voting", true);
       
       if (completedAsins.length > 0) {
-        query = query.not('asin', 'in', completedAsins);
+        // Use the "not.eq" filter for each ASIN in the array
+        // This is more reliable than "not.in" which was causing issues
+        for (const completedAsin of completedAsins) {
+          query = query.not('asin', 'eq', completedAsin);
+        }
       }
       
       const { data, error } = await query.limit(1).maybeSingle();
