@@ -12,12 +12,13 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [noMoreTshirts, setNoMoreTshirts] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
+      console.log("Fetching next ASIN, current:", currentAsin);
       setLoading(true);
       setError(null);
-      // Important: Initialize noMoreTshirts to false at the start of fetch
       setNoMoreTshirts(false);
       
       const user = await supabase.auth.getUser();
@@ -32,6 +33,8 @@ const Index = () => {
         .eq("user_id", user.data.user.id);
       
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
+      console.log("Completed ASINs count:", completedAsins.length);
+      
       if (currentAsin && !completedAsins.includes(currentAsin)) {
         completedAsins.push(currentAsin);
       }
@@ -44,7 +47,6 @@ const Index = () => {
       
       if (completedAsins.length > 0) {
         // Use the "not.eq" filter for each ASIN in the array
-        // This is more reliable than "not.in" which was causing issues
         for (const completedAsin of completedAsins) {
           query = query.not('asin', 'eq', completedAsin);
         }
@@ -63,10 +65,8 @@ const Index = () => {
         console.log("Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
-        // Already set to false at the beginning of fetch, no need to do it again
       } else {
         console.log("No more t-shirts available for voting");
-        // Only set noMoreTshirts to true when we've confirmed there are no t-shirts
         setNoMoreTshirts(true);
         toast("All done!", {
           description: "You've completed voting on all available t-shirts.",
@@ -78,14 +78,19 @@ const Index = () => {
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setLoading(false);
+      setIsInitializing(false);
     }
   };
 
   useEffect(() => {
-    // This ensures we start fresh on component mount
-    setAsin("");
-    setNoMoreTshirts(false);
-    fetchNextAsin();
+    const initializeApp = async () => {
+      setIsInitializing(true);
+      setAsin("");
+      setNoMoreTshirts(false);
+      await fetchNextAsin();
+    };
+    
+    initializeApp();
   }, []);
 
   if (error) {
@@ -106,7 +111,9 @@ const Index = () => {
     );
   }
 
-  if (noMoreTshirts) {
+  // Only show noMoreTshirts view if we've confirmed there are no more t-shirts
+  // AND we're not in the initial loading state
+  if (noMoreTshirts && !isInitializing) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB] flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
@@ -133,9 +140,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
       <main>
-        {loading ? (
+        {loading || isInitializing ? (
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
-            Loading...
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p>Looking for t-shirts to vote on...</p>
+            </div>
           </div>
         ) : asin ? (
           <ImageVotingGrid 
@@ -143,16 +153,12 @@ const Index = () => {
             suggestedTags={suggestedTags} 
             onVotingCompleted={() => fetchNextAsin(asin)}
           />
-        ) : !noMoreTshirts ? (
+        ) : (
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
               <p>Looking for t-shirts to vote on...</p>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
-            No t-shirts available for voting.
           </div>
         )}
       </main>
