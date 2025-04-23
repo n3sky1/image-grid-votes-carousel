@@ -73,7 +73,7 @@ export const initializeTshirt = async (asin: string) => {
     const { error: updateConceptsError } = await supabase
       .from("concepts")
       .update({
-        status: 'active'  // Using 'status' instead of 'ready_for_voting'
+        status: 'active'
       })
       .eq("tshirt_asin", asin);
       
@@ -94,7 +94,7 @@ export const initializeTshirt = async (asin: string) => {
         .insert({
           tshirt_asin: asin,
           concept_url: url,
-          status: 'active'  // Using 'status' field, not 'ready_for_voting'
+          status: 'active'
         });
         
       if (conceptError) {
@@ -168,7 +168,8 @@ export const fetchSupabaseImages = async (
     const { data: concepts, error: conceptError } = await supabase
       .from("concepts")
       .select("*")
-      .eq("tshirt_asin", asin);
+      .eq("tshirt_asin", asin)
+      .eq("status", "active");
 
     if (conceptError) {
       console.error("Error fetching concepts:", conceptError);
@@ -177,11 +178,8 @@ export const fetchSupabaseImages = async (
       return;
     }
 
-    // Filter active concepts in JavaScript instead of in the query
-    const activeConcepts = concepts?.filter((c: any) => c.status === 'active') || [];
-
     const repairStates: Record<string, boolean> = {};
-    activeConcepts.forEach((concept: any) => {
+    concepts?.forEach((concept: any) => {
       if (concept.repair_requested) {
         repairStates[concept.concept_id] = true;
       }
@@ -189,7 +187,7 @@ export const fetchSupabaseImages = async (
     setRepairedImages(repairStates);
 
     setConceptImages(
-      activeConcepts.map((c: any) => ({
+      (concepts || []).map((c: any) => ({
         id: c.concept_id,
         src: c.concept_url,
         alt: "Concept Design",
@@ -198,7 +196,7 @@ export const fetchSupabaseImages = async (
     );
 
     if (typeof tshirt.regenerate === "boolean") setRegenerating(tshirt.regenerate);
-    prevConceptCountRef.current = activeConcepts.length;
+    prevConceptCountRef.current = concepts?.length || 0;
   } catch (err) {
     console.error("Unexpected error:", err);
     setError("An unexpected error occurred. Please try again later.");
