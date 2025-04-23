@@ -44,6 +44,7 @@ const Index = () => {
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
       console.log("Completed ASINs count:", completedAsins.length);
       
+      // If we have a current ASIN that hasn't been marked as completed, add it to our list
       if (currentAsin && !completedAsins.includes(currentAsin)) {
         completedAsins.push(currentAsin);
       }
@@ -64,9 +65,22 @@ const Index = () => {
       
       console.log("Total t-shirts available:", totalCount);
       
-      // If there are no t-shirts at all or the user has completed all of them
-      if (totalCount === 0 || (completedAsins.length >= totalCount)) {
-        console.log("No more t-shirts available for voting");
+      // If there are no t-shirts at all
+      if (totalCount === 0) {
+        console.log("No t-shirts available at all");
+        setNoMoreTshirts(true);
+        setLoading(false);
+        setIsInitializing(false);
+        toast("No t-shirts available", {
+          description: "There are no t-shirts available for voting at this time.",
+          position: "bottom-right"
+        });
+        return;
+      }
+      
+      // If the user has completed all available t-shirts
+      if (completedAsins.length >= totalCount) {
+        console.log("User has completed all available t-shirts");
         setNoMoreTshirts(true);
         setLoading(false);
         setIsInitializing(false);
@@ -104,6 +118,7 @@ const Index = () => {
         console.log("Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
+        setNoMoreTshirts(false); // Make sure this is explicitly set to false
       } else {
         console.log("Query returned no t-shirts despite count check showing some available");
         // This is a fallback in case our count check and actual query don't match
