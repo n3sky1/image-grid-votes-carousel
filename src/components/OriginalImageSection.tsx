@@ -1,3 +1,4 @@
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +8,11 @@ import { OriginalImageSectionProps } from "@/types/props";
 import ImageCard from "./ImageCard";
 import React from "react";
 
+interface ExtendedOriginalImageSectionProps extends OriginalImageSectionProps {
+  totalReadyCount?: number;
+  userCompletedCount?: number;
+}
+
 const OriginalImageSection = ({
   originalImage,
   promptText,
@@ -14,7 +20,9 @@ const OriginalImageSection = ({
   onEditPrompt,
   onToggleDataSource,
   useTestData,
-}: OriginalImageSectionProps) => {
+  totalReadyCount = 0,
+  userCompletedCount = 0,
+}: ExtendedOriginalImageSectionProps) => {
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex flex-col space-y-4">
@@ -49,6 +57,12 @@ const OriginalImageSection = ({
                 </Button>
               </div>
             </AspectRatio>
+            {/* "Design X of Y" under original image */}
+            <div className="w-full text-center mt-2">
+              <span className="text-xs text-gray-500 font-semibold">
+                Design {userCompletedCount + 1} of {totalReadyCount}
+              </span>
+            </div>
           </div>
         ) : (
           <Card className="bg-gray-50 flex items-center justify-center h-[300px]">
@@ -64,3 +78,4 @@ const OriginalImageSection = ({
 };
 
 export default OriginalImageSection;
+

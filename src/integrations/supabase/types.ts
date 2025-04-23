@@ -73,6 +73,27 @@ export type Database = {
           },
         ]
       }
+      completed_votings: {
+        Row: {
+          asin: string
+          completed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          asin: string
+          completed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          asin?: string
+          completed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       concepts: {
         Row: {
           concept_id: string

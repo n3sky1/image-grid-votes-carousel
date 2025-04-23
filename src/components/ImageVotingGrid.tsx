@@ -11,6 +11,11 @@ import { supabase } from "@/integrations/supabase/client";
 import ImageVotingSectionLayout from "./ImageVotingSectionLayout";
 import VotingSidebar from "./VotingSidebar";
 
+const getCurrentUser = async () => {
+  const { data } = await supabase.auth.getUser();
+  return data?.user || null;
+};
+
 const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => {
   const {
     originalImage,
@@ -31,6 +36,37 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
   const [aiRecommendedModel, setAiRecommendedModel] = useState<string>("");
 
+  const [userCompletedCount, setUserCompletedCount] = useState<number>(0);
+  const [totalReadyCount, setTotalReadyCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchVotingStats = async () => {
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          setUserCompletedCount(0);
+          setTotalReadyCount(0);
+          return;
+        }
+        const { count: readyCount } = await supabase
+          .from("tshirts")
+          .select("asin", { count: "exact", head: true })
+          .eq("ready_for_voting", true);
+        setTotalReadyCount(readyCount ?? 0);
+
+        const { count: completedCount } = await supabase
+          .from("completed_votings")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        setUserCompletedCount(completedCount ?? 0);
+      } catch (err) {
+        setUserCompletedCount(0);
+        setTotalReadyCount(0);
+      }
+    };
+    fetchVotingStats();
+  }, []);
+
   useEffect(() => {
     const fetchModel = async () => {
       const { data } = await supabase
@@ -45,7 +81,6 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
 
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     const prevVote = votedImages[id];
-
     setVotedImages((prev) => ({
       ...prev,
       [id]: vote,
@@ -75,12 +110,10 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
 
   const handleRepair = async (id: string) => {
     const alreadyMarked = repairedImages[id];
-
     setRepairedImages(prev => ({
       ...prev,
       [id]: !alreadyMarked
     }));
-
     await supabase
       .from('concepts')
       .update({ repair_requested: !alreadyMarked })
@@ -137,6 +170,8 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
               onEditPrompt={() => setIsEditingPrompt(true)}
               onToggleDataSource={toggleDataSource}
               useTestData={useTestData}
+              totalReadyCount={totalReadyCount}
+              userCompletedCount={userCompletedCount}
             />
           }
           right={

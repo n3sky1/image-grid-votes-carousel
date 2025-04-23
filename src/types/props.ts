@@ -14,4 +14,8 @@ export interface OriginalImageSectionProps {
   onToggleDataSource: () => void;
   useTestData: boolean;
   suggestedTags?: string[]; // Added this prop
+  // add these optional fields:
+  totalReadyCount?: number;
+  userCompletedCount?: number;
 }
+
