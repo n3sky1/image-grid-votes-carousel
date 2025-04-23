@@ -238,7 +238,7 @@ export const fetchSupabaseImages = async (
     setPromptText(tshirt.generated_image_description || "No description available.");
     
     // Fetch active concepts for this tshirt
-    const { data: concepts, error: conceptError } = await supabase
+    let { data: conceptData, error: conceptError } = await supabase
       .from("concepts")
       .select("*")
       .eq("tshirt_asin", asin)
@@ -251,11 +251,11 @@ export const fetchSupabaseImages = async (
       return;
     }
 
-    console.log(`Found ${concepts?.length || 0} concepts for ASIN ${asin}`);
+    console.log(`Found ${conceptData?.length || 0} concepts for ASIN ${asin}`);
     
-    if (concepts && concepts.length > 0) {
+    if (conceptData && conceptData.length > 0) {
       // Log all concept URLs for debugging
-      concepts.forEach((concept: any, index: number) => {
+      conceptData.forEach((concept: any, index: number) => {
         console.log(`Concept ${index + 1} URL:`, concept.concept_url);
       });
     } else {
@@ -274,7 +274,8 @@ export const fetchSupabaseImages = async (
         if (refreshError) {
           console.error("Error fetching refreshed concepts:", refreshError);
         } else if (refreshedConcepts && refreshedConcepts.length > 0) {
-          concepts = refreshedConcepts;
+          // Update the concept data with refreshed data instead of reassigning
+          conceptData = refreshedConcepts;
           console.log(`Found ${refreshedConcepts.length} concepts after re-initialization`);
         }
       }
@@ -282,7 +283,7 @@ export const fetchSupabaseImages = async (
     
     // Process repair states
     const repairStates: Record<string, boolean> = {};
-    concepts?.forEach((concept: any) => {
+    conceptData?.forEach((concept: any) => {
       if (concept.repair_requested) {
         repairStates[concept.concept_id] = true;
       }
@@ -291,7 +292,7 @@ export const fetchSupabaseImages = async (
 
     // Set concept images
     setConceptImages(
-      (concepts || []).map((c: any) => ({
+      (conceptData || []).map((c: any) => ({
         id: c.concept_id,
         src: c.concept_url,
         alt: "Concept Design",
@@ -300,7 +301,7 @@ export const fetchSupabaseImages = async (
     );
 
     if (typeof tshirt.regenerate === "boolean") setRegenerating(tshirt.regenerate);
-    prevConceptCountRef.current = concepts?.length || 0;
+    prevConceptCountRef.current = conceptData?.length || 0;
   } catch (err) {
     console.error("Unexpected error:", err);
     setError("An unexpected error occurred. Please try again later.");
