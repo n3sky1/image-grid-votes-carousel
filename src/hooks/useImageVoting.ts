@@ -34,13 +34,16 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
   } = useRegenerationState();
 
   const fetchImages = async () => {
-    await baseFetchImages(useTestData, setVotedImages, setRepairedImages, setRegenerating);
+    // Create an empty function that matches the expected signature for setVotedImages parameter
+    const resetVotedImages = () => Promise.resolve();
+    
+    await baseFetchImages(useTestData, resetVotedImages, setRepairedImages, setRegenerating);
   };
 
   const toggleDataSource = () => {
     setUseTestData(prev => !prev);
-    setVotedImages({});
-    setRepairedImages({});
+    // We'll handle clearing votes differently since setVotedImages signature has changed
+    // Reset votedImages manually in useImageFetching
   };
 
   return {

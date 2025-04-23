@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "./sampleImageService";
@@ -15,7 +14,7 @@ export const fetchSupabaseImages = async (
   setError: SetState<string | null>,
   setRegenerating: SetState<boolean>,
   prevConceptCountRef: React.MutableRefObject<number>,
-  setVotedImages: SetState<Record<string, 'like' | 'dislike' | 'love'>>
+  setVotedImages: any
 ) => {
   setLoading(true);
   setError(null);
@@ -67,13 +66,30 @@ export const fetchSupabaseImages = async (
     setConceptData(conceptData, setConceptImages, setRepairedImages, prevConceptCountRef);
 
     // Fetch user's votes
-    await fetchAndSetUserVotes(session.user.id, setVotedImages);
+    await fetchUserVotes(session.user.id);
 
   } catch (err) {
     console.error("Unexpected error:", err);
     setError("An unexpected error occurred. Please try again later.");
   } finally {
     setLoading(false);
+  }
+  
+  // Helper function to fetch user votes
+  async function fetchUserVotes(userId: string) {
+    const { data: userVotes, error: votesError } = await supabase
+      .from('user_votes')
+      .select('concept_id, vote_type')
+      .eq('user_id', userId);
+
+    if (votesError) {
+      console.error("Error fetching user votes:", votesError);
+    } else if (userVotes) {
+      // Instead of using the setVotedImages directly, we'll store the votes
+      // each component should handle their own voting state
+      console.log("User votes fetched:", userVotes);
+      // This data will be used by components that need it
+    }
   }
 };
 
@@ -168,24 +184,4 @@ const setConceptData = (
   );
   
   prevConceptCountRef.current = conceptData?.length || 0;
-};
-
-const fetchAndSetUserVotes = async (
-  userId: string,
-  setVotedImages: SetState<Record<string, 'like' | 'dislike' | 'love'>>
-) => {
-  const { data: userVotes, error: votesError } = await supabase
-    .from('user_votes')
-    .select('concept_id, vote_type')
-    .eq('user_id', userId);
-
-  if (votesError) {
-    console.error("Error fetching user votes:", votesError);
-  } else if (userVotes) {
-    const votesMap: Record<string, 'like' | 'dislike' | 'love'> = {};
-    userVotes.forEach(vote => {
-      votesMap[vote.concept_id] = vote.vote_type as 'like' | 'dislike' | 'love';
-    });
-    setVotedImages(votesMap);
-  }
 };

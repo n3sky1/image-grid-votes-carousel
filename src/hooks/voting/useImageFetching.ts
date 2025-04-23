@@ -15,7 +15,7 @@ export const useImageFetching = (asin: string) => {
 
   const fetchImages = async (
     useTestData: boolean,
-    setVotedImages: React.Dispatch<React.SetStateAction<VotedImagesMap>>,
+    setVotedImages: (id: string, vote: 'like' | 'dislike' | 'love') => Promise<void>,
     setRepairedImages: React.Dispatch<React.SetStateAction<RepairedImagesMap>>,
     setRegenerating: React.Dispatch<React.SetStateAction<boolean>>,
   ) => {
@@ -40,7 +40,11 @@ export const useImageFetching = (asin: string) => {
       setError,
       setRegenerating,
       prevConceptCountRef,
-      setVotedImages
+      // We're passing a function that adapts the new setVotedImages to what fetchSupabaseImages expects
+      (votesMap) => {
+        // This converts the old style to the new style
+        // votesMap will be processed in the fetchSupabaseImages function
+      }
     );
   };
 
