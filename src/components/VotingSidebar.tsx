@@ -1,3 +1,4 @@
+
 import VotingProgress from "./VotingProgress";
 import PromptEditor from "./PromptEditor";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,7 @@ const VotingSidebar = ({
             type="text" 
             value={asin} 
             readOnly 
-            className="bg-white cursor-default border-gray-200 text-gray-800 select-none" 
+            className="bg-white border-gray-200 text-gray-800" 
           />
         </div>
         <div>
@@ -52,7 +53,7 @@ const VotingSidebar = ({
             type="text" 
             value={aiRecommendedModel || ""} 
             readOnly 
-            className="bg-white cursor-default border-gray-200 text-gray-800 select-none" 
+            className="bg-white border-gray-200 text-gray-800" 
           />
         </div>
       </div>
