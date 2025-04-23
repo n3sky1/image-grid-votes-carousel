@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -24,58 +25,11 @@ serve(async (req) => {
       }
     )
 
-    // Get the current vote counts and user's vote type first
-    const { data: userVote, error: voteError } = await supabaseClient
-      .from('user_votes')
-      .select('vote_type')
-      .eq('concept_id', p_concept_id)
-      .maybeSingle()
-
-    if (voteError) {
-      return new Response(JSON.stringify({ error: voteError.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      })
-    }
-
-    // Get the current vote counts
-    const { data: currentConcept, error: fetchError } = await supabaseClient
-      .from('concepts')
-      .select('votes_up, votes_down, hearts')
-      .eq('concept_id', p_concept_id)
-      .single()
-
-    if (fetchError) {
-      return new Response(JSON.stringify({ error: fetchError.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      })
-    }
-
-    // Update based on the vote type that's being removed
-    const newVoteCounts = {
-      votes_up: currentConcept.votes_up,
-      votes_down: currentConcept.votes_down,
-      hearts: currentConcept.hearts
-    }
-
-    // If p_vote_type is provided, use it (for switching votes)
-    // Otherwise use the userVote.vote_type (for removing votes)
-    const voteTypeToDecrement = p_vote_type || (userVote?.vote_type);
-    
-    if (voteTypeToDecrement === 'like') {
-      newVoteCounts.votes_up = Math.max(0, (currentConcept.votes_up || 0) - 1)
-    } else if (voteTypeToDecrement === 'dislike') {
-      newVoteCounts.votes_down = Math.max(0, (currentConcept.votes_down || 0) - 1)
-    } else if (voteTypeToDecrement === 'love') {
-      newVoteCounts.hearts = Math.max(0, (currentConcept.hearts || 0) - 1)
-    }
-
-    // Update the concept's vote counts
-    const { error } = await supabaseClient
-      .from('concepts')
-      .update(newVoteCounts)
-      .eq('concept_id', p_concept_id)
+    // Call the database function directly
+    const { error } = await supabaseClient.rpc('decrement_concept_vote', {
+      p_concept_id,
+      p_vote_type
+    })
 
     if (error) throw error
 
@@ -84,6 +38,7 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
+    console.error('Error in decrement_concept_vote:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,

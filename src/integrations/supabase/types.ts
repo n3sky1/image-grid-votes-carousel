@@ -422,12 +422,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_concept_vote: {
+        Args: { p_concept_id: string; p_vote_type?: string }
+        Returns: undefined
+      }
       get_tag_votes: {
         Args: { p_tshirt_asin: string }
         Returns: {
           tag_name: string
           votes: number
         }[]
+      }
+      increment_concept_vote: {
+        Args: { p_concept_id: string; p_vote_type: string }
+        Returns: undefined
       }
       increment_tag_vote_count: {
         Args:

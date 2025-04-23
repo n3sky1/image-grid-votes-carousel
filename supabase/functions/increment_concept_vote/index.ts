@@ -25,35 +25,11 @@ serve(async (req) => {
       }
     )
 
-    // Update the appropriate counter based on vote type
-    const updateData: Record<string, number> = {}
-    if (p_vote_type === 'like') updateData.votes_up = 1
-    if (p_vote_type === 'dislike') updateData.votes_down = 1
-    if (p_vote_type === 'love') updateData.hearts = 1
-
-    // Get the current vote counts first
-    const { data: currentConcept, error: fetchError } = await supabaseClient
-      .from('concepts')
-      .select('votes_up, votes_down, hearts')
-      .eq('concept_id', p_concept_id)
-      .single()
-
-    if (fetchError) {
-      return new Response(JSON.stringify({ error: fetchError.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      })
-    }
-
-    // Increment the appropriate counter
-    const { error } = await supabaseClient
-      .from('concepts')
-      .update({
-        votes_up: p_vote_type === 'like' ? (currentConcept.votes_up || 0) + 1 : currentConcept.votes_up,
-        votes_down: p_vote_type === 'dislike' ? (currentConcept.votes_down || 0) + 1 : currentConcept.votes_down,
-        hearts: p_vote_type === 'love' ? (currentConcept.hearts || 0) + 1 : currentConcept.hearts,
-      })
-      .eq('concept_id', p_concept_id)
+    // Call the database function directly
+    const { error } = await supabaseClient.rpc('increment_concept_vote', {
+      p_concept_id,
+      p_vote_type
+    })
 
     if (error) throw error
 
@@ -62,6 +38,7 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
+    console.error('Error in increment_concept_vote:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
