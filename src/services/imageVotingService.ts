@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "./sampleImageService";
@@ -21,6 +20,23 @@ export const fetchSupabaseImages = async (
   setError(null);
 
   try {
+    // Check if user is authenticated
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    
+    if (authError) {
+      console.error("Auth error:", authError);
+      setError("Authentication error. Please try logging in again.");
+      setLoading(false);
+      return;
+    }
+
+    if (!session) {
+      console.error("No session found");
+      setError("Please log in to view t-shirts.");
+      setLoading(false);
+      return;
+    }
+    
     console.log("Fetching images for ASIN:", asin);
     
     const { data: tshirtStatus, error: statusError } = await supabase
@@ -48,7 +64,7 @@ export const fetchSupabaseImages = async (
     }
 
     // Set regenerating status
-    if (typeof tshirtStatus.regenerate === "boolean") {
+    if (typeof tshirtStatus?.regenerate === "boolean") {
       console.log("Setting regenerating state to:", tshirtStatus.regenerate);
       setRegenerating(tshirtStatus.regenerate);
     } else {
@@ -56,7 +72,7 @@ export const fetchSupabaseImages = async (
     }
     
     // If we're just checking regenerate status, return early
-    if (tshirtStatus.regenerate) {
+    if (tshirtStatus?.regenerate) {
       setLoading(false);
       return;
     }
@@ -87,7 +103,7 @@ export const fetchSupabaseImages = async (
       isOriginal: true,
     });
 
-    const promptText = tshirt.ai_image_description || tshirt.generated_image_description || "No description available.";
+    const promptText = tshirt?.ai_image_description || tshirt?.generated_image_description || "No description available.";
     console.log("Setting prompt text:", promptText);
     setPromptText(promptText);
     
