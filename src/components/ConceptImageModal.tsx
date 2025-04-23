@@ -1,3 +1,4 @@
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Comments from "./Comments";
 import { Button } from "@/components/ui/button";
@@ -61,8 +62,8 @@ const ConceptImageModal = ({
                 className="max-w-full max-h-[60vh] object-contain"
               />
               {votedImages[expandedImageId] && (
-                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-4 shadow-md z-10">
-                  <Check size={48} className="text-green-500" />
+                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2 shadow-md z-10">
+                  <Check size={32} className="text-green-500" />
                 </div>
               )}
             </div>
