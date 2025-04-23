@@ -36,14 +36,14 @@ const ConceptImageModal = ({
 
   if (!image) return null;
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="bg-white shadow-2xl rounded-lg p-4 relative max-w-[95vw] max-h-[95vh] overflow-auto">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 overflow-auto">
+      <div className="bg-white shadow-2xl rounded-lg p-4 relative w-full max-w-[95vw] max-h-[90vh] flex flex-col">
         <Button size="icon" variant="ghost" className="absolute right-2 top-2 z-10" onClick={onClose}>
           <X size={20} />
         </Button>
-        <div className="flex gap-4">
+        <div className="flex flex-col md:flex-row gap-4 overflow-auto">
           {originalImage && (
-            <div className="w-1/4 space-y-4">
+            <div className="w-full md:w-1/4 space-y-4 flex-shrink-0">
               <div className="rounded-lg overflow-hidden border border-gray-200">
                 <AspectRatio ratio={1}>
                   <ImageCard image={originalImage} className="w-full h-full object-cover" />
@@ -54,12 +54,12 @@ const ConceptImageModal = ({
               </div>
             </div>
           )}
-          <div className="flex-1">
-            <div className="relative rounded-lg overflow-hidden mb-3">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="relative rounded-lg overflow-hidden mb-3 flex-1 flex items-center justify-center">
               <img
                 src={image.src}
                 alt={image.alt}
-                className="w-auto h-auto"
+                className="max-w-full max-h-[60vh] object-contain"
               />
             </div>
             {votedImages[expandedImageId] && (
@@ -67,7 +67,7 @@ const ConceptImageModal = ({
                 <Check size={48} className="text-green-500" />
               </div>
             )}
-            <div className="flex justify-center gap-2 pt-2 bg-white">
+            <div className="flex justify-center gap-2 pt-2 bg-white mt-auto">
               <Button
                 size="sm"
                 variant="ghost"
@@ -138,4 +138,3 @@ const ConceptImageModal = ({
 };
 
 export default ConceptImageModal;
-

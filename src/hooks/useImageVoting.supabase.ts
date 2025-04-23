@@ -195,7 +195,7 @@ export const fetchSupabaseImages = async (
     // continue with fetching the full details
     const { data: tshirt, error: tshirtError } = await supabase
       .from("tshirts")
-      .select("original_image_url, asin, generated_image_description, regenerate, ready_for_voting, ai_processing_status")
+      .select("original_image_url, asin, ai_image_description, generated_image_description, regenerate, ready_for_voting, ai_processing_status")
       .eq("asin", asin)
       .maybeSingle();
 
@@ -231,7 +231,10 @@ export const fetchSupabaseImages = async (
       isOriginal: true,
     });
 
-    setPromptText(tshirt.generated_image_description || "No description available.");
+    // Get the prompt from ai_image_description first, fall back to generated_image_description if needed
+    const promptText = tshirt.ai_image_description || tshirt.generated_image_description || "No description available.";
+    console.log("Setting prompt text:", promptText);
+    setPromptText(promptText);
     
     // Fetch active concepts for this tshirt
     let { data: conceptData, error: conceptError } = await supabase
