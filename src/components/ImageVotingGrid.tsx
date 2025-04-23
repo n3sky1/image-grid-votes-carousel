@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
@@ -83,32 +84,22 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
   }, [asin]);
 
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
-    const prevVote = votedImages[id];
-    setVotedImages((prev) => ({
-      ...prev,
-      [id]: vote,
-    }));
-
-    const fields: Partial<Record<string, number>> = {};
-    if (prevVote && prevVote !== vote) {
-      if (prevVote === "like") fields.votes_up = -1;
-      if (prevVote === "dislike") fields.votes_down = -1;
-      if (prevVote === "love") fields.hearts = -1;
+    try {
+      // Call setVotedImages with both id and vote parameters
+      await setVotedImages(id, vote);
+      
+      const voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
+      toast(voteText, {
+        description: `You ${voteText.toLowerCase()} this image`,
+        position: "bottom-right",
+      });
+    } catch (error) {
+      console.error("Error setting vote:", error);
+      toast("Error", {
+        description: "Failed to save your vote. Please try again.",
+        position: "bottom-right",
+      });
     }
-    if (vote === "like") fields.votes_up = (fields.votes_up ?? 0) + 1;
-    if (vote === "dislike") fields.votes_down = (fields.votes_down ?? 0) + 1;
-    if (vote === "love") fields.hearts = (fields.hearts ?? 0) + 1;
-
-    await supabase
-      .from("concepts")
-      .update(fields)
-      .eq("concept_id", id);
-
-    const voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
-    toast(voteText, {
-      description: `You ${voteText.toLowerCase()} this image`,
-      position: "bottom-right",
-    });
   };
 
   const handleRepair = async (id: string) => {
