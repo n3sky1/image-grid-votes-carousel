@@ -15,6 +15,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
   const [promptText, setPromptText] = useState<string>("");
   const [useTestData, setUseTestData] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [showRegeneratingOverlay, setShowRegeneratingOverlay] = useState(false);
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevConceptCountRef = useRef<number>(0);
@@ -53,29 +54,27 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asin, useTestData]);
 
-  // Stop and cleanup any existing polling
   const stopPolling = () => {
     if (pollIntervalRef.current) {
       console.log("Stopping polling interval");
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
+    setShowRegeneratingOverlay(false);
   };
 
   useEffect(() => {
-    // Clear any existing polling first
     stopPolling();
     
-    // Only start polling if regenerating is true and we're not using test data
     if (regenerating && !useTestData) {
       console.log("Starting polling for regenerated images");
+      setShowRegeneratingOverlay(true);
       pollIntervalRef.current = setInterval(async () => {
         console.log("Polling for new images...");
         await fetchImages();
       }, 5000);
     }
 
-    // Cleanup function
     return stopPolling;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regenerating, useTestData, asin]);
@@ -108,6 +107,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     setPromptText,
     useTestData,
     toggleDataSource,
-    fetchImages, // Expose the fetchImages function
+    fetchImages,
+    showRegeneratingOverlay,
   };
 };

@@ -4,6 +4,7 @@ import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
 import VotingError from "./VotingError";
 import VotingLoading from "./VotingLoading";
+import RegeneratingOverlay from "./RegeneratingOverlay";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { toast } from "@/components/ui/sonner";
@@ -32,6 +33,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
     repairedImages,
     setRepairedImages,
     fetchImages,
+    showRegeneratingOverlay,
   } = useImageVoting(asin);
 
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
@@ -189,46 +191,49 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
-      <div className="p-4 space-y-8">
-        <ImageVotingSectionLayout
-          left={
-            <OriginalImageSection
-              originalImage={originalImage}
-              promptText={promptText}
-              onOriginalAction={handleOriginalAction}
-              onEditPrompt={() => setIsEditingPrompt(true)}
-              onToggleDataSource={toggleDataSource}
-              useTestData={useTestData}
-              totalReadyCount={totalReadyCount}
-              userCompletedCount={userCompletedCount}
-            />
-          }
-          right={
-            <VotingSidebar
-              votedImages={votedImages}
-              conceptImagesCount={conceptImages.length}
-              useTestData={useTestData}
-              toggleDataSource={toggleDataSource}
-              promptText={promptText}
-              asin={asin}
-              onPromptSaved={handlePromptSaved}
-              isEditingPrompt={isEditingPrompt}
-              setIsEditingPrompt={setIsEditingPrompt}
-              aiRecommendedModel={aiRecommendedModel}
-            />
-          }
-        />
-        <ConceptImagesGrid
-          conceptImages={conceptImages}
-          votedImages={votedImages}
-          repairedImages={repairedImages}
-          onVote={handleVote}
-          onRepair={handleRepair}
-          originalImage={originalImage}
-        />
+    <>
+      {showRegeneratingOverlay && <RegeneratingOverlay />}
+      <div className="w-full max-w-6xl mx-auto">
+        <div className="p-4 space-y-8">
+          <ImageVotingSectionLayout
+            left={
+              <OriginalImageSection
+                originalImage={originalImage}
+                promptText={promptText}
+                onOriginalAction={handleOriginalAction}
+                onEditPrompt={() => setIsEditingPrompt(true)}
+                onToggleDataSource={toggleDataSource}
+                useTestData={useTestData}
+                totalReadyCount={totalReadyCount}
+                userCompletedCount={userCompletedCount}
+              />
+            }
+            right={
+              <VotingSidebar
+                votedImages={votedImages}
+                conceptImagesCount={conceptImages.length}
+                useTestData={useTestData}
+                toggleDataSource={toggleDataSource}
+                promptText={promptText}
+                asin={asin}
+                onPromptSaved={handlePromptSaved}
+                isEditingPrompt={isEditingPrompt}
+                setIsEditingPrompt={setIsEditingPrompt}
+                aiRecommendedModel={aiRecommendedModel}
+              />
+            }
+          />
+          <ConceptImagesGrid
+            conceptImages={conceptImages}
+            votedImages={votedImages}
+            repairedImages={repairedImages}
+            onVote={handleVote}
+            onRepair={handleRepair}
+            originalImage={originalImage}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -16,4 +16,5 @@ export interface UseImageVotingState {
   useTestData: boolean;
   toggleDataSource: () => void;
   fetchImages: () => Promise<void>;
+  showRegeneratingOverlay: boolean;
 }
