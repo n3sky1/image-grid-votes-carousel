@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +33,8 @@ const Index = () => {
         completedAsins.push(currentAsin);
       }
 
+      console.log("Completed ASINs:", completedAsins);
+
       // Build the query to fetch the next available t-shirt for voting
       let query = supabase
         .from("tshirts")
@@ -40,9 +43,12 @@ const Index = () => {
       
       // Only filter out completed ASINs if there are any
       if (completedAsins.length > 0) {
-        // Use NOT IN operator instead of multiple NOT EQ filters
+        // Use NOT IN operator with array parameter
         query = query.not('asin', 'in', completedAsins);
       }
+      
+      // Debug the query
+      console.log("Fetching next available t-shirt");
       
       const { data, error } = await query.limit(1).maybeSingle();
       
@@ -52,6 +58,8 @@ const Index = () => {
         setLoading(false);
         return;
       }
+      
+      console.log("Query result:", data);
       
       if (data && data.asin) {
         console.log("Found next t-shirt for voting:", data.asin);

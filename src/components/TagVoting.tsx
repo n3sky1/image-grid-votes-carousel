@@ -59,6 +59,8 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token || '';
       
+      console.log("Voting for tag:", tagName, "on ASIN:", asin);
+      
       // Call the Edge Function with the properly extracted token
       const response = await fetch("https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_tag_vote", {
         method: "POST",
@@ -73,6 +75,7 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
       });
 
       if (!response.ok) {
+        console.error("Error response:", await response.text());
         throw new Error('Failed to vote');
       }
 
