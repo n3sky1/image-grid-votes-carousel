@@ -1,14 +1,17 @@
 
-import { AlertOctagon, ImageOff } from "lucide-react";
+import { AlertOctagon, ImageOff, RefreshCw } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface VotingErrorProps {
   error: string;
+  onRetry?: () => void;
 }
 
-const VotingError = ({ error }: VotingErrorProps) => {
+const VotingError = ({ error, onRetry }: VotingErrorProps) => {
   // Check if the error is specifically about images not loading
   const isImageLoadingError = error.includes("image") || error.includes("loading");
+  const isReadyForVotingError = error.includes("not ready for voting");
 
   return (
     <Alert 
@@ -24,11 +27,16 @@ const VotingError = ({ error }: VotingErrorProps) => {
         {isImageLoadingError ? "Image Loading Error" : "Error Loading Content"}
       </AlertTitle>
       <AlertDescription className="text-red-600">{error}</AlertDescription>
-      <div className="text-gray-600 mt-4 text-sm">
+      <div className="text-gray-600 mt-4 text-sm max-w-md">
         {isImageLoadingError ? (
           <p>
-            There was a problem loading images from the server. This could be due to network issues, 
-            CORS restrictions, or the images may no longer be available.
+            There was a problem loading images from the server. This could be due to temporary 
+            network issues or the images may be processing. Please try again in a few moments.
+          </p>
+        ) : isReadyForVotingError ? (
+          <p>
+            This t-shirt is not ready for voting yet. It may still be in processing or was 
+            flagged for review.
           </p>
         ) : (
           <p>
@@ -36,6 +44,16 @@ const VotingError = ({ error }: VotingErrorProps) => {
           </p>
         )}
       </div>
+      
+      {onRetry && (
+        <Button 
+          onClick={onRetry}
+          variant="outline"
+          className="mt-4 flex items-center gap-2"
+        >
+          <RefreshCw size={16} /> Try Again
+        </Button>
+      )}
     </Alert>
   );
 };

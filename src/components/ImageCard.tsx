@@ -20,22 +20,19 @@ const ImageCard = ({ image, className, animateExit = false }: ImageCardProps) =>
     setImageSrc(image.src || "");
   }, [image.src]);
   
-  // Use a fallback image based on the domain
-  const getFallbackImage = (originalSrc: string) => {
-    if (originalSrc.includes("storage.googleapis.com/threadmule/originals")) {
-      return "/placeholder.svg"; // Fallback for original images
-    }
-    return "/placeholder.svg"; // General fallback
-  };
-  
   // Handle image loading error
   const handleImageError = () => {
     console.error(`Failed to load image: ${imageSrc}`);
     
-    // Try to get a fallback image
-    const fallbackSrc = getFallbackImage(imageSrc);
+    // For Google Storage URLs, try adding a cache-busting parameter
+    if (imageSrc.includes("storage.googleapis.com") && !imageSrc.includes("?")) {
+      const cacheBustSrc = `${imageSrc}?t=${new Date().getTime()}`;
+      console.log("Trying cache-busting URL:", cacheBustSrc);
+      setImageSrc(cacheBustSrc);
+      return; // Give it another try with the cache-busting URL
+    }
     
-    // Only set error state if we don't have a fallback
+    // If we've already tried cache-busting or it's not a Google Storage URL, show error state
     setImageError(true);
   };
   
@@ -61,7 +58,6 @@ const ImageCard = ({ image, className, animateExit = false }: ImageCardProps) =>
           alt={image.alt} 
           className="w-full h-full object-cover"
           loading="lazy"
-          crossOrigin="anonymous"
           onError={handleImageError}
         />
       )}

@@ -166,7 +166,6 @@ export const fetchSupabaseImages = async (
     console.log("Fetching images for ASIN:", asin);
     
     // First check if the t-shirt is ready for voting
-    // This is the critical check we're moving to the beginning
     const { data: tshirtStatus, error: statusError } = await supabase
       .from("tshirts")
       .select("ready_for_voting, ai_processing_status")
@@ -183,7 +182,11 @@ export const fetchSupabaseImages = async (
     // If the tshirt doesn't exist or is not ready for voting, show an error and return early
     if (!tshirtStatus || !tshirtStatus.ready_for_voting) {
       console.error("Tshirt is not ready for voting", tshirtStatus);
-      setError(`This t-shirt (ASIN: ${asin}) is not ready for voting. Current status: ${tshirtStatus?.ai_processing_status || 'unknown'}`);
+      setError(`This t-shirt (ASIN: ${asin}) is not ready for voting. ${
+        tshirtStatus?.ai_processing_status 
+          ? `Current status: ${tshirtStatus.ai_processing_status}` 
+          : 'No status available.'
+      }`);
       setLoading(false);
       return;
     }
@@ -220,14 +223,7 @@ export const fetchSupabaseImages = async (
       return;
     }
     
-    // Try image pre-loading to test if the image can be loaded
-    const testImage = new Image();
-    testImage.onerror = () => {
-      console.error("Unable to load original image:", tshirt.original_image_url);
-      // Still continue and let the ImageCard component handle the error
-    };
-    testImage.src = tshirt.original_image_url;
-    
+    // Set the original image immediately to show something to the user
     setOriginalImage({
       id: `original-${tshirt.asin}`,
       src: tshirt.original_image_url,
@@ -271,6 +267,12 @@ export const fetchSupabaseImages = async (
         isOriginal: false,
       }))
     );
+
+    // Check if there are no concept images
+    if (!conceptData || conceptData.length === 0) {
+      console.warn("No concept images found for this t-shirt");
+      // Don't set an error as the original image is still useful
+    }
 
     if (typeof tshirt.regenerate === "boolean") setRegenerating(tshirt.regenerate);
     prevConceptCountRef.current = conceptData?.length || 0;

@@ -101,5 +101,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     promptText,
     useTestData,
     toggleDataSource,
+    fetchImages, // Expose the fetchImages function
   };
 };

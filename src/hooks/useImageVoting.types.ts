@@ -14,4 +14,5 @@ export interface UseImageVotingState {
   promptText: string;
   useTestData: boolean;
   toggleDataSource: () => void;
+  fetchImages: () => Promise<void>;
 }

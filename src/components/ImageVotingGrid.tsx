@@ -1,4 +1,3 @@
-
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -27,6 +26,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
     toggleDataSource,
     repairedImages,
     setRepairedImages,
+    fetchImages,
   } = useImageVoting(asin);
 
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
@@ -103,13 +103,22 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
     });
   };
 
+  // Handler for retry when there's an error
+  const handleRetry = () => {
+    toast("Retrying...", {
+      description: "Attempting to reload images",
+      position: "bottom-right"
+    });
+    fetchImages();
+  };
+
   if (loading) return <VotingLoading />;
   
   // Show the error component with the specific error message
   if (error) {
     return (
       <div className="w-full max-w-6xl mx-auto p-4">
-        <VotingError error={error} />
+        <VotingError error={error} onRetry={handleRetry} />
       </div>
     );
   }

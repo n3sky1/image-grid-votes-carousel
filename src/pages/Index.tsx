@@ -17,6 +17,9 @@ const Index = () => {
   useEffect(() => {
     const fetchFirstAsin = async () => {
       try {
+        setLoading(true);
+        
+        // Get t-shirts that are explicitly marked as ready for voting
         const { data, error } = await supabase
           .from("tshirts")
           .select("asin, ai_suggested_tags, ready_for_voting")
@@ -31,6 +34,7 @@ const Index = () => {
         }
         
         if (data && data.asin) {
+          console.log("Found t-shirt ready for voting:", data.asin);
           setAsin(data.asin);
           
           // Set the suggested tags if they exist in data
@@ -41,6 +45,7 @@ const Index = () => {
             setSuggestedTags(["Funny", "Vintage", "Graphic", "Summer"]);
           }
         } else {
+          console.log("No t-shirts ready for voting, using demo data");
           toast("Using demo data", {
             description: "No t-shirts ready for voting were found. Using demo data instead.",
             position: "bottom-right"
