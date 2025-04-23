@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import VotingCompleted from "./VotingCompleted";
 import VotingError from "./VotingError";
 import VotingLoading from "./VotingLoading";
@@ -12,6 +11,8 @@ import { useAiModel } from "@/hooks/useAiModel";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import { VotingLayout } from "./voting/VotingLayout";
 import { useVotingActions } from "./voting/VotingActionsHandler";
+import WinningVoteOverlay from "./WinningVoteOverlay";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VotingSectionProps {
   asin: string;
@@ -21,6 +22,7 @@ interface VotingSectionProps {
 
 const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSectionProps) => {
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
+  const [showWinningOverlay, setShowWinningOverlay] = useState(false);
   const { userCompletedCount, totalReadyCount } = useVotingStats();
   const aiRecommendedModel = useAiModel(asin);
 
@@ -61,13 +63,41 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     }
   });
 
-  // Create a handler function to properly update repairedImages state
   const handleRepairImage = (id: string) => {
     setRepairedImages(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
   };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('winning-vote-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tshirts',
+          filter: `asin=eq.${asin}`,
+        },
+        (payload: any) => {
+          if (payload.old.winning_concept_id === null && payload.new.winning_concept_id !== null) {
+            setShowWinningOverlay(true);
+            setTimeout(() => {
+              if (onVotingCompleted) {
+                onVotingCompleted();
+              }
+            }, 2000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [asin, onVotingCompleted]);
 
   if (loading) return <VotingLoading />;
   if (error) {
@@ -80,49 +110,52 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
   return (
-    <VotingLayout
-      showRegeneratingOverlay={showRegeneratingOverlay}
-      allVoted={allVoted}
-      asin={asin}
-      onVotingCompleted={onVotingCompleted}
-    >
-      <ImageVotingSectionLayout
-        left={
-          <OriginalImageSection
-            originalImage={originalImage}
-            promptText={promptText}
-            onOriginalAction={handleOriginalAction}
-            onEditPrompt={() => setIsEditingPrompt(true)}
-            onToggleDataSource={toggleDataSource}
-            useTestData={useTestData}
-            totalReadyCount={totalReadyCount}
-            userCompletedCount={userCompletedCount}
-          />
-        }
-        right={
-          <VotingSidebar
-            votedImages={votedImages}
-            conceptImagesCount={conceptImages.length}
-            useTestData={useTestData}
-            toggleDataSource={toggleDataSource}
-            promptText={promptText}
-            asin={asin}
-            onPromptSaved={handlePromptSaved}
-            isEditingPrompt={isEditingPrompt}
-            setIsEditingPrompt={setIsEditingPrompt}
-            aiRecommendedModel={aiRecommendedModel}
-          />
-        }
-      />
-      <ConceptImagesGrid
-        conceptImages={conceptImages}
-        votedImages={votedImages}
-        repairedImages={repairedImages}
-        onVote={handleVote}
-        onRepair={handleRepairImage}
-        originalImage={originalImage}
-      />
-    </VotingLayout>
+    <>
+      {showWinningOverlay && <WinningVoteOverlay />}
+      <VotingLayout
+        showRegeneratingOverlay={showRegeneratingOverlay}
+        allVoted={allVoted}
+        asin={asin}
+        onVotingCompleted={onVotingCompleted}
+      >
+        <ImageVotingSectionLayout
+          left={
+            <OriginalImageSection
+              originalImage={originalImage}
+              promptText={promptText}
+              onOriginalAction={handleOriginalAction}
+              onEditPrompt={() => setIsEditingPrompt(true)}
+              onToggleDataSource={toggleDataSource}
+              useTestData={useTestData}
+              totalReadyCount={totalReadyCount}
+              userCompletedCount={userCompletedCount}
+            />
+          }
+          right={
+            <VotingSidebar
+              votedImages={votedImages}
+              conceptImagesCount={conceptImages.length}
+              useTestData={useTestData}
+              toggleDataSource={toggleDataSource}
+              promptText={promptText}
+              asin={asin}
+              onPromptSaved={handlePromptSaved}
+              isEditingPrompt={isEditingPrompt}
+              setIsEditingPrompt={setIsEditingPrompt}
+              aiRecommendedModel={aiRecommendedModel}
+            />
+          }
+        />
+        <ConceptImagesGrid
+          conceptImages={conceptImages}
+          votedImages={votedImages}
+          repairedImages={repairedImages}
+          onVote={handleVote}
+          onRepair={handleRepairImage}
+          originalImage={originalImage}
+        />
+      </VotingLayout>
+    </>
   );
 };
 

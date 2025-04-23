@@ -1,4 +1,3 @@
 
-project_id = "hdfxqwkuirbizwqrvtsd"
-
-[functions.decrement_concept_vote]
+[realtime.policies."public".tshirts]
+  enable = true
