@@ -85,12 +85,21 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
 
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     try {
+      // If the current vote is the same as the previous vote, we'll unselect it
+      const currentVote = votedImages[id];
+      const finalVote = currentVote === vote ? undefined : vote;
+
       // Call setVotedImages with both id and vote parameters
-      await setVotedImages(id, vote);
+      await setVotedImages(id, finalVote);
       
-      const voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
+      const voteText = finalVote 
+        ? (finalVote === "like" ? "Liked" : finalVote === "dislike" ? "Disliked" : "Loved")
+        : "Vote removed";
+      
       toast(voteText, {
-        description: `You ${voteText.toLowerCase()} this image`,
+        description: finalVote 
+          ? `You ${voteText.toLowerCase()} this image`
+          : "Your previous vote was removed",
         position: "bottom-right",
       });
     } catch (error) {

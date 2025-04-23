@@ -221,3 +221,45 @@ export const saveUserVote = async (
     throw error;
   }
 };
+
+export const removeUserVote = async (conceptId: string) => {
+  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  
+  if (authError || !session) {
+    console.error("Auth error:", authError);
+    throw new Error("Authentication required");
+  }
+
+  try {
+    // Remove the user's vote from user_votes table
+    const { error: voteError } = await supabase
+      .from('user_votes')
+      .delete()
+      .eq('concept_id', conceptId)
+      .eq('user_id', session.user.id);
+
+    if (voteError) {
+      console.error("Error removing vote:", voteError);
+      throw new Error("Failed to remove vote");
+    }
+
+    // Call the API endpoint to decrement vote counts
+    const response = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/decrement_concept_vote`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
+        p_concept_id: conceptId
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update vote count: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error("Error in removeUserVote:", error);
+    throw error;
+  }
+};
