@@ -28,13 +28,16 @@ const ConceptImagesGrid = ({
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
     onVote(id, vote);
     
-    // Only navigate to next image if this was a new vote, not an unselection
+    // Get the current vote for this image
     const currentVote = votedImages[id];
-    const isNewVote = currentVote !== vote;
-    const isUnselection = currentVote === vote;
     
-    // Only move to the next image for new votes, not for unselection
-    if (isNewVote && !isUnselection && conceptImages.length > 1) {
+    // Only move to the next image if:
+    // 1. This is a new vote (no current vote)
+    // 2. OR if this is a different vote than the current vote (vote switch)
+    // Do NOT move to next image when unselecting a vote (currentVote === vote)
+    const shouldMoveToNext = (!currentVote || (currentVote !== vote)) && conceptImages.length > 1;
+    
+    if (shouldMoveToNext) {
       const currentIndex = conceptImages.findIndex((img) => img.id === id);
       if (currentIndex !== -1) {
         const nextIndex = (currentIndex + 1) % conceptImages.length;

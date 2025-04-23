@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "@/services/sampleImageService";
 import { fetchSupabaseImages } from "@/services/imageDataService";
-import { saveUserVote, removeUserVote } from "@/services/voteService";
+import { saveUserVote, removeUserVote, switchUserVote } from "@/services/voteService";
 import { UseImageVotingState } from "./useImageVoting.types";
 
 export const useImageVoting = (asin: string): UseImageVotingState => {
@@ -69,17 +70,29 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
 
   const handleVote = async (id: string, vote?: 'like' | 'dislike' | 'love') => {
     try {
+      const currentVote = votedImages[id];
+      
       if (vote) {
-        await saveUserVote(id, vote);
-      } else {
+        if (currentVote && currentVote !== vote) {
+          // If there's a different current vote, switch it
+          await switchUserVote(id, vote, currentVote);
+        } else if (currentVote === vote) {
+          // If the same vote is clicked again, remove it
+          await removeUserVote(id);
+        } else {
+          // If there's no current vote, add the new vote
+          await saveUserVote(id, vote);
+        }
+      } else if (currentVote) {
+        // If no vote is provided but there is a current vote, remove it
         await removeUserVote(id);
       }
       
       setVotedImages(prev => {
         const newVotes = { ...prev };
-        if (vote) {
+        if (vote && currentVote !== vote) {
           newVotes[id] = vote;
-        } else {
+        } else if (!vote || currentVote === vote) {
           delete newVotes[id];
         }
         return newVotes;

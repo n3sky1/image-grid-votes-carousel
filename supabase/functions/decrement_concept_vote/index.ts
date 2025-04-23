@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -13,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { p_concept_id } = await req.json()
+    const { p_concept_id, p_vote_type } = await req.json()
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -60,11 +59,15 @@ serve(async (req) => {
       hearts: currentConcept.hearts
     }
 
-    if (userVote?.vote_type === 'like') {
+    // If p_vote_type is provided, use it (for switching votes)
+    // Otherwise use the userVote.vote_type (for removing votes)
+    const voteTypeToDecrement = p_vote_type || (userVote?.vote_type);
+    
+    if (voteTypeToDecrement === 'like') {
       newVoteCounts.votes_up = Math.max(0, (currentConcept.votes_up || 0) - 1)
-    } else if (userVote?.vote_type === 'dislike') {
+    } else if (voteTypeToDecrement === 'dislike') {
       newVoteCounts.votes_down = Math.max(0, (currentConcept.votes_down || 0) - 1)
-    } else if (userVote?.vote_type === 'love') {
+    } else if (voteTypeToDecrement === 'love') {
       newVoteCounts.hearts = Math.max(0, (currentConcept.hearts || 0) - 1)
     }
 

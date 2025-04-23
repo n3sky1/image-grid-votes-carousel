@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
@@ -85,21 +84,26 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
 
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     try {
-      // If the current vote is the same as the previous vote, we'll unselect it
       const currentVote = votedImages[id];
-      const finalVote = currentVote === vote ? undefined : vote;
-
-      // Call setVotedImages with both id and vote parameters
-      await setVotedImages(id, finalVote);
       
-      const voteText = finalVote 
-        ? (finalVote === "like" ? "Liked" : finalVote === "dislike" ? "Disliked" : "Loved")
-        : "Vote removed";
+      await setVotedImages(id, vote);
+      
+      let voteText: string;
+      let voteDescription: string;
+      
+      if (currentVote === vote) {
+        voteText = "Vote removed";
+        voteDescription = "Your previous vote was removed";
+      } else if (currentVote && currentVote !== vote) {
+        voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
+        voteDescription = `Vote changed from ${currentVote} to ${vote}`;
+      } else {
+        voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
+        voteDescription = `You ${voteText.toLowerCase()} this image`;
+      }
       
       toast(voteText, {
-        description: finalVote 
-          ? `You ${voteText.toLowerCase()} this image`
-          : "Your previous vote was removed",
+        description: voteDescription,
         position: "bottom-right",
       });
     } catch (error) {
