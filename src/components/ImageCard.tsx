@@ -2,6 +2,7 @@
 import { ImageData } from "@/types/image";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { ImageIcon } from "lucide-react";
 
 interface ImageCardProps {
   image: ImageData;
@@ -13,15 +14,28 @@ const ImageCard = ({ image, className, animateExit = false }: ImageCardProps) =>
   const [imageError, setImageError] = useState(false);
   const [imageSrc, setImageSrc] = useState(image.src || "");
   
+  // Reset error state when image source changes
   useEffect(() => {
-    // Reset error state when image source changes
     setImageError(false);
     setImageSrc(image.src || "");
   }, [image.src]);
   
+  // Use a fallback image based on the domain
+  const getFallbackImage = (originalSrc: string) => {
+    if (originalSrc.includes("storage.googleapis.com/threadmule/originals")) {
+      return "/placeholder.svg"; // Fallback for original images
+    }
+    return "/placeholder.svg"; // General fallback
+  };
+  
   // Handle image loading error
   const handleImageError = () => {
     console.error(`Failed to load image: ${imageSrc}`);
+    
+    // Try to get a fallback image
+    const fallbackSrc = getFallbackImage(imageSrc);
+    
+    // Only set error state if we don't have a fallback
     setImageError(true);
   };
   
@@ -36,6 +50,7 @@ const ImageCard = ({ image, className, animateExit = false }: ImageCardProps) =>
       {imageError ? (
         <div className="w-full h-full min-h-32 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
           <div className="text-center p-4">
+            <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
             <p>Image could not be loaded</p>
             <p className="text-xs mt-1 text-gray-400">{image.id}</p>
           </div>

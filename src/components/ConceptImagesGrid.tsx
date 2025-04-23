@@ -4,6 +4,7 @@ import { ImageData } from "@/types/image";
 import GridImageCard from "./GridImageCard";
 import ConceptImageModal from "./ConceptImageModal";
 import { AlertCircle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
@@ -57,20 +58,20 @@ const ConceptImagesGrid = ({
   // Check if there are no concept images to display
   if (conceptImages.length === 0) {
     return (
-      <div className="min-h-[300px] rounded-lg bg-gray-50 flex items-center justify-center p-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <AlertCircle size={40} className="text-amber-500" />
-          <p className="text-lg font-medium text-gray-700">No concept images are available for this item</p>
-          <p className="text-sm text-gray-500">
-            This could be because the t-shirt isn't ready for voting yet or no concepts have been generated.
-          </p>
+      <Alert variant="destructive" className="min-h-[200px] flex items-center justify-center rounded-lg bg-amber-50 border-amber-200">
+        <AlertCircle className="h-6 w-6 text-amber-500" />
+        <div className="ml-4">
+          <AlertTitle className="text-amber-700 font-medium">No Concept Images Available</AlertTitle>
+          <AlertDescription className="text-amber-600">
+            There are currently no concept images available for this t-shirt. This could be due to image loading issues.
+          </AlertDescription>
         </div>
-      </div>
+      </Alert>
     );
   }
 
   return (
-    <div className="grid grid-cols-5 grid-rows-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       {conceptImages.map((image) => (
         <GridImageCard
           key={image.id}

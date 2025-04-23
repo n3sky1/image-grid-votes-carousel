@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { sampleImages } from "@/data/sampleImages";
 import { isValidUUID, generateUUID } from "./useImageVoting.utils";
@@ -209,15 +210,23 @@ export const fetchSupabaseImages = async (
       return;
     }
 
+    console.log("Successfully fetched tshirt:", tshirt);
+    console.log("Original image URL:", tshirt.original_image_url);
+    
     if (!tshirt.original_image_url) {
       console.error("Tshirt has no original image URL", tshirt);
       setError(`This t-shirt (ASIN: ${asin}) doesn't have an original image.`);
       setLoading(false);
       return;
     }
-
-    console.log("Successfully fetched tshirt:", tshirt);
-    console.log("Original image URL:", tshirt.original_image_url);
+    
+    // Try image pre-loading to test if the image can be loaded
+    const testImage = new Image();
+    testImage.onerror = () => {
+      console.error("Unable to load original image:", tshirt.original_image_url);
+      // Still continue and let the ImageCard component handle the error
+    };
+    testImage.src = tshirt.original_image_url;
     
     setOriginalImage({
       id: `original-${tshirt.asin}`,
