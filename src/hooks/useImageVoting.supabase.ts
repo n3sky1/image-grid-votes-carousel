@@ -20,16 +20,23 @@ export const fetchSampleImages = () => {
 };
 
 export const initializeTshirt = async (asin: string) => {
-  console.log("Tshirt doesn't exist, initializing...");
+  console.log("Initializing t-shirt for ASIN:", asin);
   
-  // First, check if there are any existing tshirts for this ASIN that might not be ready
-  const { data: existingData } = await supabase
+  // First, check if there are any existing tshirts for this ASIN
+  const { data: existingData, error: checkError } = await supabase
     .from("tshirts")
-    .select("asin")
-    .eq("asin", asin);
+    .select("asin, ready_for_voting")
+    .eq("asin", asin)
+    .maybeSingle();
+  
+  if (checkError) {
+    console.error("Error checking for existing tshirt:", checkError);
+    throw new Error("Failed to check if the tshirt already exists. Please try again.");
+  }
     
-  // If there's already a record, update it instead of creating a new one
-  if (existingData && existingData.length > 0) {
+  // If there's already a record, update it to ensure ready_for_voting is true
+  if (existingData) {
+    console.log("Existing tshirt found, updating ready_for_voting to true");
     const { error: updateError } = await supabase
       .from("tshirts")
       .update({
@@ -45,7 +52,8 @@ export const initializeTshirt = async (asin: string) => {
       throw new Error("Failed to update the tshirt record. Please try again.");
     }
   } else {
-    // Insert a new tshirt record
+    // Insert a new tshirt record with ready_for_voting explicitly set to true
+    console.log("No existing tshirt found, creating new record with ready_for_voting=true");
     const { error: insertError } = await supabase
       .from("tshirts")
       .insert({
@@ -62,14 +70,35 @@ export const initializeTshirt = async (asin: string) => {
     }
   }
 
+  // Verify that the t-shirt is now ready for voting
+  const { data: verifyData, error: verifyError } = await supabase
+    .from("tshirts")
+    .select("ready_for_voting")
+    .eq("asin", asin)
+    .maybeSingle();
+    
+  if (verifyError || !verifyData || !verifyData.ready_for_voting) {
+    console.error("Verification failed, tshirt not ready for voting:", verifyError || "No data returned");
+    // If verification fails, make one more attempt to fix it
+    await supabase
+      .from("tshirts")
+      .update({ ready_for_voting: true })
+      .eq("asin", asin);
+  }
+
   // Check for existing concepts
-  const { data: existingConcepts } = await supabase
+  const { data: existingConcepts, error: conceptCheckError } = await supabase
     .from("concepts")
     .select("concept_id")
     .eq("tshirt_asin", asin);
     
+  if (conceptCheckError) {
+    console.error("Error checking for existing concepts:", conceptCheckError);
+  }
+    
   // If we already have concepts, make sure they're set to active status
   if (existingConcepts && existingConcepts.length > 0) {
+    console.log(`Found ${existingConcepts.length} existing concepts, updating status to active`);
     const { error: updateConceptsError } = await supabase
       .from("concepts")
       .update({
@@ -82,6 +111,7 @@ export const initializeTshirt = async (asin: string) => {
     }
   } else {
     // Insert new sample concepts if none exist
+    console.log("No existing concepts found, adding sample concepts");
     const conceptUrls = [
       "https://m.media-amazon.com/images/I/61pDu-GrM6L._AC_UL1500_.jpg",
       "https://m.media-amazon.com/images/I/61HMbj5KySL._AC_UL1500_.jpg",
@@ -102,7 +132,7 @@ export const initializeTshirt = async (asin: string) => {
       }
     }
 
-    console.log("Sample concepts added");
+    console.log("Sample concepts added successfully");
   }
 };
 
@@ -121,20 +151,27 @@ export const fetchSupabaseImages = async (
   setError(null);
 
   try {
+    console.log("Fetching images for ASIN:", asin);
+    
+    // First check if we have a tshirt record for this ASIN
     const { data: existingTshirt, error: checkError } = await supabase
       .from("tshirts")
-      .select("asin")
+      .select("asin, ready_for_voting")
       .eq("asin", asin)
       .maybeSingle();
 
     if (checkError) {
       console.error("Error checking for tshirt:", checkError);
+      throw new Error("Failed to check if the tshirt exists. Please try again.");
     }
 
-    if (!existingTshirt) {
+    // If the tshirt doesn't exist or isn't ready for voting, initialize it
+    if (!existingTshirt || !existingTshirt.ready_for_voting) {
+      console.log("Tshirt doesn't exist or isn't ready for voting. Initializing...");
       await initializeTshirt(asin);
     }
 
+    // Now fetch the tshirt data
     const { data: tshirt, error: tshirtError } = await supabase
       .from("tshirts")
       .select("original_image_url, asin, generated_image_description, regenerate, ready_for_voting")
@@ -150,11 +187,13 @@ export const fetchSupabaseImages = async (
     }
 
     if (!tshirt || !tshirt.original_image_url) {
+      console.error("No tshirt or original image found after initialization attempts");
       setError("No image found for this ASIN or not ready for voting.");
       setLoading(false);
       return;
     }
 
+    console.log("Successfully fetched tshirt:", tshirt);
     setOriginalImage({
       id: `original-${tshirt.asin}`,
       src: tshirt.original_image_url,
@@ -164,7 +203,7 @@ export const fetchSupabaseImages = async (
 
     setPromptText(tshirt.generated_image_description || "No description available.");
     
-    // Use a simpler query approach to avoid the excessive type depth
+    // Fetch active concepts for this tshirt
     const { data: concepts, error: conceptError } = await supabase
       .from("concepts")
       .select("*")
@@ -178,6 +217,9 @@ export const fetchSupabaseImages = async (
       return;
     }
 
+    console.log(`Found ${concepts?.length || 0} concepts for ASIN ${asin}`);
+    
+    // Process repair states
     const repairStates: Record<string, boolean> = {};
     concepts?.forEach((concept: any) => {
       if (concept.repair_requested) {
@@ -186,6 +228,7 @@ export const fetchSupabaseImages = async (
     });
     setRepairedImages(repairStates);
 
+    // Set concept images
     setConceptImages(
       (concepts || []).map((c: any) => ({
         id: c.concept_id,
