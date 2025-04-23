@@ -1,4 +1,3 @@
-
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -9,8 +8,12 @@ import { Card } from "@/components/ui/card";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { toast } from "@/components/ui/sonner";
-import { Pencil } from "lucide-react";
+import { edit, save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ExtendedImageVotingGridProps extends ImageVotingGridProps {
   suggestedTags?: string[];
@@ -27,23 +30,31 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
     error,
     promptText,
     useTestData,
-    toggleDataSource
+    toggleDataSource,
   } = useImageVoting(asin);
 
-  const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
-    setVotedImages(prev => ({
+  const [isEditingPrompt, setIsEditingPrompt] = useState(false);
+  const [editPromptValue, setEditPromptValue] = useState(promptText);
+  const [saveLoading, setSaveLoading] = useState(false);
+
+  if (!isEditingPrompt && editPromptValue !== promptText) {
+    setEditPromptValue(promptText);
+  }
+
+  const handleVote = (id: string, vote: "like" | "dislike" | "love") => {
+    setVotedImages((prev) => ({
       ...prev,
-      [id]: vote
+      [id]: vote,
     }));
   };
 
   const handleOriginalAction = (action: "copyrighted" | "no-design" | "cant-design") => {
     const actionMessages = {
-      "copyrighted": "Marked as Copyrighted!",
+      copyrighted: "Marked as Copyrighted!",
       "no-design": "Marked as No Design!",
-      "cant-design": "Marked as Can't Design!"
+      "cant-design": "Marked as Can't Design!",
     };
-    
+
     toast(actionMessages[action], {
       description: `You selected: ${actionMessages[action].replace("Marked as ", "")}`,
       position: "bottom-right",
@@ -51,17 +62,30 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
   };
 
   const handleEditPrompt = () => {
-    toast("Edit Prompt clicked!", {
-      description: "This feature is under development.",
-      position: "bottom-right",
-    });
+    setIsEditingPrompt(true);
+  };
+
+  const handleSavePrompt = async () => {
+    setSaveLoading(true);
+    const { error: updateError } = await supabase
+      .from("tshirts")
+      .update({ ai_image_description: editPromptValue })
+      .eq("asin", asin);
+
+    if (updateError) {
+      toast("Error saving prompt", { description: updateError.message, position: "bottom-right" });
+    } else {
+      toast("Updated prompt", { description: "Prompt updated successfully!", position: "bottom-right" });
+      setIsEditingPrompt(false);
+      window.location.reload();
+    }
+    setSaveLoading(false);
   };
 
   if (loading) return <VotingLoading />;
   if (error) return <VotingError error={error} />;
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
-  // Use provided tags or default test tags
   const tagsToUse = suggestedTags.length > 0 ? suggestedTags : ["Funny", "Vintage", "Graphic", "Summer"];
 
   return (
@@ -87,24 +111,55 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
                   <div className="bg-white/80 rounded-lg p-5 shadow-sm border border-blue-100 relative group">
                     <div className="text-base font-bold mb-2 text-gray-800 flex justify-between items-center">
                       <span>Generation Prompt</span>
-                      <button 
-                        onClick={handleEditPrompt}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
-                        aria-label="Edit prompt"
-                      >
-                        <Pencil className="h-4 w-4 text-gray-500" />
-                      </button>
+                      {!isEditingPrompt && (
+                        <button
+                          onClick={handleEditPrompt}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                          aria-label="Edit prompt"
+                        >
+                          <edit className="h-4 w-4 text-gray-500" />
+                        </button>
+                      )}
                     </div>
                     <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">
-                      {promptText}
+                      {!isEditingPrompt ? (
+                        promptText
+                      ) : (
+                        <div>
+                          <Textarea
+                            value={editPromptValue}
+                            onChange={(e) => setEditPromptValue(e.target.value)}
+                            minRows={4}
+                            className="mb-2"
+                            disabled={saveLoading}
+                          />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-1 flex gap-2 items-center"
+                                  onClick={handleSavePrompt}
+                                  disabled={saveLoading}
+                                  aria-label="Save and regenerate"
+                                >
+                                  <save className="h-4 w-4" />
+                                  {saveLoading ? "Saving..." : "Save & Regenerate"}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Save and regenerate
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  
-                  <VotingProgress 
-                    votedImages={votedImages} 
-                    conceptImagesCount={conceptImages.length} 
-                  />
-                  
+
+                  <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImages.length} />
+
                   <Button
                     variant={useTestData ? "default" : "outline"}
                     onClick={toggleDataSource}

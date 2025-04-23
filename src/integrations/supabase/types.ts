@@ -78,7 +78,10 @@ export type Database = {
           concept_id: string
           concept_url: string
           created_at: string | null
+          generation_model_id: string | null
+          generation_timestamp: string | null
           hearts: number
+          source_prompt: string | null
           status: string
           tshirt_asin: string
           updated_at: string | null
@@ -89,7 +92,10 @@ export type Database = {
           concept_id?: string
           concept_url: string
           created_at?: string | null
+          generation_model_id?: string | null
+          generation_timestamp?: string | null
           hearts?: number
+          source_prompt?: string | null
           status?: string
           tshirt_asin: string
           updated_at?: string | null
@@ -100,7 +106,10 @@ export type Database = {
           concept_id?: string
           concept_url?: string
           created_at?: string | null
+          generation_model_id?: string | null
+          generation_timestamp?: string | null
           hearts?: number
+          source_prompt?: string | null
           status?: string
           tshirt_asin?: string
           updated_at?: string | null
@@ -181,6 +190,8 @@ export type Database = {
           ai_analysis_timestamp: string | null
           ai_copyright_check_passed: boolean | null
           ai_copyright_flag_reason: string | null
+          ai_generation_model: string | null
+          ai_generation_timestamp: string | null
           ai_image_description: string | null
           ai_is_blank: boolean | null
           ai_is_tshirt: boolean | null
@@ -229,6 +240,8 @@ export type Database = {
           ai_analysis_timestamp?: string | null
           ai_copyright_check_passed?: boolean | null
           ai_copyright_flag_reason?: string | null
+          ai_generation_model?: string | null
+          ai_generation_timestamp?: string | null
           ai_image_description?: string | null
           ai_is_blank?: boolean | null
           ai_is_tshirt?: boolean | null
@@ -277,6 +290,8 @@ export type Database = {
           ai_analysis_timestamp?: string | null
           ai_copyright_check_passed?: boolean | null
           ai_copyright_flag_reason?: string | null
+          ai_generation_model?: string | null
+          ai_generation_timestamp?: string | null
           ai_image_description?: string | null
           ai_is_blank?: boolean | null
           ai_is_tshirt?: boolean | null
