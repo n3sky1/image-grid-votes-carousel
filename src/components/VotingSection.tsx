@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import VotingCompleted from "./VotingCompleted";
 import VotingError from "./VotingError";
@@ -43,6 +43,31 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     fetchImages,
     showRegeneratingOverlay,
   } = useImageVoting(asin);
+
+  // Add effect to check for winning concept
+  useEffect(() => {
+    const checkWinningConcept = async () => {
+      const { data } = await supabase
+        .from('tshirts')
+        .select('winning_concept_id')
+        .eq('asin', asin)
+        .single();
+      
+      if (data?.winning_concept_id) {
+        toast("Winner Selected!", {
+          description: "A winning concept has been chosen. Moving to next t-shirt.",
+          position: "bottom-right",
+        });
+        if (onVotingCompleted) {
+          onVotingCompleted();
+        }
+      }
+    };
+
+    if (conceptImages.length > 0) {
+      checkWinningConcept();
+    }
+  }, [asin, conceptImages, votedImages, onVotingCompleted]);
 
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     try {

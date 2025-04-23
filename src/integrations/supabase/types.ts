@@ -262,6 +262,7 @@ export type Database = {
           title: string | null
           total_offer_count: number | null
           updated_at: string | null
+          winning_concept_id: string | null
         }
         Insert: {
           ai_analysis_timestamp?: string | null
@@ -315,6 +316,7 @@ export type Database = {
           title?: string | null
           total_offer_count?: number | null
           updated_at?: string | null
+          winning_concept_id?: string | null
         }
         Update: {
           ai_analysis_timestamp?: string | null
@@ -368,8 +370,17 @@ export type Database = {
           title?: string | null
           total_offer_count?: number | null
           updated_at?: string | null
+          winning_concept_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tshirts_winning_concept_id_fkey"
+            columns: ["winning_concept_id"]
+            isOneToOne: false
+            referencedRelation: "concepts"
+            referencedColumns: ["concept_id"]
+          },
+        ]
       }
       user_votes: {
         Row: {
