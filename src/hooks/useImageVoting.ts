@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
-import { fetchSampleImages, fetchSupabaseImages } from "./useImageVoting.supabase";
-import { isValidUUID, generateUUID } from "./useImageVoting.utils";
+import { fetchSampleImages } from "@/services/sampleImageService";
+import { fetchSupabaseImages } from "@/services/imageVotingService";
 import { UseImageVotingState } from "./useImageVoting.types";
 
 export const useImageVoting = (asin: string): UseImageVotingState => {
@@ -33,10 +32,8 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
       setLoading(false);
       return;
     } else {
-      // Check if we're currently regenerating
       const currentlyRegenerating = lastRegeneratingStatusRef.current;
       
-      // Only perform the full update if we're not regenerating or if regeneration just completed
       if (!regenerating || (currentlyRegenerating && !regenerating)) {
         await fetchSupabaseImages(
           asin,
@@ -50,21 +47,19 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
           prevConceptCountRef
         );
       } else {
-        // If regenerating, just check the regenerate status without updating images
         await fetchSupabaseImages(
           asin,
-          () => {}, // Skip updating original image during regeneration
-          () => {}, // Skip updating concept images during regeneration
-          () => {}, // Skip updating prompt text during regeneration
-          () => {}, // Skip updating repair status during regeneration
-          () => {}, // Don't change loading state
+          () => {},
+          () => {},
+          () => {},
+          () => {},
+          () => {},
           setError,
           setRegenerating,
           prevConceptCountRef
         );
       }
       
-      // Update last regenerating status
       lastRegeneratingStatusRef.current = regenerating;
     }
   };
