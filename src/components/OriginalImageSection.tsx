@@ -1,10 +1,12 @@
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Edit, Database, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import TagVoting from "./TagVoting";
 import { OriginalImageSectionProps } from "@/types/props";
 import ImageCard from "./ImageCard";
+import React from "react";
 
 const OriginalImageSection = ({
   originalImage,
@@ -18,14 +20,39 @@ const OriginalImageSection = ({
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-start">
-          <h2 className="text-xl font-bold text-gray-800">T-Shirt Design</h2>
-        </div>
+        {/* Removed the "T-Shirt Design" heading */}
 
         {originalImage ? (
-          <div className="relative rounded-lg overflow-hidden border border-gray-200">
+          <div className="relative rounded-lg overflow-hidden border border-gray-200 group transition">
             <AspectRatio ratio={1}>
               <ImageCard image={originalImage} className="w-full h-full object-cover" />
+              {/* Action Buttons Overlay - only visible on hover */}
+              <div className="absolute left-0 bottom-0 w-full flex justify-center gap-2 bg-gradient-to-t from-black/60 to-transparent px-4 py-3 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOriginalAction("copyrighted")}
+                  className="text-xs pointer-events-auto"
+                >
+                  Copyrighted
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOriginalAction("no-design")}
+                  className="text-xs pointer-events-auto"
+                >
+                  No Design
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOriginalAction("cant-design")}
+                  className="text-xs pointer-events-auto"
+                >
+                  Can't Design
+                </Button>
+              </div>
             </AspectRatio>
           </div>
         ) : (
@@ -38,32 +65,8 @@ const OriginalImageSection = ({
         )}
       </div>
 
-      <div className="flex gap-2 mt-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onOriginalAction("copyrighted")}
-          className="text-xs"
-        >
-          Copyrighted
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onOriginalAction("no-design")}
-          className="text-xs"
-        >
-          No Design
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onOriginalAction("cant-design")}
-          className="text-xs"
-        >
-          Can't Design
-        </Button>
-      </div>
+      {/* The action buttons are now overlayed above, not here */}
+      {/* <div className="flex gap-2 mt-4"> ... </div> */}
 
       <TagVoting asin={originalImage?.id.replace('original-', '') || ''} suggestedTags={suggestedTags} />
     </div>
@@ -71,3 +74,4 @@ const OriginalImageSection = ({
 };
 
 export default OriginalImageSection;
+
