@@ -62,7 +62,7 @@ const ConceptImageModal = ({
                 alt={image.alt}
                 className="max-w-full max-h-[60vh] object-contain"
               />
-              <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90">
+              <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1.5 text-sm font-medium rounded-md shadow-md z-10">
                 Concept {conceptIndex}
               </div>
               {votedImages[expandedImageId] && (
