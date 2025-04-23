@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Edit, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,10 +25,13 @@ const PromptEditor = ({ asin, promptText, onPromptSaved }: PromptEditorProps) =>
   const handleSavePrompt = async () => {
     setSaveLoading(true);
 
-    // Update prompt and set regenerate to true in one query
+    // Explicitly set regenerate to true and update prompt
     const { error: updateError } = await supabase
       .from("tshirts")
-      .update({ ai_image_description: editValue, regenerate: true })
+      .update({ 
+        ai_image_description: editValue, 
+        regenerate: true  // Explicitly set regenerate to true
+      })
       .eq("asin", asin);
 
     if (updateError) {
