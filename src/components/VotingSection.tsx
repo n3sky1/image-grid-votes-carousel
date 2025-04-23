@@ -43,7 +43,7 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     toggleDataSource,
     fetchImages,
     showRegeneratingOverlay,
-    setShowRegeneratingOverlay  // Added this line to destructure the setter
+    setShowRegeneratingOverlay
   } = useImageVoting(asin);
 
   const {
@@ -73,7 +73,8 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
   };
 
   useEffect(() => {
-    const channel = supabase
+    // Enable postgreSQL changes for the tshirts table at the Supabase level
+    const tshirtChangesChannel = supabase
       .channel('tshirt-changes')
       .on(
         'postgres_changes',
@@ -84,7 +85,16 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
           filter: `asin=eq.${asin}`,
         },
         (payload: any) => {
-          if (payload.old.winning_concept_id === null && payload.new.winning_concept_id !== null) {
+          console.log("Tshirt change detected:", payload);
+          
+          // Check if winning_concept_id changed from null to a value (winner selected)
+          if (
+            payload.old && 
+            payload.new && 
+            payload.old.winning_concept_id === null && 
+            payload.new.winning_concept_id !== null
+          ) {
+            console.log("Winner detected! Showing overlay");
             setShowWinningOverlay(true);
             setTimeout(() => {
               if (onVotingCompleted) {
@@ -93,17 +103,53 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
             }, 2000);
           }
           
-          if (!payload.old.regenerate && payload.new.regenerate) {
+          // Check if regenerate flag was set
+          if (
+            payload.old && 
+            payload.new && 
+            !payload.old.regenerate && 
+            payload.new.regenerate
+          ) {
+            console.log("Regeneration flag detected. Showing overlay");
             setShowRegeneratingOverlay(true);
+          }
+        }
+      )
+      .subscribe();
+      
+    // Also listen specifically for concept vote changes that might trigger a winner
+    const conceptChangesChannel = supabase
+      .channel('concept-votes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'concepts',
+          filter: `tshirt_asin=eq.${asin}`,
+        },
+        (payload: any) => {
+          console.log("Concept vote change detected:", payload);
+          
+          // Check if votes_up >= 2 or hearts >= 1 (winning conditions)
+          if (
+            payload.new && 
+            ((payload.new.votes_up >= 2) || (payload.new.hearts >= 1))
+          ) {
+            console.log("Potential winner based on vote count. Refreshing data");
+            // Instead of immediately showing overlay, refresh data
+            // The tshirt channel will catch if a winner was truly declared
+            fetchImages();
           }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tshirtChangesChannel);
+      supabase.removeChannel(conceptChangesChannel);
     };
-  }, [asin, onVotingCompleted]);
+  }, [asin, onVotingCompleted, setShowRegeneratingOverlay, fetchImages]);
 
   if (loading) return <VotingLoading />;
   if (error) {
