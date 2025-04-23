@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import VotingCompleted from "./VotingCompleted";
 import VotingError from "./VotingError";
@@ -42,6 +43,7 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     toggleDataSource,
     fetchImages,
     showRegeneratingOverlay,
+    setShowRegeneratingOverlay  // Added this line to destructure the setter
   } = useImageVoting(asin);
 
   const {
