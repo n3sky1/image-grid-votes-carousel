@@ -1,3 +1,4 @@
+
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -8,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { toast } from "@/components/ui/sonner";
-import { edit, save } from "lucide-react";
+import { Edit, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,7 +118,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
                           aria-label="Edit prompt"
                         >
-                          <edit className="h-4 w-4 text-gray-500" />
+                          <Edit className="h-4 w-4 text-gray-500" />
                         </button>
                       )}
                     </div>
@@ -129,9 +130,9 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
                           <Textarea
                             value={editPromptValue}
                             onChange={(e) => setEditPromptValue(e.target.value)}
-                            minRows={4}
                             className="mb-2"
                             disabled={saveLoading}
+                            rows={4}
                           />
                           <TooltipProvider>
                             <Tooltip>
@@ -144,7 +145,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
                                   disabled={saveLoading}
                                   aria-label="Save and regenerate"
                                 >
-                                  <save className="h-4 w-4" />
+                                  <Save className="h-4 w-4" />
                                   {saveLoading ? "Saving..." : "Save & Regenerate"}
                                 </Button>
                               </TooltipTrigger>
