@@ -172,5 +172,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     toggleDataSource,
     fetchImages,
     showRegeneratingOverlay,
+    setShowRegeneratingOverlay,
   };
 };

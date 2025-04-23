@@ -17,4 +17,5 @@ export interface UseImageVotingState {
   toggleDataSource: () => void;
   fetchImages: () => Promise<void>;
   showRegeneratingOverlay: boolean;
+  setShowRegeneratingOverlay: React.Dispatch<React.SetStateAction<boolean>>;
 }
