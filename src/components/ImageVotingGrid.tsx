@@ -28,12 +28,42 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
   } = useImageVoting(asin);
 
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
+  const [repairedImages, setRepairedImages] = useState<Record<string, boolean>>({});
 
   const handleVote = (id: string, vote: "like" | "dislike" | "love") => {
     setVotedImages((prev) => ({
       ...prev,
       [id]: vote,
     }));
+  };
+
+  const handleRepair = async (id: string) => {
+    try {
+      // Toggle the repair status
+      setRepairedImages(prev => ({
+        ...prev,
+        [id]: !prev[id]
+      }));
+
+      // Update the concepts table
+      const { error } = await supabase
+        .from('concepts')
+        .update({ repair_requested: true })
+        .eq('concept_id', id);
+
+      if (error) {
+        console.error('Error updating repair status:', error);
+        toast('Error', { description: 'Could not mark for repair', position: 'bottom-right' });
+      } else {
+        const actionText = repairedImages[id] ? 'Unmarked' : 'Marked';
+        toast(actionText, { 
+          description: `${actionText} image for repair`, 
+          position: 'bottom-right' 
+        });
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
   };
 
   const handleOriginalAction = (action: "copyrighted" | "no-design" | "cant-design") => {
@@ -88,7 +118,9 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
         <ConceptImagesGrid
           conceptImages={conceptImages}
           votedImages={votedImages}
+          repairedImages={repairedImages}
           onVote={handleVote}
+          onRepair={handleRepair}
           originalImage={originalImage}
         />
       </div>

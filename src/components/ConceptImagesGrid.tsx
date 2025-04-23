@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
@@ -7,15 +6,25 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Comments from "./Comments";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
   votedImages: Record<string, 'like' | 'dislike' | 'love'>;
+  repairedImages?: Record<string, boolean>;
   onVote: (id: string, vote: 'like' | 'dislike' | 'love') => void;
+  onRepair?: (id: string) => void;
   originalImage: ImageData | null;
 }
 
-const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }: ConceptImagesGridProps) => {
+const ConceptImagesGrid = ({ 
+  conceptImages, 
+  votedImages, 
+  repairedImages = {}, 
+  onVote, 
+  onRepair, 
+  originalImage 
+}: ConceptImagesGridProps) => {
   const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
@@ -27,6 +36,12 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
       setExpandedImageId(conceptImages[nextIndex].id);
     } else {
       setExpandedImageId(null);
+    }
+  };
+
+  const handleRepair = async (id: string) => {
+    if (onRepair) {
+      onRepair(id);
     }
   };
 
@@ -46,7 +61,6 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
     setExpandedImageId(conceptImages[newIndex].id);
   };
 
-  // Helper function to check if a string is a valid UUID
   const isValidUUID = (id: string): boolean => {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   };
@@ -98,7 +112,6 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
                           </AspectRatio>
                         </div>
                         <div className="mt-4">
-                          {/* Only use the Comments component if the ID is a valid UUID */}
                           <Comments conceptId={isValidUUID(expandedImageId) ? expandedImageId : ''} />
                         </div>
                       </div>
@@ -151,8 +164,15 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="hover:bg-blue-50 hover:text-blue-600"
+                          variant={repairedImages[image.id] ? 'default' : 'outline'}
+                          onClick={() => handleRepair(image.id)}
+                          className={`
+                            hover:bg-blue-50 
+                            hover:text-blue-600 
+                            ${repairedImages[image.id] 
+                              ? 'bg-blue-500 text-white' 
+                              : ''
+                            }`}
                         >
                           <Wrench size={16} />
                         </Button>

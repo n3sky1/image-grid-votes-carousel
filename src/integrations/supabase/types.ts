@@ -81,6 +81,7 @@ export type Database = {
           generation_model_id: string | null
           generation_timestamp: string | null
           hearts: number
+          repair_requested: boolean
           source_prompt: string | null
           status: string
           tshirt_asin: string
@@ -95,6 +96,7 @@ export type Database = {
           generation_model_id?: string | null
           generation_timestamp?: string | null
           hearts?: number
+          repair_requested?: boolean
           source_prompt?: string | null
           status?: string
           tshirt_asin: string
@@ -109,6 +111,7 @@ export type Database = {
           generation_model_id?: string | null
           generation_timestamp?: string | null
           hearts?: number
+          repair_requested?: boolean
           source_prompt?: string | null
           status?: string
           tshirt_asin?: string
