@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { sampleImages } from "@/data/sampleImages";
 import { isValidUUID, generateUUID } from "./useImageVoting.utils";
@@ -37,7 +36,7 @@ export const initializeTshirt = async (asin: string) => {
   // Determine if this tshirt should be ready for voting based on processing status
   const shouldBeReadyForVoting = 
     existingData?.ai_processing_status === 'image_generated';
-  
+    
   console.log("Should be ready for voting:", shouldBeReadyForVoting, "Status:", existingData?.ai_processing_status);
     
   // If there's already a record, update it respecting the ready_for_voting condition
@@ -181,15 +180,8 @@ export const fetchSupabaseImages = async (
     if (!existingTshirt) {
       console.log("Tshirt doesn't exist. Initializing...");
       await initializeTshirt(asin);
-    } 
-    // If exists but not ready for voting and its status isn't image_generated, show an error
-    else if (!existingTshirt.ready_for_voting && existingTshirt.ai_processing_status !== 'image_generated') {
-      console.log("Tshirt exists but is not ready for voting and status isn't image_generated");
-      setError(`This t-shirt (ASIN: ${asin}) is not ready for voting. Current status: ${existingTshirt.ai_processing_status || 'unknown'}`);
-      setLoading(false);
-      return;
     }
-
+    
     // Now fetch the tshirt data
     const { data: tshirt, error: tshirtError } = await supabase
       .from("tshirts")
@@ -211,6 +203,7 @@ export const fetchSupabaseImages = async (
       return;
     }
 
+    // CRITICAL CHECK: If the tshirt is not ready for voting, show appropriate error message and return early
     if (!tshirt.ready_for_voting) {
       console.error("Tshirt is not ready for voting", tshirt);
       setError(`This t-shirt (ASIN: ${asin}) is not ready for voting. Current status: ${tshirt.ai_processing_status || 'unknown'}`);
