@@ -42,7 +42,7 @@ serve(async (req) => {
       )
     }
 
-    // If upsert was successful, now use RPC call to increment the vote count
+    // If upsert was successful, now increment the vote count
     const { data: updateData, error: updateError } = await supabase.rpc(
       'increment_tag_vote_count',
       { p_tag_name, p_tshirt_asin }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -55,28 +54,17 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
     }
 
     try {
-      // Get the session first to properly extract the token
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token || '';
-      
-      console.log("Voting for tag:", tagName, "on ASIN:", asin);
-      
-      // Call the Edge Function with the properly extracted token
-      const response = await fetch("https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_tag_vote", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .rpc('increment_tag_vote_count', {
           p_tag_name: tagName,
-          p_tshirt_asin: asin
-        })
-      });
+          p_tshirt_asin: asin,
+          p_user_id: user.id
+        });
 
-      if (!response.ok) {
-        console.error("Error response:", await response.text());
-        throw new Error('Failed to vote');
+      if (error) {
+        console.error('Error voting for tag:', error);
+        toast.error('Failed to register your vote');
+        return;
       }
 
       setTagVotes(prev => ({

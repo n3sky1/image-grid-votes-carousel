@@ -33,35 +33,18 @@ const Index = () => {
         completedAsins.push(currentAsin);
       }
 
-      console.log("Completed ASINs:", completedAsins);
-
-      console.log("Fetching next available t-shirt");
-
-      // Check if there are ANY t-shirts ready for voting regardless of completion status
-      const { count: totalReadyCount } = await supabase
-        .from("tshirts")
-        .select("*", { count: "exact", head: true })
-        .eq("ready_for_voting", true);
-        
-      console.log("Total ready for voting t-shirts:", totalReadyCount);
-      
-      // If no t-shirts are ready at all, show appropriate message
-      if (!totalReadyCount) {
-        console.log("No t-shirts are ready for voting in the system");
-        setError("No t-shirts are available for voting in the system.");
-        setLoading(false);
-        return;
-      }
-      
       // Build the query to fetch the next available t-shirt for voting
       let query = supabase
         .from("tshirts")
         .select("asin, ai_suggested_tags")
         .eq("ready_for_voting", true);
       
-      // Only filter out completed ASINs if there are any
       if (completedAsins.length > 0) {
-        query = query.not('asin', 'in', completedAsins);
+        // Use the "not.eq" filter for each ASIN in the array
+        // This is more reliable than "not.in" which was causing issues
+        for (const completedAsin of completedAsins) {
+          query = query.not('asin', 'eq', completedAsin);
+        }
       }
       
       const { data, error } = await query.limit(1).maybeSingle();
@@ -73,40 +56,17 @@ const Index = () => {
         return;
       }
       
-      console.log("Query result:", data);
-      
       if (data && data.asin) {
         console.log("Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
       } else {
         console.log("No more t-shirts available for voting");
-        
-        // If we have completed ASINs but no results, double check if there are any t-shirts available 
-        // that we haven't voted on
-        if (completedAsins.length > 0) {
-          const { count: remainingCount } = await supabase
-            .from("tshirts")
-            .select("*", { count: "exact", head: true })
-            .eq("ready_for_voting", true);
-            
-          console.log(`Total t-shirts: ${totalReadyCount}, Completed: ${completedAsins.length}`);
-          
-          if (remainingCount > completedAsins.length) {
-            // This indicates a query issue - there should be more t-shirts
-            setError("Error fetching next t-shirt. Please try refreshing the page.");
-          } else {
-            // All t-shirts have been voted on
-            toast("All done!", {
-              description: "You've completed voting on all available t-shirts.",
-              position: "bottom-right"
-            });
-            setError("No more t-shirts available for voting.");
-          }
-        } else {
-          // No t-shirts are ready for this user despite there being t-shirts in the system
-          setError("No t-shirts are currently available for voting. Please try again later.");
-        }
+        toast("All done!", {
+          description: "You've completed voting on all available t-shirts.",
+          position: "bottom-right"
+        });
+        setError("No more t-shirts available for voting.");
       }
     } catch (err) {
       console.error("Unexpected error:", err);
