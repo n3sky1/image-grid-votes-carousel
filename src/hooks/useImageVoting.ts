@@ -5,6 +5,7 @@ import { fetchSampleImages } from "@/services/sampleImageService";
 import { fetchSupabaseImages } from "@/services/imageDataService";
 import { saveUserVote, removeUserVote, switchUserVote } from "@/services/voteService";
 import { UseImageVotingState } from "./useImageVoting.types";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useImageVoting = (asin: string): UseImageVotingState => {
   const [originalImage, setOriginalImage] = useState<ImageData | null>(null);
