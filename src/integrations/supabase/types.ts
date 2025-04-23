@@ -254,6 +254,7 @@ export type Database = {
           pattern: string | null
           ready_for_voting: boolean
           regenerate: boolean | null
+          review_problem: string | null
           sales_rank_drops_30_day: number | null
           sales_rank_drops_90_day: number | null
           status: string
@@ -306,6 +307,7 @@ export type Database = {
           pattern?: string | null
           ready_for_voting?: boolean
           regenerate?: boolean | null
+          review_problem?: string | null
           sales_rank_drops_30_day?: number | null
           sales_rank_drops_90_day?: number | null
           status?: string
@@ -358,6 +360,7 @@ export type Database = {
           pattern?: string | null
           ready_for_voting?: boolean
           regenerate?: boolean | null
+          review_problem?: string | null
           sales_rank_drops_30_day?: number | null
           sales_rank_drops_90_day?: number | null
           status?: string

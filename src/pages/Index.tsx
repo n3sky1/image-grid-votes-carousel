@@ -21,32 +21,25 @@ const Index = () => {
         return;
       }
 
-      // First, get the ASINs that the user has already completed
       const { data: completedVotings } = await supabase
         .from("completed_votings")
         .select("asin")
         .eq("user_id", user.data.user.id);
       
-      // Extract the ASINs into an array
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
-      
-      // Add the current ASIN to the list of excluded ASINs if provided
       if (currentAsin && !completedAsins.includes(currentAsin)) {
         completedAsins.push(currentAsin);
       }
 
-      // Get t-shirts that are ready for voting and not completed by the current user
       let query = supabase
         .from("tshirts")
         .select("asin, ai_suggested_tags")
         .eq("ready_for_voting", true);
       
-      // Only apply the not-in filter if there are completed ASINs
       if (completedAsins.length > 0) {
         query = query.not('asin', 'in', completedAsins);
       }
       
-      // Limit to 1 result and get as maybeSignle
       const { data, error } = await query.limit(1).maybeSingle();
       
       if (error) {
@@ -58,19 +51,13 @@ const Index = () => {
       if (data && data.asin) {
         console.log("Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
-        
-        if (data.ai_suggested_tags && Array.isArray(data.ai_suggested_tags)) {
-          setSuggestedTags(data.ai_suggested_tags);
-        } else {
-          setSuggestedTags(["Funny", "Vintage", "Graphic", "Summer"]);
-        }
+        setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
       } else {
         console.log("No more t-shirts available for voting");
         toast("All done!", {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
         });
-        // Keep the last ASIN displayed
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -80,7 +67,6 @@ const Index = () => {
     }
   };
 
-  // Initial load
   useEffect(() => {
     fetchNextAsin();
   }, []);
