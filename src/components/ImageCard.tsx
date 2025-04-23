@@ -1,7 +1,7 @@
 
 import { ImageData } from "@/types/image";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ImageCardProps {
   image: ImageData;
@@ -11,9 +11,19 @@ interface ImageCardProps {
 
 const ImageCard = ({ image, className, animateExit = false }: ImageCardProps) => {
   const [imageError, setImageError] = useState(false);
+  const [imageSrc, setImageSrc] = useState(image.src || "");
   
-  // Ensure image src is a valid URL
-  const imageSrc = image.src || "";
+  useEffect(() => {
+    // Reset error state when image source changes
+    setImageError(false);
+    setImageSrc(image.src || "");
+  }, [image.src]);
+  
+  // Handle image loading error
+  const handleImageError = () => {
+    console.error(`Failed to load image: ${imageSrc}`);
+    setImageError(true);
+  };
   
   return (
     <div 
@@ -25,7 +35,10 @@ const ImageCard = ({ image, className, animateExit = false }: ImageCardProps) =>
     >
       {imageError ? (
         <div className="w-full h-full min-h-32 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
-          Image could not be loaded
+          <div className="text-center p-4">
+            <p>Image could not be loaded</p>
+            <p className="text-xs mt-1 text-gray-400">{image.id}</p>
+          </div>
         </div>
       ) : (
         <img 
@@ -33,7 +46,8 @@ const ImageCard = ({ image, className, animateExit = false }: ImageCardProps) =>
           alt={image.alt} 
           className="w-full h-full object-cover"
           loading="lazy"
-          onError={() => setImageError(true)}
+          crossOrigin="anonymous"
+          onError={handleImageError}
         />
       )}
       {image.isOriginal && (
