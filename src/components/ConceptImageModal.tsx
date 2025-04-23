@@ -56,22 +56,24 @@ const ConceptImageModal = ({
             </div>
           )}
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="relative rounded-lg overflow-hidden mb-3 flex-1 flex items-center justify-center">
-              <div className="relative">
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  className="max-w-full max-h-[75vh] object-contain scale-125" // Increased max-height and added scale-125
-                />
-                <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90 z-10">
-                  Concept {conceptIndex}
-                </div>
-                {votedImages[expandedImageId] && (
-                  <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-10">
-                    <Check size={24} className="text-green-500" />
+            <div className="relative rounded-lg overflow-hidden mb-3 flex-1">
+              <AspectRatio ratio={1}>
+                <div className="relative w-full h-full">
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="absolute inset-0 w-full h-full object-contain scale-125"
+                  />
+                  <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90 z-20">
+                    Concept {conceptIndex}
                   </div>
-                )}
-              </div>
+                  {votedImages[expandedImageId] && (
+                    <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-20">
+                      <Check size={24} className="text-green-500" />
+                    </div>
+                  )}
+                </div>
+              </AspectRatio>
             </div>
             <div className="flex justify-center gap-2 pt-2 bg-white mt-auto">
               <Button
