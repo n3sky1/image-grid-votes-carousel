@@ -17,6 +17,7 @@ const Index = () => {
     try {
       setLoading(true);
       setError(null);
+      // Important: Initialize noMoreTshirts to false at the start of fetch
       setNoMoreTshirts(false);
       
       const user = await supabase.auth.getUser();
@@ -62,14 +63,15 @@ const Index = () => {
         console.log("Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
-        setNoMoreTshirts(false);
+        // Already set to false at the beginning of fetch, no need to do it again
       } else {
         console.log("No more t-shirts available for voting");
+        // Only set noMoreTshirts to true when we've confirmed there are no t-shirts
+        setNoMoreTshirts(true);
         toast("All done!", {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
         });
-        setNoMoreTshirts(true);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -80,6 +82,9 @@ const Index = () => {
   };
 
   useEffect(() => {
+    // This ensures we start fresh on component mount
+    setAsin("");
+    setNoMoreTshirts(false);
     fetchNextAsin();
   }, []);
 
@@ -138,6 +143,13 @@ const Index = () => {
             suggestedTags={suggestedTags} 
             onVotingCompleted={() => fetchNextAsin(asin)}
           />
+        ) : !noMoreTshirts ? (
+          <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p>Looking for t-shirts to vote on...</p>
+            </div>
+          </div>
         ) : (
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
             No t-shirts available for voting.
