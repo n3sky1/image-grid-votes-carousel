@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -6,10 +7,8 @@ import VotingLoading from "./VotingLoading";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { toast } from "@/components/ui/sonner";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ImageVotingSectionLayout from "./ImageVotingSectionLayout";
-import PromptEditor from "./PromptEditor";
 import VotingSidebar from "./VotingSidebar";
 
 const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => {
@@ -115,8 +114,6 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
 
   const tagsToUse = suggestedTags.length > 0 ? suggestedTags : ["Funny", "Vintage", "Graphic", "Summer"];
 
-  console.log("In ImageVotingGrid, promptText:", promptText);
-
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="p-4 space-y-8">
@@ -133,21 +130,17 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
             />
           }
           right={
-            <>
-              {isEditingPrompt && (
-                <PromptEditor
-                  asin={asin}
-                  promptText={promptText}
-                  onPromptSaved={() => setIsEditingPrompt(false)}
-                />
-              )}
-              <VotingSidebar
-                votedImages={votedImages}
-                conceptImagesCount={conceptImages.length}
-                useTestData={useTestData}
-                toggleDataSource={toggleDataSource}
-              />
-            </>
+            <VotingSidebar
+              votedImages={votedImages}
+              conceptImagesCount={conceptImages.length}
+              useTestData={useTestData}
+              toggleDataSource={toggleDataSource}
+              promptText={promptText}
+              asin={asin}
+              onPromptSaved={() => {}}
+              isEditingPrompt={isEditingPrompt}
+              setIsEditingPrompt={setIsEditingPrompt}
+            />
           }
         />
         <ConceptImagesGrid
