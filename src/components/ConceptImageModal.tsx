@@ -1,4 +1,3 @@
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Comments from "./Comments";
 import { Button } from "@/components/ui/button";
@@ -57,13 +56,11 @@ const ConceptImageModal = ({
           )}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="aspect-square relative rounded-lg overflow-hidden mb-3 flex-1 border border-gray-200">
-              <div className="w-full h-full relative">
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  className="absolute inset-0 w-full h-full object-contain"
-                />
-              </div>
+              <img
+                src={image.src}
+                alt={image.alt}
+                className="absolute inset-0 w-full h-full object-contain"
+              />
               
               <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90 z-10">
                 Concept {conceptIndex}
