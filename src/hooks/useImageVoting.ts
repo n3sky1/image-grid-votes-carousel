@@ -1,5 +1,3 @@
-
-// Main Image Voting Hook (Refactored)
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages, fetchSupabaseImages } from "./useImageVoting.supabase";
@@ -87,8 +85,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     const votedCount = Object.keys(votedImages).length;
     if (votedCount >= nonOriginalCount && nonOriginalCount > 0) {
       setAllVoted(true);
-      // Ensure polling stops when all images are voted
-      stopPolling();
     }
   }, [votedImages, conceptImages]);
 
