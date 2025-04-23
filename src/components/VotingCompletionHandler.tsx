@@ -3,35 +3,36 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface VotingCompletionHandlerProps {
-  allVoted: boolean;
   asin: string;
   onVotingCompleted?: () => void;
 }
 
 const VotingCompletionHandler = ({
-  allVoted,
   asin,
   onVotingCompleted
 }: VotingCompletionHandlerProps) => {
   useEffect(() => {
-    if (allVoted && onVotingCompleted) {
-      const recordCompletion = async () => {
-        const user = await supabase.auth.getUser();
-        if (!user.data.user) return;
+    // We no longer check for allVoted, this component just records completed votings
+    // when explicitly instructed to do so via props or other mechanisms
+    
+    const recordCompletion = async () => {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) return;
 
-        await supabase
-          .from("completed_votings")
-          .insert({
-            asin: asin,
-            user_id: user.data.user.id
-          });
-      };
+      await supabase
+        .from("completed_votings")
+        .insert({
+          asin: asin,
+          user_id: user.data.user.id
+        });
+    };
 
+    if (onVotingCompleted) {
       recordCompletion().then(() => {
         onVotingCompleted();
       });
     }
-  }, [allVoted, asin, onVotingCompleted]);
+  }, [asin, onVotingCompleted]);
 
   return null;
 };

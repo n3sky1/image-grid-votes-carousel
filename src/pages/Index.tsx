@@ -11,19 +11,16 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [noMoreTshirts, setNoMoreTshirts] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [hasCheckedAvailability, setHasCheckedAvailability] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
       console.log("Fetching next ASIN, current:", currentAsin);
       setLoading(true);
       setError(null);
-      
-      // Always reset noMoreTshirts when starting a fetch
-      setNoMoreTshirts(false);
       
       // Get current user
       const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -88,11 +85,11 @@ const Index = () => {
       console.log("Total t-shirts available:", totalCount);
       setHasCheckedAvailability(true);
       
-      // If there are no t-shirts at all, we'll still try to fetch anyway
+      // If there are no t-shirts at all, show a notification but continue trying
       if (!totalCount || totalCount === 0) {
-        console.log("No t-shirts available, but still trying to fetch");
+        console.log("No t-shirts available for voting at the moment");
         toast("Limited availability", {
-          description: "There are very few t-shirts available. We'll keep trying.",
+          description: "There are very few t-shirts available for voting. We'll keep trying.",
           position: "bottom-right"
         });
       }
@@ -128,10 +125,9 @@ const Index = () => {
         console.log("Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
-        setNoMoreTshirts(false); // Make sure this is explicitly set to false
+        setRetryCount(0); // Reset retry counter on success
       } else {
-        console.log("Query returned no t-shirts despite count check showing some available");
-        console.log("This is unexpected - rechecking with a different query approach");
+        console.log("No more t-shirts available for voting, will retry");
         
         // Fallback query - try to get any t-shirt that's ready for voting
         const { data: fallbackData, error: fallbackError } = await supabase
@@ -145,16 +141,31 @@ const Index = () => {
           console.log("Fallback query found t-shirt:", fallbackData.asin);
           setAsin(fallbackData.asin);
           setSuggestedTags(fallbackData.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
+          setRetryCount(0); // Reset retry counter on success
         } else {
-          // Even if fallback fails, we'll just show loading and retry
-          console.log("Even fallback query found no t-shirts - will retry");
+          console.log("No t-shirts available even with fallback query");
           setAsin("");
           
-          // Schedule a retry after a delay
+          // Increment retry count and schedule another attempt
+          const nextRetryCount = retryCount + 1;
+          setRetryCount(nextRetryCount);
+          
+          // Schedule a retry with exponential backoff (max 30 seconds)
+          const delay = Math.min(Math.pow(1.5, nextRetryCount) * 1000, 30000);
+          console.log(`Will retry in ${delay/1000} seconds (attempt ${nextRetryCount})`);
+          
           setTimeout(() => {
-            console.log("Retrying fetch after delay");
+            console.log(`Retrying fetch after ${delay/1000} second delay`);
             fetchNextAsin();
-          }, 5000);
+          }, delay);
+          
+          // Show a notification on every 3rd retry
+          if (nextRetryCount % 3 === 0) {
+            toast("Still searching", {
+              description: "Looking for available t-shirts to vote on...",
+              position: "bottom-right"
+            });
+          }
         }
       }
     } catch (err) {
@@ -171,9 +182,9 @@ const Index = () => {
       // Reset everything at the start
       setIsInitializing(true);
       setAsin("");
-      setNoMoreTshirts(false);
       setLoading(true);
       setHasCheckedAvailability(false);
+      setRetryCount(0);
       
       console.log("Initializing application...");
       await fetchNextAsin();
@@ -188,11 +199,11 @@ const Index = () => {
       asin, 
       loading, 
       isInitializing, 
-      noMoreTshirts,
       userId,
-      hasCheckedAvailability
+      hasCheckedAvailability,
+      retryCount
     });
-  }, [asin, loading, isInitializing, noMoreTshirts, userId, hasCheckedAvailability]);
+  }, [asin, loading, isInitializing, userId, hasCheckedAvailability, retryCount]);
 
   if (error) {
     return (
@@ -216,7 +227,6 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
       <main>
-        {/* We're showing the loading state when needed, otherwise render the ImageVotingGrid */}
         {(loading || isInitializing || !hasCheckedAvailability || !asin) ? (
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
             <div className="flex flex-col items-center">

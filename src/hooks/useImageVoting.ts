@@ -11,7 +11,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
   const [conceptImages, setConceptImages] = useState<ImageData[]>([]);
   const [votedImages, setVotedImages] = useState<Record<string, 'like' | 'dislike' | 'love'>>({});
   const [repairedImages, setRepairedImages] = useState<Record<string, boolean>>({});
-  const [allVoted, setAllVoted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [promptText, setPromptText] = useState<string>("");
@@ -142,14 +141,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regenerating, useTestData, asin]);
 
-  useEffect(() => {
-    const nonOriginalCount = conceptImages.length;
-    const votedCount = Object.keys(votedImages).length;
-    if (votedCount >= nonOriginalCount && nonOriginalCount > 0) {
-      setAllVoted(true);
-    }
-  }, [votedImages, conceptImages]);
-
   const toggleDataSource = () => {
     setUseTestData(prev => !prev);
     setVotedImages({});
@@ -163,7 +154,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     setVotedImages: handleVote,
     repairedImages,
     setRepairedImages,
-    allVoted,
     loading,
     error,
     promptText,

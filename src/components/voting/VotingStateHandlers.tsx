@@ -1,13 +1,11 @@
 
 import VotingError from "../VotingError";
 import VotingLoading from "../VotingLoading";
-import VotingCompleted from "../VotingCompleted";
 import { VotingLayout } from "./VotingLayout";
 
 interface VotingStateHandlersProps {
   loading: boolean;
   error: string | null;
-  allVoted: boolean;
   votedImages: Record<string, 'like' | 'dislike' | 'love'>;
   showRegeneratingOverlay: boolean;
   asin: string;
@@ -19,7 +17,6 @@ interface VotingStateHandlersProps {
 export const VotingStateHandlers = ({
   loading,
   error,
-  allVoted,
   votedImages,
   showRegeneratingOverlay,
   asin,
@@ -35,12 +32,10 @@ export const VotingStateHandlers = ({
       </div>
     );
   }
-  if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
   return (
     <VotingLayout
       showRegeneratingOverlay={showRegeneratingOverlay}
-      allVoted={allVoted}
       asin={asin}
       onVotingCompleted={onVotingCompleted}
     >
