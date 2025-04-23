@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages, fetchSupabaseImages } from "./useImageVoting.supabase";
@@ -19,6 +20,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevConceptCountRef = useRef<number>(0);
+  const lastRegeneratingStatusRef = useRef<boolean>(false);
 
   const fetchImages = async () => {
     if (useTestData) {
@@ -31,17 +33,39 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
       setLoading(false);
       return;
     } else {
-      await fetchSupabaseImages(
-        asin,
-        setOriginalImage,
-        setConceptImages,
-        setPromptText,
-        setRepairedImages,
-        setLoading,
-        setError,
-        setRegenerating,
-        prevConceptCountRef
-      );
+      // Check if we're currently regenerating
+      const currentlyRegenerating = lastRegeneratingStatusRef.current;
+      
+      // Only perform the full update if we're not regenerating or if regeneration just completed
+      if (!regenerating || (currentlyRegenerating && !regenerating)) {
+        await fetchSupabaseImages(
+          asin,
+          setOriginalImage,
+          setConceptImages,
+          setPromptText,
+          setRepairedImages,
+          setLoading,
+          setError,
+          setRegenerating,
+          prevConceptCountRef
+        );
+      } else {
+        // If regenerating, just check the regenerate status without updating images
+        await fetchSupabaseImages(
+          asin,
+          () => {}, // Skip updating original image during regeneration
+          () => {}, // Skip updating concept images during regeneration
+          () => {}, // Skip updating prompt text during regeneration
+          () => {}, // Skip updating repair status during regeneration
+          () => {}, // Don't change loading state
+          setError,
+          setRegenerating,
+          prevConceptCountRef
+        );
+      }
+      
+      // Update last regenerating status
+      lastRegeneratingStatusRef.current = regenerating;
     }
   };
 
@@ -73,6 +97,11 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
         console.log("Polling for new images...");
         await fetchImages();
       }, 5000);
+    } else if (!regenerating && lastRegeneratingStatusRef.current) {
+      // If regeneration just completed, refresh images once
+      console.log("Regeneration completed, refreshing images once");
+      setShowRegeneratingOverlay(false);
+      fetchImages();
     }
 
     return stopPolling;

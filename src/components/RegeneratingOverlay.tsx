@@ -1,5 +1,5 @@
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 
 const RegeneratingOverlay = () => {
   return (
@@ -12,6 +12,10 @@ const RegeneratingOverlay = () => {
             <p className="text-gray-600">
               Please wait. It should take approximately 60 seconds.
             </p>
+            <div className="flex items-center justify-center mt-4 text-blue-500">
+              <Clock className="w-5 h-5 mr-2" />
+              <span className="text-sm">Images will load when ready</span>
+            </div>
           </div>
         </div>
       </div>
