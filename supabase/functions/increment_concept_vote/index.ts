@@ -31,9 +31,28 @@ serve(async (req) => {
     if (p_vote_type === 'dislike') updateData.votes_down = 1
     if (p_vote_type === 'love') updateData.hearts = 1
 
+    // Get the current vote counts first
+    const { data: currentConcept, error: fetchError } = await supabaseClient
+      .from('concepts')
+      .select('votes_up, votes_down, hearts')
+      .eq('concept_id', p_concept_id)
+      .single()
+
+    if (fetchError) {
+      return new Response(JSON.stringify({ error: fetchError.message }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
+    // Increment the appropriate counter
     const { error } = await supabaseClient
       .from('concepts')
-      .update(updateData)
+      .update({
+        votes_up: p_vote_type === 'like' ? (currentConcept.votes_up || 0) + 1 : currentConcept.votes_up,
+        votes_down: p_vote_type === 'dislike' ? (currentConcept.votes_down || 0) + 1 : currentConcept.votes_down,
+        hearts: p_vote_type === 'love' ? (currentConcept.hearts || 0) + 1 : currentConcept.hearts,
+      })
       .eq('concept_id', p_concept_id)
 
     if (error) throw error

@@ -153,7 +153,7 @@ export const fetchSupabaseImages = async (
     } else if (userVotes) {
       const votesMap: Record<string, 'like' | 'dislike' | 'love'> = {};
       userVotes.forEach(vote => {
-        votesMap[vote.concept_id] = vote.vote_type;
+        votesMap[vote.concept_id] = vote.vote_type as 'like' | 'dislike' | 'love';
       });
       setVotedImages(votesMap);
     }
@@ -176,36 +176,48 @@ export const saveUserVote = async (
     throw new Error("Authentication required");
   }
 
-  // Update user_votes table
-  const { error: voteError } = await supabase
-    .from('user_votes')
-    .upsert({
-      concept_id: conceptId,
-      user_id: session.user.id,
-      vote_type: voteType
-    }, {
-      onConflict: 'user_id,concept_id'
+  try {
+    // Update user_votes table
+    const { error: voteError } = await supabase
+      .from('user_votes')
+      .upsert({
+        concept_id: conceptId,
+        user_id: session.user.id,
+        vote_type: voteType
+      }, {
+        onConflict: 'user_id,concept_id'
+      });
+
+    if (voteError) {
+      console.error("Error saving vote:", voteError);
+      throw new Error("Failed to save vote");
+    }
+
+    // Use direct update instead of the RPC function
+    const updateData: Record<string, number> = {};
+    
+    if (voteType === 'like') updateData.votes_up = 1;
+    if (voteType === 'dislike') updateData.votes_down = 1;
+    if (voteType === 'love') updateData.hearts = 1;
+
+    // Call the API endpoint with proper CORS handling
+    const response = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_concept_vote`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
+        p_concept_id: conceptId,
+        p_vote_type: voteType
+      })
     });
 
-  if (voteError) {
-    console.error("Error saving vote:", voteError);
-    throw new Error("Failed to save vote");
-  }
-
-  // Update concept vote counts
-  const updateData: Record<string, number> = {};
-  
-  if (voteType === 'like') updateData.votes_up = 1;
-  if (voteType === 'dislike') updateData.votes_down = 1;
-  if (voteType === 'love') updateData.hearts = 1;
-
-  const { error: conceptError } = await supabase.rpc('increment_concept_vote', {
-    p_concept_id: conceptId,
-    p_vote_type: voteType
-  });
-
-  if (conceptError) {
-    console.error("Error updating concept votes:", conceptError);
-    throw new Error("Failed to update vote count");
+    if (!response.ok) {
+      throw new Error(`Failed to update vote count: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error("Error in saveUserVote:", error);
+    throw error;
   }
 };

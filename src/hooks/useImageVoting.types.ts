@@ -5,7 +5,7 @@ export interface UseImageVotingState {
   originalImage: ImageData | null;
   conceptImages: ImageData[];
   votedImages: Record<string, 'like' | 'dislike' | 'love'>;
-  setVotedImages: React.Dispatch<React.SetStateAction<Record<string, 'like' | 'dislike' | 'love'>>>;
+  setVotedImages: (id: string, vote: 'like' | 'dislike' | 'love') => Promise<void>;
   repairedImages: Record<string, boolean>;
   setRepairedImages: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   allVoted: boolean;

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "@/services/sampleImageService";
@@ -66,7 +67,8 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     }
   };
 
-  const setVote = async (id: string, vote: 'like' | 'dislike' | 'love') => {
+  // Fix the type issue by wrapping the saveUserVote call in a function that matches the expected type
+  const handleVote = async (id: string, vote: 'like' | 'dislike' | 'love') => {
     try {
       await saveUserVote(id, vote);
       setVotedImages(prev => ({
@@ -136,7 +138,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     originalImage,
     conceptImages,
     votedImages,
-    setVotedImages: setVote,
+    setVotedImages: handleVote,
     repairedImages,
     setRepairedImages,
     allVoted,
