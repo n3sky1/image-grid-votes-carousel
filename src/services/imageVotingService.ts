@@ -15,6 +15,7 @@ export const fetchSupabaseImages = async (
   setError: SetState<string | null>,
   setRegenerating: SetState<boolean>,
   prevConceptCountRef: React.MutableRefObject<number>,
+  setVotedImages: SetState<Record<string, 'like' | 'dislike' | 'love'>>
 ) => {
   setLoading(true);
   setError(null);
@@ -140,10 +141,71 @@ export const fetchSupabaseImages = async (
     );
     
     prevConceptCountRef.current = conceptData?.length || 0;
+
+    // Fetch user's votes
+    const { data: userVotes, error: votesError } = await supabase
+      .from('user_votes')
+      .select('concept_id, vote_type')
+      .eq('user_id', session.user.id);
+
+    if (votesError) {
+      console.error("Error fetching user votes:", votesError);
+    } else if (userVotes) {
+      const votesMap: Record<string, 'like' | 'dislike' | 'love'> = {};
+      userVotes.forEach(vote => {
+        votesMap[vote.concept_id] = vote.vote_type;
+      });
+      setVotedImages(votesMap);
+    }
   } catch (err) {
     console.error("Unexpected error:", err);
     setError("An unexpected error occurred. Please try again later.");
   } finally {
     setLoading(false);
+  }
+};
+
+export const saveUserVote = async (
+  conceptId: string,
+  voteType: 'like' | 'dislike' | 'love'
+) => {
+  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  
+  if (authError || !session) {
+    console.error("Auth error:", authError);
+    throw new Error("Authentication required");
+  }
+
+  // Update user_votes table
+  const { error: voteError } = await supabase
+    .from('user_votes')
+    .upsert({
+      concept_id: conceptId,
+      user_id: session.user.id,
+      vote_type: voteType
+    }, {
+      onConflict: 'user_id,concept_id'
+    });
+
+  if (voteError) {
+    console.error("Error saving vote:", voteError);
+    throw new Error("Failed to save vote");
+  }
+
+  // Update concept vote counts
+  const updateData: Record<string, number> = {};
+  
+  if (voteType === 'like') updateData.votes_up = 1;
+  if (voteType === 'dislike') updateData.votes_down = 1;
+  if (voteType === 'love') updateData.hearts = 1;
+
+  const { error: conceptError } = await supabase.rpc('increment_concept_vote', {
+    p_concept_id: conceptId,
+    p_vote_type: voteType
+  });
+
+  if (conceptError) {
+    console.error("Error updating concept votes:", conceptError);
+    throw new Error("Failed to update vote count");
   }
 };

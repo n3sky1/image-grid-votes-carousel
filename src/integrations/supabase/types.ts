@@ -371,6 +371,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_votes: {
+        Row: {
+          concept_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          vote_type: Database["public"]["Enums"]["vote_type"]
+        }
+        Insert: {
+          concept_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          vote_type: Database["public"]["Enums"]["vote_type"]
+        }
+        Update: {
+          concept_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          vote_type?: Database["public"]["Enums"]["vote_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_votes_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "concepts"
+            referencedColumns: ["concept_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -391,7 +426,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      vote_type: "like" | "dislike" | "love"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -506,6 +541,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      vote_type: ["like", "dislike", "love"],
+    },
   },
 } as const

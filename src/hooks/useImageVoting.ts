@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "@/services/sampleImageService";
-import { fetchSupabaseImages } from "@/services/imageVotingService";
+import { fetchSupabaseImages, saveUserVote } from "@/services/imageVotingService";
 import { UseImageVotingState } from "./useImageVoting.types";
 
 export const useImageVoting = (asin: string): UseImageVotingState => {
@@ -44,7 +44,8 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
           setLoading,
           setError,
           setRegenerating,
-          prevConceptCountRef
+          prevConceptCountRef,
+          setVotedImages
         );
       } else {
         await fetchSupabaseImages(
@@ -56,11 +57,25 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
           () => {},
           setError,
           setRegenerating,
-          prevConceptCountRef
+          prevConceptCountRef,
+          () => {}
         );
       }
       
       lastRegeneratingStatusRef.current = regenerating;
+    }
+  };
+
+  const setVote = async (id: string, vote: 'like' | 'dislike' | 'love') => {
+    try {
+      await saveUserVote(id, vote);
+      setVotedImages(prev => ({
+        ...prev,
+        [id]: vote
+      }));
+    } catch (error) {
+      console.error("Error setting vote:", error);
+      throw error;
     }
   };
 
@@ -121,7 +136,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     originalImage,
     conceptImages,
     votedImages,
-    setVotedImages,
+    setVotedImages: setVote,
     repairedImages,
     setRepairedImages,
     allVoted,
