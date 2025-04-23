@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ImageData } from "@/types/image";
 import GridImageCard from "./GridImageCard";
@@ -70,9 +69,10 @@ const ConceptImagesGrid = ({
     );
   }
 
+  // Display up to 8 images, in a fixed 2 rows by 4 columns grid
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {conceptImages.map((image) => (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto" style={{gridAutoRows: '1fr'}}>
+      {conceptImages.slice(0, 8).map((image) => (
         <GridImageCard
           key={image.id}
           image={image}
