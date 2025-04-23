@@ -126,7 +126,6 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
               onEditPrompt={() => setIsEditingPrompt(true)}
               onToggleDataSource={toggleDataSource}
               useTestData={useTestData}
-              suggestedTags={tagsToUse}
             />
           }
           right={
@@ -140,6 +139,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
               onPromptSaved={() => {}}
               isEditingPrompt={isEditingPrompt}
               setIsEditingPrompt={setIsEditingPrompt}
+              suggestedTags={tagsToUse}
             />
           }
         />

@@ -1,4 +1,3 @@
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,18 +14,14 @@ const OriginalImageSection = ({
   onEditPrompt,
   onToggleDataSource,
   useTestData,
-  suggestedTags = [],
 }: OriginalImageSectionProps) => {
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex flex-col space-y-4">
-        {/* Removed the "T-Shirt Design" heading */}
-
         {originalImage ? (
           <div className="relative rounded-lg overflow-hidden border border-gray-200 group transition">
             <AspectRatio ratio={1}>
               <ImageCard image={originalImage} className="w-full h-full object-cover" />
-              {/* Action Buttons Overlay - only visible on hover */}
               <div className="absolute left-0 bottom-0 w-full flex justify-center gap-2 bg-gradient-to-t from-black/60 to-transparent px-4 py-3 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-10">
                 <Button
                   variant="outline"
@@ -64,14 +59,8 @@ const OriginalImageSection = ({
           </Card>
         )}
       </div>
-
-      {/* The action buttons are now overlayed above, not here */}
-      {/* <div className="flex gap-2 mt-4"> ... </div> */}
-
-      <TagVoting asin={originalImage?.id.replace('original-', '') || ''} suggestedTags={suggestedTags} />
     </div>
   );
 };
 
 export default OriginalImageSection;
-

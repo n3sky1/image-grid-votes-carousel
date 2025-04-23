@@ -1,6 +1,7 @@
 
 import VotingProgress from "./VotingProgress";
 import PromptEditor from "./PromptEditor";
+import TagVoting from "./TagVoting";
 
 interface VotingSidebarProps {
   votedImages: Record<string, "like" | "dislike" | "love">;
@@ -12,6 +13,7 @@ interface VotingSidebarProps {
   onPromptSaved?: () => void;
   isEditingPrompt: boolean;
   setIsEditingPrompt: (value: boolean) => void;
+  suggestedTags?: string[];
 }
 
 const VotingSidebar = ({
@@ -22,6 +24,7 @@ const VotingSidebar = ({
   onPromptSaved,
   isEditingPrompt,
   setIsEditingPrompt,
+  suggestedTags = [],
 }: VotingSidebarProps) => (
   <div className="space-y-4">
     <div>
@@ -34,9 +37,14 @@ const VotingSidebar = ({
         }}
       />
     </div>
+
+    {/* Tags are now under Generation Prompt but above Voting Progress */}
+    {suggestedTags.length > 0 && (
+      <TagVoting asin={asin} suggestedTags={suggestedTags} />
+    )}
+
     <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImagesCount} />
   </div>
 );
 
 export default VotingSidebar;
-
