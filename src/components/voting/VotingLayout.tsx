@@ -7,7 +7,7 @@ import WinningVoteOverlay from "../WinningVoteOverlay";
 interface VotingLayoutProps {
   children: ReactNode;
   showRegeneratingOverlay: boolean;
-  showWinningVoteOverlay?: boolean;
+  showWinningVoteOverlay: boolean;
   allVoted: boolean;
   asin: string;
   onVotingCompleted?: () => void;
@@ -16,7 +16,7 @@ interface VotingLayoutProps {
 export const VotingLayout = ({
   children,
   showRegeneratingOverlay,
-  showWinningVoteOverlay = false,
+  showWinningVoteOverlay,
   allVoted,
   asin,
   onVotingCompleted

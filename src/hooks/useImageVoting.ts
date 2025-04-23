@@ -144,11 +144,15 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
 
   useEffect(() => {
     const nonOriginalCount = conceptImages.length;
+    if (nonOriginalCount === 0) return; // Don't set allVoted if no concepts are loaded yet
+    
     const votedCount = Object.keys(votedImages).length;
-    if (votedCount >= nonOriginalCount && nonOriginalCount > 0) {
-      setAllVoted(true);
+    const allConceptsVoted = votedCount >= nonOriginalCount;
+    
+    if (allConceptsVoted !== allVoted) {
+      setAllVoted(allConceptsVoted);
     }
-  }, [votedImages, conceptImages]);
+  }, [votedImages, conceptImages, allVoted]);
 
   const toggleDataSource = () => {
     setUseTestData(prev => !prev);

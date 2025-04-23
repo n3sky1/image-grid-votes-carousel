@@ -10,7 +10,7 @@ interface VotingStateHandlersProps {
   allVoted: boolean;
   votedImages: Record<string, 'like' | 'dislike' | 'love'>;
   showRegeneratingOverlay: boolean;
-  showWinningVoteOverlay?: boolean;
+  showWinningVoteOverlay: boolean;
   asin: string;
   onVotingCompleted?: () => void;
   onRetry: () => void;
@@ -23,7 +23,7 @@ export const VotingStateHandlers = ({
   allVoted,
   votedImages,
   showRegeneratingOverlay,
-  showWinningVoteOverlay = false,
+  showWinningVoteOverlay,
   asin,
   onVotingCompleted,
   onRetry,
