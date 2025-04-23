@@ -11,11 +11,13 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [noMoreTshirts, setNoMoreTshirts] = useState(false);
 
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
       setLoading(true);
       setError(null);
+      setNoMoreTshirts(false);
       
       const user = await supabase.auth.getUser();
       if (!user.data.user) {
@@ -66,7 +68,7 @@ const Index = () => {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
         });
-        setError("No more t-shirts available for voting.");
+        setNoMoreTshirts(true);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -92,6 +94,30 @@ const Index = () => {
             className="mt-4 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
           >
             Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (noMoreTshirts) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB] flex items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
+          <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-gray-800">All Done!</h2>
+          <p className="text-lg text-gray-600 mb-6">
+            You've completed voting on all available t-shirts.
+          </p>
+          <button 
+            onClick={() => fetchNextAsin()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Check for New T-shirts
           </button>
         </div>
       </div>

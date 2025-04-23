@@ -39,12 +39,13 @@ export const useVotingRealtime = ({
           ) {
             console.log("Winner detected! Showing overlay");
             setShowRegeneratingOverlay(true);
-            // Increase the timeout to ensure the overlay is visible for longer
+            
+            // Delay the navigation to ensure the overlay is visible
             setTimeout(() => {
               if (onVotingCompleted) {
                 onVotingCompleted();
               }
-            }, 3000); // Increased from 2000ms to 3000ms
+            }, 3000);
           }
           
           if (
