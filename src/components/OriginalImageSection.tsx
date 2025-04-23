@@ -57,9 +57,11 @@ const OriginalImageSection = ({
                 </Button>
               </div>
             </AspectRatio>
-            {/* "Design X of Y" under original image */}
+            {/* Improved "Design X of Y" text */}
             <div className="w-full text-center mt-2">
-              <span className="text-xs text-gray-500 font-semibold">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold 
+                bg-gradient-to-br from-purple-50 to-purple-100 
+                text-purple-800 shadow-sm">
                 Design {userCompletedCount + 1} of {totalReadyCount}
               </span>
             </div>
@@ -78,4 +80,3 @@ const OriginalImageSection = ({
 };
 
 export default OriginalImageSection;
-
