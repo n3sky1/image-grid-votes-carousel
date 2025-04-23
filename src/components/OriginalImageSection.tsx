@@ -66,11 +66,9 @@ const OriginalImageSection = ({
           </Card>
         )}
       </div>
-      <div className="w-full text-center">
-        <div className="bg-white/70 border border-blue-100 rounded-lg p-2 inline-block">
-          <span className="block text-gray-700 font-medium text-xs">
-            Design Progress {userCompletedCount + 1} of {totalReadyCount}
-          </span>
+      <div className="w-full flex justify-center">
+        <div className="bg-white/70 border border-blue-100 rounded-lg p-2 text-sm font-bold">
+          Design Progress {userCompletedCount + 1} of {totalReadyCount}
         </div>
       </div>
     </div>
