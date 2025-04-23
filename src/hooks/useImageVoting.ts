@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { supabase } from "@/integrations/supabase/client";
 import { sampleImages } from "@/data/sampleImages";
@@ -13,104 +12,141 @@ export const useImageVoting = (asin: string) => {
   const [error, setError] = useState<string | null>(null);
   const [promptText, setPromptText] = useState<string>("");
   const [useTestData, setUseTestData] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
 
-  useEffect(() => {
-    const fetchImages = async () => {
-      setLoading(true);
-      setError(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const prevConceptCountRef = useRef<number>(0);
 
-      if (useTestData) {
-        const original = sampleImages.find(img => img.isOriginal);
-        setOriginalImage(original || null);
-        
-        // Ensure sample images for concepts have valid UUIDs
-        const sampleConceptImages = sampleImages
-          .filter(img => !img.isOriginal)
-          .map(img => ({
-            ...img,
-            // If id is not already in UUID format, make it so
-            id: isValidUUID(img.id) ? img.id : generateUUID()
-          }));
-        
-        setConceptImages(sampleConceptImages);
-        setPromptText("This is a sample prompt for demonstration purposes. It would normally contain the description used to generate the t-shirt designs.");
+  const fetchImages = async () => {
+    setLoading(true);
+    setError(null);
+
+    if (useTestData) {
+      const original = sampleImages.find(img => img.isOriginal);
+      setOriginalImage(original || null);
+      const sampleConceptImages = sampleImages
+        .filter(img => !img.isOriginal)
+        .map(img => ({
+          ...img,
+          id: isValidUUID(img.id) ? img.id : generateUUID()
+        }));
+      setConceptImages(sampleConceptImages);
+      setPromptText("This is a sample prompt for demonstration purposes. It would normally contain the description used to generate the t-shirt designs.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data: existingTshirt, error: checkError } = await supabase
+        .from("tshirts")
+        .select("asin")
+        .eq("asin", asin)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking for tshirt:", checkError);
+      }
+
+      if (!existingTshirt) {
+        await initializeTshirt(asin);
+      }
+
+      const { data: tshirt, error: tshirtError } = await supabase
+        .from("tshirts")
+        .select("original_image_url, asin, generated_image_description, regenerate")
+        .eq("asin", asin)
+        .maybeSingle();
+
+      if (tshirtError) {
+        console.error("Error fetching tshirt:", tshirtError);
+        setError("Failed to load the original image for this ASIN.");
         setLoading(false);
         return;
       }
 
-      try {
-        const { data: existingTshirt, error: checkError } = await supabase
-          .from("tshirts")
-          .select("asin")
-          .eq("asin", asin)
-          .maybeSingle();
-
-        if (checkError) {
-          console.error("Error checking for tshirt:", checkError);
-        }
-
-        if (!existingTshirt) {
-          await initializeTshirt(asin);
-        }
-
-        const { data: tshirt, error: tshirtError } = await supabase
-          .from("tshirts")
-          .select("original_image_url, asin, generated_image_description")
-          .eq("asin", asin)
-          .maybeSingle();
-
-        if (tshirtError) {
-          console.error("Error fetching tshirt:", tshirtError);
-          setError("Failed to load the original image for this ASIN.");
-          setLoading(false);
-          return;
-        }
-
-        if (!tshirt || !tshirt.original_image_url) {
-          setError("No image found for this ASIN.");
-          setLoading(false);
-          return;
-        }
-
-        setOriginalImage({
-          id: `original-${tshirt.asin}`,
-          src: tshirt.original_image_url,
-          alt: "Original T-shirt Design",
-          isOriginal: true,
-        });
-
-        setPromptText(tshirt.generated_image_description || "No description available.");
-
-        const { data: concepts, error: conceptError } = await supabase
-          .from("concepts")
-          .select("concept_id, concept_url")
-          .eq("tshirt_asin", asin);
-
-        if (conceptError) {
-          console.error("Error fetching concepts:", conceptError);
-          setError("Failed to load concept images.");
-          setLoading(false);
-          return;
-        }
-
-        setConceptImages(
-          (concepts || []).map((c: any) => ({
-            id: c.concept_id,
-            src: c.concept_url,
-            alt: "Concept Design",
-            isOriginal: false,
-          }))
-        );
-      } catch (err) {
-        console.error("Unexpected error:", err);
-        setError("An unexpected error occurred. Please try again later.");
-      } finally {
+      if (!tshirt || !tshirt.original_image_url) {
+        setError("No image found for this ASIN.");
         setLoading(false);
+        return;
       }
-    };
 
+      setOriginalImage({
+        id: `original-${tshirt.asin}`,
+        src: tshirt.original_image_url,
+        alt: "Original T-shirt Design",
+        isOriginal: true,
+      });
+
+      setPromptText(tshirt.generated_image_description || "No description available.");
+      const { data: concepts, error: conceptError } = await supabase
+        .from("concepts")
+        .select("concept_id, concept_url")
+        .eq("tshirt_asin", asin);
+
+      if (conceptError) {
+        console.error("Error fetching concepts:", conceptError);
+        setError("Failed to load concept images.");
+        setLoading(false);
+        return;
+      }
+
+      setConceptImages(
+        (concepts || []).map((c: any) => ({
+          id: c.concept_id,
+          src: c.concept_url,
+          alt: "Concept Design",
+          isOriginal: false,
+        }))
+      );
+
+      if (typeof tshirt.regenerate === "boolean") setRegenerating(tshirt.regenerate);
+      prevConceptCountRef.current = (concepts || []).length;
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchImages();
   }, [asin, useTestData]);
+
+  useEffect(() => {
+    if (regenerating && !useTestData) {
+      pollIntervalRef.current = setInterval(async () => {
+        const { data: tshirt } = await supabase
+          .from("tshirts")
+          .select("regenerate")
+          .eq("asin", asin)
+          .maybeSingle();
+
+        if (tshirt && tshirt.regenerate === false) {
+          clearInterval(pollIntervalRef.current as NodeJS.Timeout);
+          pollIntervalRef.current = null;
+          setRegenerating(false);
+          fetchImages();
+        } else {
+          fetchImages();
+        }
+      }, 5000);
+
+      return () => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+      };
+    }
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [regenerating, useTestData, asin]);
 
   useEffect(() => {
     const nonOriginalCount = conceptImages.length;
@@ -139,14 +175,11 @@ export const useImageVoting = (asin: string) => {
   };
 };
 
-// Helper functions
 const isValidUUID = (id: string): boolean => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 };
 
 const generateUUID = (): string => {
-  // This is a simple implementation for generating a valid UUID format
-  // RFC4122 version 4 compliant
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);

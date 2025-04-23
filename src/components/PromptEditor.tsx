@@ -25,18 +25,20 @@ const PromptEditor = ({ asin, promptText, onPromptSaved }: PromptEditorProps) =>
 
   const handleSavePrompt = async () => {
     setSaveLoading(true);
+
+    // Update prompt and set regenerate to true in one query
     const { error: updateError } = await supabase
       .from("tshirts")
-      .update({ ai_image_description: editValue })
+      .update({ ai_image_description: editValue, regenerate: true })
       .eq("asin", asin);
 
     if (updateError) {
       toast("Error saving prompt", { description: updateError.message, position: "bottom-right" });
     } else {
-      toast("Updated prompt", { description: "Prompt updated successfully!", position: "bottom-right" });
+      toast("Updated prompt", { description: "Prompt updated and regeneration started!", position: "bottom-right" });
       setIsEditing(false);
       if (onPromptSaved) onPromptSaved(editValue);
-      window.location.reload();
+      // Do not reload — let polling mechanism in voting grid pick up new images
     }
     setSaveLoading(false);
   };

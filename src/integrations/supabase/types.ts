@@ -228,6 +228,7 @@ export type Database = {
           monthly_sold: number | null
           original_image_url: string | null
           pattern: string | null
+          regenerate: boolean | null
           sales_rank_drops_30_day: number | null
           sales_rank_drops_90_day: number | null
           status: string
@@ -278,6 +279,7 @@ export type Database = {
           monthly_sold?: number | null
           original_image_url?: string | null
           pattern?: string | null
+          regenerate?: boolean | null
           sales_rank_drops_30_day?: number | null
           sales_rank_drops_90_day?: number | null
           status?: string
@@ -328,6 +330,7 @@ export type Database = {
           monthly_sold?: number | null
           original_image_url?: string | null
           pattern?: string | null
+          regenerate?: boolean | null
           sales_rank_drops_30_day?: number | null
           sales_rank_drops_90_day?: number | null
           status?: string
