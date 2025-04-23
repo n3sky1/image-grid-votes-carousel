@@ -88,35 +88,20 @@ const Index = () => {
       console.log("Total t-shirts available:", totalCount);
       setHasCheckedAvailability(true);
       
-      // If there are no t-shirts at all
+      // If there are no t-shirts at all, we'll still try to fetch anyway
       if (!totalCount || totalCount === 0) {
-        console.log("No t-shirts available at all");
-        setNoMoreTshirts(true);
-        setLoading(false);
-        setIsInitializing(false);
-        toast("No t-shirts available", {
-          description: "There are no t-shirts available for voting at this time.",
+        console.log("No t-shirts available, but still trying to fetch");
+        toast("Limited availability", {
+          description: "There are very few t-shirts available. We'll keep trying.",
           position: "bottom-right"
         });
-        return;
       }
       
       // Debug the completed vs total numbers
-      console.log(`User has completed ${completedAsins.length} out of ${totalCount} total t-shirts`);
-      
-      // If the user has completed all available t-shirts
-      if (completedAsins.length >= totalCount) {
-        console.log("User has completed all available t-shirts");
-        setNoMoreTshirts(true);
-        setLoading(false);
-        setIsInitializing(false);
-        toast("All done!", {
-          description: "You've completed voting on all available t-shirts.",
-          position: "bottom-right"
-        });
-        return;
+      if (totalCount) {
+        console.log(`User has completed ${completedAsins.length} out of ${totalCount} total t-shirts`);
       }
-
+      
       // Build the query to fetch the next available t-shirt for voting
       console.log("Finding next t-shirt not in:", completedAsins);
       let query = supabase
@@ -160,15 +145,16 @@ const Index = () => {
           console.log("Fallback query found t-shirt:", fallbackData.asin);
           setAsin(fallbackData.asin);
           setSuggestedTags(fallbackData.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
-          setNoMoreTshirts(false);
         } else {
-          // If even the fallback fails, show the "All Done" message
-          console.log("Even fallback query found no t-shirts - setting noMoreTshirts to true");
-          setNoMoreTshirts(true);
-          toast("All done!", {
-            description: "You've completed voting on all available t-shirts.",
-            position: "bottom-right"
-          });
+          // Even if fallback fails, we'll just show loading and retry
+          console.log("Even fallback query found no t-shirts - will retry");
+          setAsin("");
+          
+          // Schedule a retry after a delay
+          setTimeout(() => {
+            console.log("Retrying fetch after delay");
+            fetchNextAsin();
+          }, 5000);
         }
       }
     } catch (err) {
@@ -226,58 +212,32 @@ const Index = () => {
     );
   }
 
-  // Only show noMoreTshirts view if we've confirmed there are no more t-shirts
-  // AND we're not in the initial loading state AND we have checked availability
-  if (noMoreTshirts && !isInitializing && hasCheckedAvailability) {
-    console.log("Rendering 'All Done' view");
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
-          <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold mb-2 text-gray-800">All Done!</h2>
-          <p className="text-lg text-gray-600 mb-6">
-            You've completed voting on all available t-shirts.
-          </p>
-          <button 
-            onClick={() => fetchNextAsin()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Check for New T-shirts
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Show loading state or the voting interface
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
       <main>
-        {/* Only show content when we have verified there are t-shirts to display */}
-        {(loading || isInitializing || !hasCheckedAvailability) ? (
+        {/* We're showing the loading state when needed, otherwise render the ImageVotingGrid */}
+        {(loading || isInitializing || !hasCheckedAvailability || !asin) ? (
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
               <p>Looking for t-shirts to vote on...</p>
+              {!asin && !loading && hasCheckedAvailability && (
+                <button 
+                  onClick={() => fetchNextAsin()}
+                  className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Retry Search
+                </button>
+              )}
             </div>
           </div>
-        ) : asin ? (
+        ) : (
           <ImageVotingGrid 
             asin={asin} 
             suggestedTags={suggestedTags} 
             onVotingCompleted={() => fetchNextAsin(asin)}
           />
-        ) : (
-          <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p>Looking for t-shirts to vote on...</p>
-            </div>
-          </div>
         )}
       </main>
 
