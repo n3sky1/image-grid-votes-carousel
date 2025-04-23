@@ -67,8 +67,11 @@ const OriginalImageSection = ({
         )}
       </div>
       <div className="w-full flex justify-center">
-        <div className="bg-white border border-gray-200 text-gray-800 rounded-lg p-2 text-xs w-full text-center font-mono">
-          Design {userCompletedCount + 1} of {totalReadyCount}
+        <div
+          className="bg-white border border-gray-200 text-gray-800 rounded-lg p-2 w-full text-center font-sans text-base"
+          // font-sans and text-base to match ASIN Input
+        >
+          Design {userCompletedCount + 1} of {totalReadyCount} to Review
         </div>
       </div>
     </div>
