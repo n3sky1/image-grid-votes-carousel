@@ -12,6 +12,7 @@ export interface UseImageVotingState {
   loading: boolean;
   error: string | null;
   promptText: string;
+  setPromptText: React.Dispatch<React.SetStateAction<string>>;
   useTestData: boolean;
   toggleDataSource: () => void;
   fetchImages: () => Promise<void>;

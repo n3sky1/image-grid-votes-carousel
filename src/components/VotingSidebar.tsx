@@ -11,7 +11,7 @@ interface VotingSidebarProps {
   toggleDataSource: () => void;
   promptText: string;
   asin: string;
-  onPromptSaved?: () => void;
+  onPromptSaved?: (newPrompt: string) => void;
   isEditingPrompt: boolean;
   setIsEditingPrompt: (value: boolean) => void;
   aiRecommendedModel: string;
@@ -28,9 +28,9 @@ const VotingSidebar = ({
   aiRecommendedModel
 }: VotingSidebarProps) => <div className="space-y-4">
     <div>
-      <PromptEditor asin={asin} promptText={promptText} onPromptSaved={() => {
+      <PromptEditor asin={asin} promptText={promptText} onPromptSaved={(newPrompt) => {
       setIsEditingPrompt(false);
-      if (onPromptSaved) onPromptSaved();
+      if (onPromptSaved) onPromptSaved(newPrompt);
     }} />
     </div>
 

@@ -26,6 +26,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
     loading,
     error,
     promptText,
+    setPromptText,
     useTestData,
     toggleDataSource,
     repairedImages,
@@ -150,6 +151,11 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
     fetchImages();
   };
 
+  const handlePromptSaved = (newPrompt: string) => {
+    setPromptText(newPrompt);
+    fetchImages();
+  };
+
   useEffect(() => {
     if (allVoted && onVotingCompleted) {
       const recordCompletion = async () => {
@@ -206,7 +212,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
               toggleDataSource={toggleDataSource}
               promptText={promptText}
               asin={asin}
-              onPromptSaved={() => {}}
+              onPromptSaved={handlePromptSaved}
               isEditingPrompt={isEditingPrompt}
               setIsEditingPrompt={setIsEditingPrompt}
               aiRecommendedModel={aiRecommendedModel}

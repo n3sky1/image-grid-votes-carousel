@@ -103,6 +103,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     loading,
     error,
     promptText,
+    setPromptText,
     useTestData,
     toggleDataSource,
     fetchImages, // Expose the fetchImages function
