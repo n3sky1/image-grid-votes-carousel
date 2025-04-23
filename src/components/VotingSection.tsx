@@ -72,11 +72,11 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
 
   useEffect(() => {
     const channel = supabase
-      .channel('winning-vote-changes')
+      .channel('tshirt-changes')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'tshirts',
           filter: `asin=eq.${asin}`,
@@ -89,6 +89,10 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
                 onVotingCompleted();
               }
             }, 2000);
+          }
+          
+          if (!payload.old.regenerate && payload.new.regenerate) {
+            setShowRegeneratingOverlay(true);
           }
         }
       )
