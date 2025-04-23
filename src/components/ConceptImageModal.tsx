@@ -56,7 +56,7 @@ const ConceptImageModal = ({
             </div>
           )}
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="aspect-square relative rounded-lg overflow-hidden mb-3 flex-1">
+            <div className="aspect-square relative rounded-lg overflow-hidden mb-3 flex-1 border border-gray-200">
               <div className="w-full h-full relative">
                 <img
                   src={image.src}
@@ -65,10 +65,10 @@ const ConceptImageModal = ({
                 />
               </div>
               
-              {/* Positioned overlay elements */}
               <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90 z-10">
                 Concept {conceptIndex}
               </div>
+              
               {votedImages[expandedImageId] && (
                 <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-10">
                   <Check size={24} className="text-green-500" />
