@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ImageData } from "@/types/image";
 import GridImageCard from "./GridImageCard";
@@ -26,12 +27,19 @@ const ConceptImagesGrid = ({
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
     onVote(id, vote);
-    const currentIndex = conceptImages.findIndex((img) => img.id === id);
-    if (currentIndex !== -1 && conceptImages.length > 1) {
-      const nextIndex = (currentIndex + 1) % conceptImages.length;
-      setExpandedImageId(conceptImages[nextIndex].id);
-    } else {
-      setExpandedImageId(null);
+    
+    // Only navigate to next image if this was a new vote, not an unselection
+    const currentVote = votedImages[id];
+    const isNewVote = currentVote !== vote;
+    const isUnselection = currentVote === vote;
+    
+    // Only move to the next image for new votes, not for unselection
+    if (isNewVote && !isUnselection && conceptImages.length > 1) {
+      const currentIndex = conceptImages.findIndex((img) => img.id === id);
+      if (currentIndex !== -1) {
+        const nextIndex = (currentIndex + 1) % conceptImages.length;
+        setExpandedImageId(conceptImages[nextIndex].id);
+      }
     }
   };
 

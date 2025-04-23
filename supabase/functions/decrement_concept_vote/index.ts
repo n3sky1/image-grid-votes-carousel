@@ -39,20 +39,39 @@ serve(async (req) => {
       })
     }
 
-    // Determine which counter to decrement based on the vote type
-    const updateData: Record<string, number> = {}
-    if (userVote?.vote_type === 'like') updateData.votes_up = -1
-    if (userVote?.vote_type === 'dislike') updateData.votes_down = -1
-    if (userVote?.vote_type === 'love') updateData.hearts = -1
+    // Get the current vote counts
+    const { data: currentConcept, error: fetchError } = await supabaseClient
+      .from('concepts')
+      .select('votes_up, votes_down, hearts')
+      .eq('concept_id', p_concept_id)
+      .single()
+
+    if (fetchError) {
+      return new Response(JSON.stringify({ error: fetchError.message }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
+    // Update based on the vote type that's being removed
+    const newVoteCounts = {
+      votes_up: currentConcept.votes_up,
+      votes_down: currentConcept.votes_down,
+      hearts: currentConcept.hearts
+    }
+
+    if (userVote?.vote_type === 'like') {
+      newVoteCounts.votes_up = Math.max(0, (currentConcept.votes_up || 0) - 1)
+    } else if (userVote?.vote_type === 'dislike') {
+      newVoteCounts.votes_down = Math.max(0, (currentConcept.votes_down || 0) - 1)
+    } else if (userVote?.vote_type === 'love') {
+      newVoteCounts.hearts = Math.max(0, (currentConcept.hearts || 0) - 1)
+    }
 
     // Update the concept's vote counts
     const { error } = await supabaseClient
       .from('concepts')
-      .update({
-        votes_up: userVote?.vote_type === 'like' ? supabaseClient.rpc('decrement', { row: 'votes_up' }) : undefined,
-        votes_down: userVote?.vote_type === 'dislike' ? supabaseClient.rpc('decrement', { row: 'votes_down' }) : undefined,
-        hearts: userVote?.vote_type === 'love' ? supabaseClient.rpc('decrement', { row: 'hearts' }) : undefined,
-      })
+      .update(newVoteCounts)
       .eq('concept_id', p_concept_id)
 
     if (error) throw error
