@@ -25,12 +25,7 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          // Enable password protection
-          gotrue: {
-            password_protection: true
-          }
-        }
+        // Remove the options object with gotrue
       });
 
       if (error) {

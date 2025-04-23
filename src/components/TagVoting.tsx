@@ -28,7 +28,7 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
   const fetchTagVotes = async () => {
     try {
       const { data, error } = await supabase
-        .rpc('get_tag_votes', { p_tshirt_asin: asin }, { schema: 'public' });
+        .rpc('get_tag_votes', { p_tshirt_asin: asin });
 
       if (error) {
         console.error('Error fetching tag votes:', error);
@@ -55,17 +55,21 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
     }
 
     try {
-      const { error } = await supabase
-        .rpc('increment_tag_vote_count', {
+      // Call the Edge Function instead of using RPC directly
+      const response = await fetch("https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_tag_vote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+        },
+        body: JSON.stringify({
           p_tag_name: tagName,
-          p_tshirt_asin: asin,
-          p_user_id: user.id
-        }, { schema: 'public' });
+          p_tshirt_asin: asin
+        })
+      });
 
-      if (error) {
-        console.error('Error voting for tag:', error);
-        toast.error('Failed to register your vote');
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to vote');
       }
 
       setTagVotes(prev => ({
