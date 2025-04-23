@@ -13,6 +13,7 @@ const Index = () => {
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [noMoreTshirts, setNoMoreTshirts] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
@@ -20,29 +21,49 @@ const Index = () => {
       setLoading(true);
       setError(null);
       
-      // Make sure we don't show "No more t-shirts" during fetching
+      // Always reset noMoreTshirts when starting a fetch
       setNoMoreTshirts(false);
       
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) {
+      // Get current user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error("Error getting user:", userError);
+        setError("Authentication error. Please try logging in again.");
+        setLoading(false);
+        setIsInitializing(false);
+        return;
+      }
+      
+      if (!userData.user) {
         console.log("No authenticated user found");
         setLoading(false);
         setIsInitializing(false);
         return;
       }
+      
+      // Store user ID for debugging
+      const currentUserId = userData.user.id;
+      setUserId(currentUserId);
+      console.log("Current user ID:", currentUserId);
 
-      // Get the list of ASINs the user has already voted on
+      // Get the list of ASINs the user has already voted on with explicit user_id filter
       const { data: completedVotings, error: completedError } = await supabase
         .from("completed_votings")
         .select("asin")
-        .eq("user_id", user.data.user.id);
+        .eq("user_id", currentUserId);
       
       if (completedError) {
         console.error("Error fetching completed votings:", completedError);
+        setError("Failed to retrieve your voting history.");
+        setLoading(false);
+        setIsInitializing(false);
+        return;
       }
       
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
-      console.log("Completed ASINs count:", completedAsins.length);
+      console.log("User has completed", completedAsins.length, "t-shirts");
+      console.log("Completed ASINs:", completedAsins);
       
       // If we have a current ASIN that hasn't been marked as completed, add it to our list
       if (currentAsin && !completedAsins.includes(currentAsin)) {
@@ -66,7 +87,7 @@ const Index = () => {
       console.log("Total t-shirts available:", totalCount);
       
       // If there are no t-shirts at all
-      if (totalCount === 0) {
+      if (!totalCount || totalCount === 0) {
         console.log("No t-shirts available at all");
         setNoMoreTshirts(true);
         setLoading(false);
@@ -77,6 +98,9 @@ const Index = () => {
         });
         return;
       }
+      
+      // Debug the completed vs total numbers
+      console.log(`User has completed ${completedAsins.length} out of ${totalCount} total t-shirts`);
       
       // If the user has completed all available t-shirts
       if (completedAsins.length >= totalCount) {
@@ -92,16 +116,15 @@ const Index = () => {
       }
 
       // Build the query to fetch the next available t-shirt for voting
+      console.log("Finding next t-shirt not in:", completedAsins);
       let query = supabase
         .from("tshirts")
         .select("asin, ai_suggested_tags")
         .eq("ready_for_voting", true);
       
+      // Only filter by completed ASINs if there are any
       if (completedAsins.length > 0) {
-        // Use the "not.eq" filter for each ASIN in the array
-        for (const completedAsin of completedAsins) {
-          query = query.not('asin', 'eq', completedAsin);
-        }
+        query = query.not('asin', 'in', `(${completedAsins.join(',')})`);
       }
       
       const { data, error } = await query.limit(1).maybeSingle();
@@ -121,12 +144,30 @@ const Index = () => {
         setNoMoreTshirts(false); // Make sure this is explicitly set to false
       } else {
         console.log("Query returned no t-shirts despite count check showing some available");
-        // This is a fallback in case our count check and actual query don't match
-        setNoMoreTshirts(true);
-        toast("All done!", {
-          description: "You've completed voting on all available t-shirts.",
-          position: "bottom-right"
-        });
+        console.log("This is unexpected - rechecking with a different query approach");
+        
+        // Fallback query - try to get any t-shirt that's ready for voting
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("tshirts")
+          .select("asin, ai_suggested_tags")
+          .eq("ready_for_voting", true)
+          .limit(1)
+          .maybeSingle();
+          
+        if (fallbackData && fallbackData.asin) {
+          console.log("Fallback query found t-shirt:", fallbackData.asin);
+          setAsin(fallbackData.asin);
+          setSuggestedTags(fallbackData.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
+          setNoMoreTshirts(false);
+        } else {
+          // If even the fallback fails, show the "All Done" message
+          console.log("Even fallback query found no t-shirts - setting noMoreTshirts to true");
+          setNoMoreTshirts(true);
+          toast("All done!", {
+            description: "You've completed voting on all available t-shirts.",
+            position: "bottom-right"
+          });
+        }
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -151,6 +192,17 @@ const Index = () => {
     
     initializeApp();
   }, []);
+
+  // Debug current state
+  useEffect(() => {
+    console.log("Current state:", { 
+      asin, 
+      loading, 
+      isInitializing, 
+      noMoreTshirts,
+      userId 
+    });
+  }, [asin, loading, isInitializing, noMoreTshirts, userId]);
 
   if (error) {
     return (
