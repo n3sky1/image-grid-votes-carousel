@@ -44,7 +44,7 @@ const OriginalImageSection = ({
         description: 'This t-shirt has been marked for review.',
       });
 
-      // Call the original action handler
+      // Call the original action handler with the problem type
       onOriginalAction(problem);
     } catch (error) {
       console.error('Error updating tshirt:', error);

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ const Index = () => {
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
       setLoading(true);
+      setError(null);
       
       const user = await supabase.auth.getUser();
       if (!user.data.user) {
@@ -45,6 +47,7 @@ const Index = () => {
       if (error) {
         console.error("Error fetching ASIN:", error);
         setError("Unable to load t-shirt data. Please try again later.");
+        setLoading(false);
         return;
       }
       
@@ -58,6 +61,7 @@ const Index = () => {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
         });
+        setError("No more t-shirts available for voting.");
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -79,7 +83,7 @@ const Index = () => {
           <h1 className="text-xl font-bold text-center text-red-700 mb-2">Error</h1>
           <p className="text-center text-gray-700">{error}</p>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={() => fetchNextAsin()}
             className="mt-4 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
           >
             Retry

@@ -136,6 +136,10 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
       description: `You selected: ${actionMessages[action].replace("Marked as ", "")}`,
       position: "bottom-right",
     });
+    
+    if (onVotingCompleted) {
+      onVotingCompleted();
+    }
   };
 
   const handleRetry = () => {
