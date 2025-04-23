@@ -13,6 +13,7 @@ import VotingCompletionHandler from "./VotingCompletionHandler";
 import { useVotingStats } from "@/hooks/useVotingStats";
 import { useAiModel } from "@/hooks/useAiModel";
 import { useImageVoting } from "@/hooks/useImageVoting";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VotingSectionProps {
   asin: string;
