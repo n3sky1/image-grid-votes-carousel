@@ -55,12 +55,16 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
     }
 
     try {
-      // Call the Edge Function instead of using RPC directly
+      // Get the session first to properly extract the token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || '';
+      
+      // Call the Edge Function with the properly extracted token
       const response = await fetch("https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_tag_vote", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           p_tag_name: tagName,
