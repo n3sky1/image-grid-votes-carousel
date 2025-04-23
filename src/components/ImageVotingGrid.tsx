@@ -25,7 +25,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
     promptText,
     useTestData,
     toggleDataSource,
-    repairedImages, // We'll let UI manage this state for consistency
+    repairedImages,
     setRepairedImages,
   } = useImageVoting(asin);
 
@@ -104,7 +104,16 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
   };
 
   if (loading) return <VotingLoading />;
-  if (error) return <VotingError error={error} />;
+  
+  // Show the error component with the specific error message
+  if (error) {
+    return (
+      <div className="w-full max-w-6xl mx-auto p-4">
+        <VotingError error={error} />
+      </div>
+    );
+  }
+  
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
   const tagsToUse = suggestedTags.length > 0 ? suggestedTags : ["Funny", "Vintage", "Graphic", "Summer"];
@@ -125,11 +134,13 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
           }
           right={
             <>
-              <PromptEditor
-                asin={asin}
-                promptText={promptText}
-                onPromptSaved={() => setIsEditingPrompt(false)}
-              />
+              {isEditingPrompt && (
+                <PromptEditor
+                  asin={asin}
+                  promptText={promptText}
+                  onPromptSaved={() => setIsEditingPrompt(false)}
+                />
+              )}
               <VotingSidebar
                 votedImages={votedImages}
                 conceptImagesCount={conceptImages.length}

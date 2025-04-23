@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ImageData } from "@/types/image";
 import GridImageCard from "./GridImageCard";
 import ConceptImageModal from "./ConceptImageModal";
+import { AlertCircle } from "lucide-react";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
@@ -52,6 +53,21 @@ const ConceptImagesGrid = ({
     }
     setExpandedImageId(conceptImages[newIndex].id);
   };
+
+  // Check if there are no concept images to display
+  if (conceptImages.length === 0) {
+    return (
+      <div className="min-h-[300px] rounded-lg bg-gray-50 flex items-center justify-center p-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <AlertCircle size={40} className="text-amber-500" />
+          <p className="text-lg font-medium text-gray-700">No concept images are available for this item</p>
+          <p className="text-sm text-gray-500">
+            This could be because the t-shirt isn't ready for voting yet or no concepts have been generated.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-5 grid-rows-2 gap-4">
