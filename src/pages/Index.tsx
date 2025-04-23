@@ -21,22 +21,33 @@ const Index = () => {
         return;
       }
 
+      // First, get the ASINs that the user has already completed
+      const { data: completedVotings } = await supabase
+        .from("completed_votings")
+        .select("asin")
+        .eq("user_id", user.data.user.id);
+      
+      // Extract the ASINs into an array
+      const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
+      
+      // Add the current ASIN to the list of excluded ASINs if provided
+      if (currentAsin && !completedAsins.includes(currentAsin)) {
+        completedAsins.push(currentAsin);
+      }
+
       // Get t-shirts that are ready for voting and not completed by the current user
-      const { data, error } = await supabase
+      let query = supabase
         .from("tshirts")
         .select("asin, ai_suggested_tags")
-        .eq("ready_for_voting", true)
-        .not("asin", "eq", currentAsin) // Exclude current ASIN if provided
-        .not(
-          "asin",
-          "in",
-          supabase
-            .from("completed_votings")
-            .select("asin")
-            .eq("user_id", user.data.user.id)
-        )
-        .limit(1)
-        .maybeSingle();
+        .eq("ready_for_voting", true);
+      
+      // Only apply the not-in filter if there are completed ASINs
+      if (completedAsins.length > 0) {
+        query = query.not('asin', 'in', completedAsins);
+      }
+      
+      // Limit to 1 result and get as maybeSignle
+      const { data, error } = await query.limit(1).maybeSingle();
       
       if (error) {
         console.error("Error fetching ASIN:", error);
