@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
@@ -6,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Comments from "./Comments";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ConceptImagesGridProps {
   conceptImages: ImageData[];
@@ -29,7 +29,6 @@ const ConceptImagesGrid = ({
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
     onVote(id, vote);
-    
     const currentIndex = conceptImages.findIndex(img => img.id === id);
     if (currentIndex !== -1 && conceptImages.length > 1) {
       const nextIndex = (currentIndex + 1) % conceptImages.length;
@@ -47,17 +46,14 @@ const ConceptImagesGrid = ({
 
   const handleNavigate = (direction: 'prev' | 'next') => {
     if (!expandedImageId) return;
-    
     const currentIndex = conceptImages.findIndex(img => img.id === expandedImageId);
     if (currentIndex === -1) return;
-    
     let newIndex;
     if (direction === 'prev') {
       newIndex = currentIndex === 0 ? conceptImages.length - 1 : currentIndex - 1;
     } else {
-      newIndex = newIndex = currentIndex === conceptImages.length - 1 ? 0 : currentIndex + 1;
+      newIndex = currentIndex === conceptImages.length - 1 ? 0 : currentIndex + 1;
     }
-    
     setExpandedImageId(conceptImages[newIndex].id);
   };
 
@@ -140,25 +136,28 @@ const ConceptImagesGrid = ({
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant={votedImages[image.id] === 'dislike' ? "default" : "outline"}
                           onClick={() => handleVote(image.id, 'dislike')}
-                          className="hover:bg-red-50 hover:text-red-600"
+                          className={`hover:bg-red-50 hover:text-red-600 
+                            ${votedImages[image.id] === 'dislike' ? 'bg-red-100 text-red-600' : ''}`}
                         >
                           <ThumbsDown size={16} />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant={votedImages[image.id] === 'like' ? "default" : "outline"}
                           onClick={() => handleVote(image.id, 'like')}
-                          className="hover:bg-green-50 hover:text-green-600"
+                          className={`hover:bg-green-50 hover:text-green-600 
+                            ${votedImages[image.id] === 'like' ? 'bg-green-100 text-green-600' : ''}`}
                         >
                           <ThumbsUp size={16} />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant={votedImages[image.id] === 'love' ? "default" : "outline"}
                           onClick={() => handleVote(image.id, 'love')}
-                          className="hover:bg-pink-50 hover:text-pink-600"
+                          className={`hover:bg-pink-50 hover:text-pink-600 
+                            ${votedImages[image.id] === 'love' ? 'bg-pink-100 text-pink-600' : ''}`}
                         >
                           <Heart size={16} />
                         </Button>

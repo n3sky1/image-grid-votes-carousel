@@ -25,45 +25,69 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
     promptText,
     useTestData,
     toggleDataSource,
+    repairedImages, // We'll let UI manage this state for consistency
+    setRepairedImages,
   } = useImageVoting(asin);
 
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
-  const [repairedImages, setRepairedImages] = useState<Record<string, boolean>>({});
 
-  const handleVote = (id: string, vote: "like" | "dislike" | "love") => {
+  // Handle voting logic
+  const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
+    // Previous vote for this image (if any)
+    const prevVote = votedImages[id];
+
+    // Optimistically update UI
     setVotedImages((prev) => ({
       ...prev,
       [id]: vote,
     }));
+
+    // Prepare DB field changes
+    const fields: Partial<Record<string, number>> = {};
+    if (prevVote && prevVote !== vote) {
+      // Decrement previous vote count
+      if (prevVote === "like") fields.votes_up = -1;
+      if (prevVote === "dislike") fields.votes_down = -1;
+      if (prevVote === "love") fields.hearts = -1;
+    }
+    // Increment new vote count
+    if (vote === "like") fields.votes_up = (fields.votes_up ?? 0) + 1;
+    if (vote === "dislike") fields.votes_down = (fields.votes_down ?? 0) + 1;
+    if (vote === "love") fields.hearts = (fields.hearts ?? 0) + 1;
+
+    // Update in Supabase
+    const updates: any = { ...fields };
+    await supabase
+      .from("concepts")
+      .update(updates)
+      .eq("concept_id", id);
+
+    // Show toast for feedback
+    const voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
+    toast(voteText, {
+      description: `You ${voteText.toLowerCase()} this image`,
+      position: "bottom-right",
+    });
   };
 
+  // Handle Repair action (toggle, independent from vote)
   const handleRepair = async (id: string) => {
-    try {
-      // Toggle the repair status
-      setRepairedImages(prev => ({
-        ...prev,
-        [id]: !prev[id]
-      }));
+    const alreadyMarked = repairedImages[id];
 
-      // Update the concepts table
-      const { error } = await supabase
-        .from('concepts')
-        .update({ repair_requested: true })
-        .eq('concept_id', id);
+    setRepairedImages(prev => ({
+      ...prev,
+      [id]: !alreadyMarked
+    }));
 
-      if (error) {
-        console.error('Error updating repair status:', error);
-        toast('Error', { description: 'Could not mark for repair', position: 'bottom-right' });
-      } else {
-        const actionText = repairedImages[id] ? 'Unmarked' : 'Marked';
-        toast(actionText, { 
-          description: `${actionText} image for repair`, 
-          position: 'bottom-right' 
-        });
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
+    await supabase
+      .from('concepts')
+      .update({ repair_requested: !alreadyMarked })
+      .eq('concept_id', id);
+
+    toast(`${alreadyMarked ? "Unmarked" : "Marked"} for repair`, {
+      description: `${alreadyMarked ? "Repair unmarked" : "Repair requested"}`,
+      position: 'bottom-right'
+    });
   };
 
   const handleOriginalAction = (action: "copyrighted" | "no-design" | "cant-design") => {
