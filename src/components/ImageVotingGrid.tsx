@@ -51,7 +51,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
 
     await supabase
       .from("concepts")
-      .update(updates)
+      .update(fields)
       .eq("concept_id", id);
 
     const voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
