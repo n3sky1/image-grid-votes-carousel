@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,12 +38,10 @@ const Index = () => {
         .select("asin, ai_suggested_tags")
         .eq("ready_for_voting", true);
       
+      // Only filter out completed ASINs if there are any
       if (completedAsins.length > 0) {
-        // Use the "not.eq" filter for each ASIN in the array
-        // This is more reliable than "not.in" which was causing issues
-        for (const completedAsin of completedAsins) {
-          query = query.not('asin', 'eq', completedAsin);
-        }
+        // Use NOT IN operator instead of multiple NOT EQ filters
+        query = query.not('asin', 'in', completedAsins);
       }
       
       const { data, error } = await query.limit(1).maybeSingle();
