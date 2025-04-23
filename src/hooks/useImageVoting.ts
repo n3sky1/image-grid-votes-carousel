@@ -15,7 +15,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [promptText, setPromptText] = useState<string>("");
-  const [useTestData, setUseTestData] = useState(false); // Changed from true to false
+  const [useTestData, setUseTestData] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
