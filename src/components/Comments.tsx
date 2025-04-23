@@ -16,7 +16,7 @@ const Comments = ({ conceptId }: CommentsProps) => {
     toggleLikeMutation
   } = useComments(conceptId);
 
-  if (!isValidUUID) {
+  if (!conceptId || !isValidUUID) {
     return <div className="text-center text-gray-500 text-sm">Comments not available for this concept</div>;
   }
 

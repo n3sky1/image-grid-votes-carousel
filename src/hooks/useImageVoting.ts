@@ -22,7 +22,17 @@ export const useImageVoting = (asin: string) => {
       if (useTestData) {
         const original = sampleImages.find(img => img.isOriginal);
         setOriginalImage(original || null);
-        setConceptImages(sampleImages.filter(img => !img.isOriginal));
+        
+        // Ensure sample images for concepts have valid UUIDs
+        const sampleConceptImages = sampleImages
+          .filter(img => !img.isOriginal)
+          .map(img => ({
+            ...img,
+            // If id is not already in UUID format, make it so
+            id: isValidUUID(img.id) ? img.id : generateUUID()
+          }));
+        
+        setConceptImages(sampleConceptImages);
         setPromptText("This is a sample prompt for demonstration purposes. It would normally contain the description used to generate the t-shirt designs.");
         setLoading(false);
         return;
@@ -127,6 +137,21 @@ export const useImageVoting = (asin: string) => {
     useTestData,
     toggleDataSource
   };
+};
+
+// Helper functions
+const isValidUUID = (id: string): boolean => {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
+const generateUUID = (): string => {
+  // This is a simple implementation for generating a valid UUID format
+  // RFC4122 version 4 compliant
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 };
 
 const initializeTshirt = async (asin: string) => {

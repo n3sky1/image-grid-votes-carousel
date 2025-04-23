@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Heart, Wrench, X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Textarea } from "@/components/ui/textarea";
 import Comments from "./Comments";
 
 interface ConceptImagesGridProps {
@@ -18,7 +17,6 @@ interface ConceptImagesGridProps {
 
 const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }: ConceptImagesGridProps) => {
   const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
-  const [comment, setComment] = useState<string>("");
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
     onVote(id, vote);
@@ -42,10 +40,15 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
     if (direction === 'prev') {
       newIndex = currentIndex === 0 ? conceptImages.length - 1 : currentIndex - 1;
     } else {
-      newIndex = currentIndex === conceptImages.length - 1 ? 0 : currentIndex + 1;
+      newIndex = newIndex = currentIndex === conceptImages.length - 1 ? 0 : currentIndex + 1;
     }
     
     setExpandedImageId(conceptImages[newIndex].id);
+  };
+
+  // Helper function to check if a string is a valid UUID
+  const isValidUUID = (id: string): boolean => {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   };
 
   return (
@@ -95,7 +98,8 @@ const ConceptImagesGrid = ({ conceptImages, votedImages, onVote, originalImage }
                           </AspectRatio>
                         </div>
                         <div className="mt-4">
-                          <Comments conceptId={expandedImageId} />
+                          {/* Only use the Comments component if the ID is a valid UUID */}
+                          <Comments conceptId={isValidUUID(expandedImageId) ? expandedImageId : ''} />
                         </div>
                       </div>
                     )}
