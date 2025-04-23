@@ -33,8 +33,6 @@ const Index = () => {
         completedAsins.push(currentAsin);
       }
 
-      console.log("Fetching next ASIN, excluding:", completedAsins);
-
       // Build the query to fetch the next available t-shirt for voting
       let query = supabase
         .from("tshirts")

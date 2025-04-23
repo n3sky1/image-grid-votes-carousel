@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface UseVotingRealtimeProps {
@@ -17,8 +17,6 @@ export const useVotingRealtime = ({
   setRegenerating,
   fetchImages
 }: UseVotingRealtimeProps) => {
-  const [showWinningVoteOverlay, setShowWinningVoteOverlay] = useState(false);
-  
   useEffect(() => {
     const tshirtChangesChannel = supabase
       .channel('tshirt-changes')
@@ -33,7 +31,6 @@ export const useVotingRealtime = ({
         (payload: any) => {
           console.log("Tshirt change detected:", payload);
           
-          // Check if a winning concept was selected
           if (
             payload.old && 
             payload.new && 
@@ -41,17 +38,14 @@ export const useVotingRealtime = ({
             payload.new.winning_concept_id !== null
           ) {
             console.log("Winner detected! Showing overlay");
-            setShowWinningVoteOverlay(true);
+            setShowRegeneratingOverlay(true);
             setTimeout(() => {
-              setShowWinningVoteOverlay(false);
               if (onVotingCompleted) {
                 onVotingCompleted();
               }
             }, 2000);
-            return; // Exit early as we're moving to next t-shirt
           }
           
-          // Handle regeneration start
           if (
             payload.old && 
             payload.new && 
@@ -66,7 +60,6 @@ export const useVotingRealtime = ({
             setRegenerating(true);
           }
           
-          // Handle regeneration completion
           if (
             payload.old && 
             payload.new && 
@@ -76,24 +69,6 @@ export const useVotingRealtime = ({
             console.log("Regeneration complete detected. Refreshing images");
             setRegenerating(false);
             fetchImages();
-          }
-
-          // Handle t-shirt becoming unavailable for voting
-          if (
-            payload.old && 
-            payload.new && 
-            payload.old.ready_for_voting === true &&
-            payload.new.ready_for_voting === false &&
-            payload.new.winning_concept_id
-          ) {
-            console.log("Tshirt no longer available for voting because it has a winner");
-            setShowWinningVoteOverlay(true);
-            setTimeout(() => {
-              setShowWinningVoteOverlay(false);
-              if (onVotingCompleted) {
-                onVotingCompleted();
-              }
-            }, 2000);
           }
         }
       )
@@ -112,17 +87,12 @@ export const useVotingRealtime = ({
         (payload: any) => {
           console.log("Concept vote change detected:", payload);
           
-          // Check for both regular votes and heart votes
-          if (payload.new) {
-            const hasWinningVotes = payload.new.votes_up >= 2;
-            const hasWinningHearts = payload.new.hearts >= 1;
-            
-            if (hasWinningVotes || hasWinningHearts) {
-              console.log("Potential winner based on votes/hearts. Refreshing data");
-              // This will trigger a refresh that will pick up the winning state
-              // since the database trigger will have updated the tshirt's winning_concept_id
-              fetchImages();
-            }
+          if (
+            payload.new && 
+            ((payload.new.votes_up >= 2) || (payload.new.hearts >= 1))
+          ) {
+            console.log("Potential winner based on vote count. Refreshing data");
+            fetchImages();
           }
         }
       )
@@ -133,6 +103,4 @@ export const useVotingRealtime = ({
       supabase.removeChannel(conceptChangesChannel);
     };
   }, [asin, onVotingCompleted, setShowRegeneratingOverlay, fetchImages, setRegenerating]);
-  
-  return { showWinningVoteOverlay };
 };

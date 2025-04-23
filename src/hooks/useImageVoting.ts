@@ -5,7 +5,6 @@ import { fetchSampleImages } from "@/services/sampleImageService";
 import { fetchSupabaseImages } from "@/services/imageDataService";
 import { saveUserVote, removeUserVote, switchUserVote } from "@/services/voteService";
 import { UseImageVotingState } from "./useImageVoting.types";
-import { supabase } from "@/integrations/supabase/client";
 
 export const useImageVoting = (asin: string): UseImageVotingState => {
   const [originalImage, setOriginalImage] = useState<ImageData | null>(null);
@@ -19,7 +18,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
   const [useTestData, setUseTestData] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [showRegeneratingOverlay, setShowRegeneratingOverlay] = useState(false);
-  const [winningConceptId, setWinningConceptId] = useState<string | null>(null);
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevConceptCountRef = useRef<number>(0);
@@ -38,57 +36,35 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     } else {
       const currentlyRegenerating = lastRegeneratingStatusRef.current;
       
-      setLoading(true);
-      try {
-        // First check if this t-shirt has a winner
-        const { data: tshirtData, error: tshirtError } = await supabase
-          .from("tshirts")
-          .select("winning_concept_id, ready_for_voting")
-          .eq("asin", asin)
-          .single();
-          
-        if (tshirtError) {
-          console.error("Error checking tshirt winner:", tshirtError);
-        } else if (tshirtData?.winning_concept_id) {
-          console.log("Tshirt already has a winning concept:", tshirtData.winning_concept_id);
-          setWinningConceptId(tshirtData.winning_concept_id);
-          // If it has a winning concept but isn't loaded yet, load the images
-        }
-        
-        if (!regenerating || (currentlyRegenerating && !regenerating)) {
-          await fetchSupabaseImages(
-            asin,
-            setOriginalImage,
-            setConceptImages,
-            setPromptText,
-            setRepairedImages,
-            setLoading,
-            setError,
-            setRegenerating,
-            prevConceptCountRef,
-            setVotedImages
-          );
-        } else {
-          await fetchSupabaseImages(
-            asin,
-            () => {},
-            () => {},
-            () => {},
-            () => {},
-            () => {},
-            setError,
-            setRegenerating,
-            prevConceptCountRef,
-            () => {}
-          );
-        }
-      } catch (error) {
-        console.error("Error in fetchImages:", error);
-        setError("Failed to load images. Please try again.");
-      } finally {
-        setLoading(false);
-        lastRegeneratingStatusRef.current = regenerating;
+      if (!regenerating || (currentlyRegenerating && !regenerating)) {
+        await fetchSupabaseImages(
+          asin,
+          setOriginalImage,
+          setConceptImages,
+          setPromptText,
+          setRepairedImages,
+          setLoading,
+          setError,
+          setRegenerating,
+          prevConceptCountRef,
+          setVotedImages
+        );
+      } else {
+        await fetchSupabaseImages(
+          asin,
+          () => {},
+          () => {},
+          () => {},
+          () => {},
+          () => {},
+          setError,
+          setRegenerating,
+          prevConceptCountRef,
+          () => {}
+        );
       }
+      
+      lastRegeneratingStatusRef.current = regenerating;
     }
   };
 
@@ -121,27 +97,6 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
         }
         return newVotes;
       });
-      
-      // Check if this was a critical vote that might have triggered a winner
-      // For likes and loves, check if the t-shirt has now been marked as having a winner
-      if (vote === 'like' || vote === 'love') {
-        setTimeout(async () => {
-          try {
-            const { data: tshirtData } = await supabase
-              .from("tshirts")
-              .select("winning_concept_id")
-              .eq("asin", asin)
-              .maybeSingle();
-              
-            if (tshirtData?.winning_concept_id) {
-              console.log("Vote created a winning concept:", tshirtData.winning_concept_id);
-              setWinningConceptId(tshirtData.winning_concept_id);
-            }
-          } catch (error) {
-            console.error("Error checking for winner after vote:", error);
-          }
-        }, 500); // Give the database trigger time to run
-      }
     } catch (error) {
       console.error("Error setting vote:", error);
       throw error;
@@ -189,15 +144,11 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
 
   useEffect(() => {
     const nonOriginalCount = conceptImages.length;
-    if (nonOriginalCount === 0) return; // Don't set allVoted if no concepts are loaded yet
-    
     const votedCount = Object.keys(votedImages).length;
-    const allConceptsVoted = votedCount >= nonOriginalCount;
-    
-    if (allConceptsVoted !== allVoted) {
-      setAllVoted(allConceptsVoted);
+    if (votedCount >= nonOriginalCount && nonOriginalCount > 0) {
+      setAllVoted(true);
     }
-  }, [votedImages, conceptImages, allVoted]);
+  }, [votedImages, conceptImages]);
 
   const toggleDataSource = () => {
     setUseTestData(prev => !prev);

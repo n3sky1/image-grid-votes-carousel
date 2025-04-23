@@ -45,26 +45,6 @@ export const saveUserVote = async (
     if (!response.ok) {
       throw new Error(`Failed to update vote count: ${response.statusText}`);
     }
-    
-    // Check if this vote resulted in a winning concept
-    if (voteType === 'love' || voteType === 'like') {
-      // Get the concept to find its t-shirt
-      const { data: conceptData } = await supabase
-        .from('concepts')
-        .select('tshirt_asin, votes_up, hearts')
-        .eq('concept_id', conceptId)
-        .single();
-        
-      if (conceptData) {
-        const isWinner = 
-          (voteType === 'love' && conceptData.hearts >= 1) || 
-          (voteType === 'like' && conceptData.votes_up >= 2);
-            
-        if (isWinner) {
-          console.log("This vote created a winning concept:", conceptId);
-        }
-      }
-    }
   } catch (error) {
     console.error("Error in saveUserVote:", error);
     throw error;
@@ -174,26 +154,6 @@ export const switchUserVote = async (
 
     if (!incrementResponse.ok) {
       throw new Error(`Failed to increment new vote count: ${incrementResponse.statusText}`);
-    }
-    
-    // Check if this vote resulted in a winning concept
-    if (newVoteType === 'love' || newVoteType === 'like') {
-      // Get the concept to find its t-shirt
-      const { data: conceptData } = await supabase
-        .from('concepts')
-        .select('tshirt_asin, votes_up, hearts')
-        .eq('concept_id', conceptId)
-        .single();
-        
-      if (conceptData) {
-        const isWinner = 
-          (newVoteType === 'love' && conceptData.hearts >= 1) || 
-          (newVoteType === 'like' && conceptData.votes_up >= 2);
-            
-        if (isWinner) {
-          console.log("This vote switch created a winning concept:", conceptId);
-        }
-      }
     }
   } catch (error) {
     console.error("Error in switchUserVote:", error);
