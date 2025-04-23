@@ -13,7 +13,7 @@ const VotingProgress = ({
   return <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
       <div className="flex flex-col">
         <div className="flex justify-between items-center mb-2">
-          <p className="text-sm font-medium text-gray-700">Voting Progress for this Design</p>
+          <p className="text-sm font-medium text-gray-700">Voting Progress:</p>
           <p className="text-sm text-gray-600">
             {votedCount} of {total} voted
           </p>
