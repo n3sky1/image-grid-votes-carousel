@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "@/services/sampleImageService";
-import { fetchSupabaseImages, saveUserVote, removeUserVote } from "@/services/imageVotingService";
+import { fetchSupabaseImages } from "@/services/imageDataService";
+import { saveUserVote, removeUserVote } from "@/services/voteService";
 import { UseImageVotingState } from "./useImageVoting.types";
 
 export const useImageVoting = (asin: string): UseImageVotingState => {
