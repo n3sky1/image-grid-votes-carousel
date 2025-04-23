@@ -62,7 +62,7 @@ const PromptEditor = ({ asin, promptText, onPromptSaved }: PromptEditorProps) =>
           </button>
         )}
       </div>
-      <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">
+      <div className="text-gray-700 max-h-[200px] overflow-y-auto text-sm">
         {!isEditing ? (
           promptText
         ) : (
@@ -72,7 +72,7 @@ const PromptEditor = ({ asin, promptText, onPromptSaved }: PromptEditorProps) =>
               onChange={(e) => setEditValue(e.target.value)}
               className="mb-2"
               disabled={saveLoading}
-              rows={4}
+              rows={6} // Increased from 4 to 6 to make it 25% larger
             />
             <div className="flex gap-2">
               <TooltipProvider>
