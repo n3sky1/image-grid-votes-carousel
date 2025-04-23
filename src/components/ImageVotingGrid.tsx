@@ -16,7 +16,7 @@ const getCurrentUser = async () => {
   return data?.user || null;
 };
 
-const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => {
+const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageVotingGridProps) => {
   const {
     originalImage,
     conceptImages,
@@ -145,6 +145,26 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
     });
     fetchImages();
   };
+
+  useEffect(() => {
+    if (allVoted && onVotingCompleted) {
+      const recordCompletion = async () => {
+        const user = await supabase.auth.getUser();
+        if (!user.data.user) return;
+
+        await supabase
+          .from("completed_votings")
+          .insert({
+            asin: asin,
+            user_id: user.data.user.id
+          });
+      };
+
+      recordCompletion().then(() => {
+        onVotingCompleted();
+      });
+    }
+  }, [allVoted, asin, onVotingCompleted]);
 
   if (loading) return <VotingLoading />;
   

@@ -1,9 +1,9 @@
-
 import { ImageData } from "./image";
 
 export interface ImageVotingGridProps {
   asin: string;
   suggestedTags?: string[];
+  onVotingCompleted?: () => void;
 }
 
 export interface OriginalImageSectionProps {
@@ -13,9 +13,7 @@ export interface OriginalImageSectionProps {
   onEditPrompt: () => void;
   onToggleDataSource: () => void;
   useTestData: boolean;
-  suggestedTags?: string[]; // Added this prop
-  // add these optional fields:
+  suggestedTags?: string[];
   totalReadyCount?: number;
   userCompletedCount?: number;
 }
-

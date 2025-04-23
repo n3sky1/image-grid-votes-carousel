@@ -1,65 +1,77 @@
-
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
-const DEMO_ASIN = "B01N4HS7B8";
-
 const Index = () => {
   const [showInstructions, setShowInstructions] = useState(false);
-  const [asin, setAsin] = useState(DEMO_ASIN);
+  const [asin, setAsin] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
 
-  useEffect(() => {
-    const fetchFirstAsin = async () => {
-      try {
-        setLoading(true);
-        
-        // Get t-shirts that are explicitly marked as ready for voting
-        const { data, error } = await supabase
-          .from("tshirts")
-          .select("asin, ai_suggested_tags, ready_for_voting")
-          .eq("ready_for_voting", true) // Only get t-shirts ready for voting
-          .limit(1)
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Error fetching ASIN:", error);
-          setError("Unable to load t-shirt data. Please try again later.");
-          return;
-        }
-        
-        if (data && data.asin) {
-          console.log("Found t-shirt ready for voting:", data.asin);
-          setAsin(data.asin);
-          
-          // Set the suggested tags if they exist in data
-          if (data.ai_suggested_tags && Array.isArray(data.ai_suggested_tags)) {
-            setSuggestedTags(data.ai_suggested_tags);
-          } else {
-            // Default tags if none exist in the database
-            setSuggestedTags(["Funny", "Vintage", "Graphic", "Summer"]);
-          }
-        } else {
-          console.log("No t-shirts ready for voting, using demo data");
-          toast("Using demo data", {
-            description: "No t-shirts ready for voting were found. Using demo data instead.",
-            position: "bottom-right"
-          });
-        }
-      } catch (err) {
-        console.error("Unexpected error:", err);
-        setError("An unexpected error occurred. Please try again later.");
-      } finally {
+  const fetchNextAsin = async (currentAsin?: string) => {
+    try {
+      setLoading(true);
+      
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
         setLoading(false);
+        return;
       }
-    };
 
-    fetchFirstAsin();
+      // Get t-shirts that are ready for voting and not completed by the current user
+      const { data, error } = await supabase
+        .from("tshirts")
+        .select("asin, ai_suggested_tags")
+        .eq("ready_for_voting", true)
+        .not("asin", "eq", currentAsin) // Exclude current ASIN if provided
+        .not(
+          "asin",
+          "in",
+          supabase
+            .from("completed_votings")
+            .select("asin")
+            .eq("user_id", user.data.user.id)
+        )
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching ASIN:", error);
+        setError("Unable to load t-shirt data. Please try again later.");
+        return;
+      }
+      
+      if (data && data.asin) {
+        console.log("Found next t-shirt for voting:", data.asin);
+        setAsin(data.asin);
+        
+        if (data.ai_suggested_tags && Array.isArray(data.ai_suggested_tags)) {
+          setSuggestedTags(data.ai_suggested_tags);
+        } else {
+          setSuggestedTags(["Funny", "Vintage", "Graphic", "Summer"]);
+        }
+      } else {
+        console.log("No more t-shirts available for voting");
+        toast("All done!", {
+          description: "You've completed voting on all available t-shirts.",
+          position: "bottom-right"
+        });
+        // Keep the last ASIN displayed
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchNextAsin();
   }, []);
 
   if (error) {
@@ -88,13 +100,16 @@ const Index = () => {
             Loading...
           </div>
         ) : (
-          <ImageVotingGrid asin={asin} suggestedTags={suggestedTags} />
+          <ImageVotingGrid 
+            asin={asin} 
+            suggestedTags={suggestedTags} 
+            onVotingCompleted={() => fetchNextAsin(asin)}
+          />
         )}
       </main>
 
       <footer className="mt-14 py-7 border-t bg-white/60 bg-gradient-to-bl from-[#ede8f6] to-[#fff8] 
-        shadow-inner rounded-t-2xl
-      ">
+        shadow-inner rounded-t-2xl">
         <div className="max-w-6xl mx-auto px-6">
           <p className="text-gray-500 text-sm text-center">
             Staff Image Voting System © {new Date().getFullYear()}
