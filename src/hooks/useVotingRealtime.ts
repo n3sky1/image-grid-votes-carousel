@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface UseVotingRealtimeProps {
@@ -17,6 +17,8 @@ export const useVotingRealtime = ({
   setRegenerating,
   fetchImages
 }: UseVotingRealtimeProps) => {
+  const [showWinningVoteOverlay, setShowWinningVoteOverlay] = useState(false);
+  
   useEffect(() => {
     const tshirtChangesChannel = supabase
       .channel('tshirt-changes')
@@ -38,8 +40,9 @@ export const useVotingRealtime = ({
             payload.new.winning_concept_id !== null
           ) {
             console.log("Winner detected! Showing overlay");
-            setShowRegeneratingOverlay(true);
+            setShowWinningVoteOverlay(true);
             setTimeout(() => {
+              setShowWinningVoteOverlay(false);
               if (onVotingCompleted) {
                 onVotingCompleted();
               }
@@ -108,4 +111,6 @@ export const useVotingRealtime = ({
       supabase.removeChannel(conceptChangesChannel);
     };
   }, [asin, onVotingCompleted, setShowRegeneratingOverlay, fetchImages, setRegenerating]);
+  
+  return { showWinningVoteOverlay };
 };

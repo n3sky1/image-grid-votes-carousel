@@ -10,6 +10,7 @@ interface VotingStateHandlersProps {
   allVoted: boolean;
   votedImages: Record<string, 'like' | 'dislike' | 'love'>;
   showRegeneratingOverlay: boolean;
+  showWinningVoteOverlay?: boolean;
   asin: string;
   onVotingCompleted?: () => void;
   onRetry: () => void;
@@ -22,6 +23,7 @@ export const VotingStateHandlers = ({
   allVoted,
   votedImages,
   showRegeneratingOverlay,
+  showWinningVoteOverlay = false,
   asin,
   onVotingCompleted,
   onRetry,
@@ -40,6 +42,7 @@ export const VotingStateHandlers = ({
   return (
     <VotingLayout
       showRegeneratingOverlay={showRegeneratingOverlay}
+      showWinningVoteOverlay={showWinningVoteOverlay}
       allVoted={allVoted}
       asin={asin}
       onVotingCompleted={onVotingCompleted}

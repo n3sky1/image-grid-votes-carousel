@@ -9,7 +9,6 @@ import ImageVotingSectionLayout from "./ImageVotingSectionLayout";
 import OriginalImageSection from "./OriginalImageSection";
 import VotingSidebar from "./VotingSidebar";
 import ConceptImagesGrid from "./ConceptImagesGrid";
-import WinningVoteOverlay from "./WinningVoteOverlay";
 import { VotingStateHandlers } from "./voting/VotingStateHandlers";
 
 interface VotingSectionProps {
@@ -62,7 +61,7 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
     }
   });
 
-  useVotingRealtime({
+  const { showWinningVoteOverlay } = useVotingRealtime({
     asin,
     onVotingCompleted,
     setShowRegeneratingOverlay,
@@ -79,13 +78,13 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
 
   return (
     <>
-      {showRegeneratingOverlay && <WinningVoteOverlay />}
       <VotingStateHandlers
         loading={loading}
         error={error}
         allVoted={allVoted}
         votedImages={votedImages}
         showRegeneratingOverlay={showRegeneratingOverlay}
+        showWinningVoteOverlay={showWinningVoteOverlay}
         asin={asin}
         onVotingCompleted={onVotingCompleted}
         onRetry={handleRetry}

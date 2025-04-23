@@ -19,6 +19,20 @@ const VotingCompletionHandler = ({
         const user = await supabase.auth.getUser();
         if (!user.data.user) return;
 
+        // Check if this ASIN is already marked as completed
+        const { data: existingCompletion } = await supabase
+          .from("completed_votings")
+          .select("asin")
+          .eq("asin", asin)
+          .eq("user_id", user.data.user.id)
+          .single();
+          
+        if (existingCompletion) {
+          console.log("Completion already recorded for this ASIN, skipping...");
+          return;
+        }
+
+        // Record the completion
         await supabase
           .from("completed_votings")
           .insert({
@@ -28,6 +42,10 @@ const VotingCompletionHandler = ({
       };
 
       recordCompletion().then(() => {
+        onVotingCompleted();
+      }).catch(error => {
+        console.error("Error recording completion:", error);
+        // Still call onVotingCompleted to move to next t-shirt
         onVotingCompleted();
       });
     }
