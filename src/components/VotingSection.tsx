@@ -61,6 +61,14 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     }
   });
 
+  // Create a handler function to properly update repairedImages state
+  const handleRepairImage = (id: string) => {
+    setRepairedImages(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   if (loading) return <VotingLoading />;
   if (error) {
     return (
@@ -111,7 +119,7 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
         votedImages={votedImages}
         repairedImages={repairedImages}
         onVote={handleVote}
-        onRepair={setRepairedImages}
+        onRepair={handleRepairImage}
         originalImage={originalImage}
       />
     </VotingLayout>
