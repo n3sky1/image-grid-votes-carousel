@@ -1,3 +1,6 @@
 
 [realtime.policies."public".tshirts]
   enable = true
+
+[realtime.policies."public".concepts]
+  enable = true

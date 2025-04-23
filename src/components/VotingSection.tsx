@@ -1,19 +1,15 @@
 
-import { useState, useEffect } from "react";
-import VotingCompleted from "./VotingCompleted";
-import VotingError from "./VotingError";
-import VotingLoading from "./VotingLoading";
-import OriginalImageSection from "./OriginalImageSection";
-import ConceptImagesGrid from "./ConceptImagesGrid";
-import ImageVotingSectionLayout from "./ImageVotingSectionLayout";
-import VotingSidebar from "./VotingSidebar";
+import { useState } from "react";
 import { useVotingStats } from "@/hooks/useVotingStats";
 import { useAiModel } from "@/hooks/useAiModel";
 import { useImageVoting } from "@/hooks/useImageVoting";
-import { VotingLayout } from "./voting/VotingLayout";
 import { useVotingActions } from "./voting/VotingActionsHandler";
-import WinningVoteOverlay from "./WinningVoteOverlay";
-import { supabase } from "@/integrations/supabase/client";
+import { useVotingRealtime } from "@/hooks/useVotingRealtime";
+import ImageVotingSectionLayout from "./ImageVotingSectionLayout";
+import OriginalImageSection from "./OriginalImageSection";
+import VotingSidebar from "./VotingSidebar";
+import ConceptImagesGrid from "./ConceptImagesGrid";
+import { VotingStateHandlers } from "./voting/VotingStateHandlers";
 
 interface VotingSectionProps {
   asin: string;
@@ -21,9 +17,8 @@ interface VotingSectionProps {
   onVotingCompleted?: () => void;
 }
 
-const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSectionProps) => {
+const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
-  const [showWinningOverlay, setShowWinningOverlay] = useState(false);
   const { userCompletedCount, totalReadyCount } = useVotingStats();
   const aiRecommendedModel = useAiModel(asin);
 
@@ -43,7 +38,8 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     toggleDataSource,
     fetchImages,
     showRegeneratingOverlay,
-    setShowRegeneratingOverlay  // Added this line to destructure the setter
+    setShowRegeneratingOverlay,
+    setRegenerating
   } = useImageVoting(asin);
 
   const {
@@ -65,6 +61,14 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     }
   });
 
+  const { showWinningVoteOverlay } = useVotingRealtime({
+    asin,
+    onVotingCompleted,
+    setShowRegeneratingOverlay,
+    setRegenerating,
+    fetchImages
+  });
+
   const handleRepairImage = (id: string) => {
     setRepairedImages(prev => ({
       ...prev,
@@ -72,57 +76,18 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     }));
   };
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('tshirt-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tshirts',
-          filter: `asin=eq.${asin}`,
-        },
-        (payload: any) => {
-          if (payload.old.winning_concept_id === null && payload.new.winning_concept_id !== null) {
-            setShowWinningOverlay(true);
-            setTimeout(() => {
-              if (onVotingCompleted) {
-                onVotingCompleted();
-              }
-            }, 2000);
-          }
-          
-          if (!payload.old.regenerate && payload.new.regenerate) {
-            setShowRegeneratingOverlay(true);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [asin, onVotingCompleted]);
-
-  if (loading) return <VotingLoading />;
-  if (error) {
-    return (
-      <div className="w-full max-w-6xl mx-auto p-4">
-        <VotingError error={error} onRetry={handleRetry} />
-      </div>
-    );
-  }
-  if (allVoted) return <VotingCompleted votedImages={votedImages} />;
-
   return (
     <>
-      {showWinningOverlay && <WinningVoteOverlay />}
-      <VotingLayout
-        showRegeneratingOverlay={showRegeneratingOverlay}
+      <VotingStateHandlers
+        loading={loading}
+        error={error}
         allVoted={allVoted}
+        votedImages={votedImages}
+        showRegeneratingOverlay={showRegeneratingOverlay}
+        showWinningVoteOverlay={showWinningVoteOverlay}
         asin={asin}
         onVotingCompleted={onVotingCompleted}
+        onRetry={handleRetry}
       >
         <ImageVotingSectionLayout
           left={
@@ -160,7 +125,7 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
           onRepair={handleRepairImage}
           originalImage={originalImage}
         />
-      </VotingLayout>
+      </VotingStateHandlers>
     </>
   );
 };

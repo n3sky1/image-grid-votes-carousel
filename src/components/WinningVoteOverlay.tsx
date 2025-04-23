@@ -10,7 +10,7 @@ const WinningVoteOverlay = () => {
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Winning vote cast!</h3>
             <p className="text-gray-600">
-              Loading next t-shirt for review...
+              This design has received enough votes to win. Loading next t-shirt for review...
             </p>
           </div>
         </div>
