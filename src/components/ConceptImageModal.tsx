@@ -61,7 +61,7 @@ const ConceptImageModal = ({
                 <img
                   src={image.src}
                   alt={image.alt}
-                  className="max-w-full max-h-[60vh] object-contain"
+                  className="max-w-full max-h-[75vh] object-contain scale-125" // Increased max-height and added scale-125
                 />
                 <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90 z-10">
                   Concept {conceptIndex}
