@@ -66,12 +66,12 @@ const ConceptImageModal = ({
                 <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90 z-10">
                   Concept {conceptIndex}
                 </div>
+                {votedImages[expandedImageId] && (
+                  <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-10">
+                    <Check size={24} className="text-green-500" />
+                  </div>
+                )}
               </div>
-              {votedImages[expandedImageId] && (
-                <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-10">
-                  <Check size={24} className="text-green-500" />
-                </div>
-              )}
             </div>
             <div className="flex justify-center gap-2 pt-2 bg-white mt-auto">
               <Button
