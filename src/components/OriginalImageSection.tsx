@@ -67,8 +67,8 @@ const OriginalImageSection = ({
         )}
       </div>
       <div className="w-full flex justify-center">
-        <div className="bg-white/70 border border-gray-200 rounded-lg p-2 text-xs w-full text-center">
-          Review {userCompletedCount + 1} of {totalReadyCount}
+        <div className="bg-white border border-gray-200 text-gray-800 rounded-lg p-2 text-xs w-full text-center font-medium">
+          Design {userCompletedCount + 1} of {totalReadyCount}
         </div>
       </div>
     </div>
