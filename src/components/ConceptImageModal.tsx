@@ -33,6 +33,7 @@ const ConceptImageModal = ({
   originalImage,
 }: ConceptImageModalProps) => {
   const image = conceptImages.find(img => img.id === expandedImageId);
+  const conceptIndex = conceptImages.findIndex(img => img.id === expandedImageId) + 1;
 
   if (!image) return null;
   return (
@@ -61,6 +62,9 @@ const ConceptImageModal = ({
                 alt={image.alt}
                 className="max-w-full max-h-[60vh] object-contain"
               />
+              <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90">
+                Concept {conceptIndex}
+              </div>
               {votedImages[expandedImageId] && (
                 <div className="absolute top-2 right-2 bg-white/90 rounded-full p-2 shadow-md z-10">
                   <Check size={24} className="text-green-500" />
