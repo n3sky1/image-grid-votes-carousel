@@ -1,4 +1,3 @@
-
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -9,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { toast } from "@/components/ui/sonner";
-import { Edit, Save } from "lucide-react";
+import { Edit, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,6 +82,11 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
     setSaveLoading(false);
   };
 
+  const handleCancelEditPrompt = () => {
+    setIsEditingPrompt(false);
+    setEditPromptValue(promptText);
+  };
+
   if (loading) return <VotingLoading />;
   if (error) return <VotingError error={error} />;
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
@@ -134,26 +138,46 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ExtendedImageVotingGridPr
                             disabled={saveLoading}
                             rows={4}
                           />
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="mt-1 flex gap-2 items-center"
-                                  onClick={handleSavePrompt}
-                                  disabled={saveLoading}
-                                  aria-label="Save and regenerate"
-                                >
-                                  <Save className="h-4 w-4" />
-                                  {saveLoading ? "Saving..." : "Save & Regenerate"}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                Save and regenerate
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <div className="flex gap-2">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-1 flex gap-2 items-center"
+                                    onClick={handleSavePrompt}
+                                    disabled={saveLoading}
+                                    aria-label="Save and regenerate"
+                                  >
+                                    <Save className="h-4 w-4" />
+                                    {saveLoading ? "Saving..." : "Save & Regenerate"}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Save and regenerate
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="mt-1"
+                                    onClick={handleCancelEditPrompt}
+                                    disabled={saveLoading}
+                                    aria-label="Cancel editing"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Cancel editing
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                         </div>
                       )}
                     </div>
