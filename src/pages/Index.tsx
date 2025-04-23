@@ -62,6 +62,7 @@ const Index = () => {
         console.log("Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
+        setNoMoreTshirts(false);
       } else {
         console.log("No more t-shirts available for voting");
         toast("All done!", {
@@ -131,12 +132,16 @@ const Index = () => {
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
             Loading...
           </div>
-        ) : (
+        ) : asin ? (
           <ImageVotingGrid 
             asin={asin} 
             suggestedTags={suggestedTags} 
             onVotingCompleted={() => fetchNextAsin(asin)}
           />
+        ) : (
+          <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
+            No t-shirts available for voting.
+          </div>
         )}
       </main>
 
