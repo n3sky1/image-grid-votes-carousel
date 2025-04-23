@@ -39,13 +39,11 @@ export const useVotingRealtime = ({
           ) {
             console.log("Winner detected! Showing overlay");
             setShowRegeneratingOverlay(true);
-            
-            // Delay the navigation to ensure the overlay is visible
             setTimeout(() => {
               if (onVotingCompleted) {
                 onVotingCompleted();
               }
-            }, 3000);
+            }, 2000);
           }
           
           if (
@@ -95,17 +93,10 @@ export const useVotingRealtime = ({
             const hasWinningHearts = payload.new.hearts >= 1;
             
             if (hasWinningVotes || hasWinningHearts) {
-              console.log("Potential winner based on votes/hearts. Showing overlay and refreshing data");
-              // First show the overlay
-              setShowRegeneratingOverlay(true);
-              
-              // Then refresh data after a short delay
-              setTimeout(() => {
-                fetchImages();
-              }, 500);
-              
-              // If this results in a winning concept, the tshirt-changes channel
-              // above will catch that and handle the transition appropriately
+              console.log("Potential winner based on votes/hearts. Refreshing data");
+              // This will trigger a refresh that will pick up the winning state
+              // since the database trigger will have updated the tshirt's winning_concept_id
+              fetchImages();
             }
           }
         }

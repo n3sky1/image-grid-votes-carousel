@@ -6,6 +6,7 @@ import VotingCompletionHandler from "../VotingCompletionHandler";
 interface VotingLayoutProps {
   children: ReactNode;
   showRegeneratingOverlay: boolean;
+  allVoted: boolean;
   asin: string;
   onVotingCompleted?: () => void;
 }
@@ -13,12 +14,14 @@ interface VotingLayoutProps {
 export const VotingLayout = ({
   children,
   showRegeneratingOverlay,
+  allVoted,
   asin,
   onVotingCompleted
 }: VotingLayoutProps) => {
   return (
     <>
       <VotingCompletionHandler 
+        allVoted={allVoted} 
         asin={asin} 
         onVotingCompleted={onVotingCompleted} 
       />

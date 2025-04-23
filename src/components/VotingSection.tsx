@@ -30,6 +30,7 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
     setVotedImages,
     repairedImages,
     setRepairedImages,
+    allVoted,
     loading,
     error,
     promptText,
@@ -82,6 +83,7 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
       <VotingStateHandlers
         loading={loading}
         error={error}
+        allVoted={allVoted}
         votedImages={votedImages}
         showRegeneratingOverlay={showRegeneratingOverlay}
         asin={asin}
