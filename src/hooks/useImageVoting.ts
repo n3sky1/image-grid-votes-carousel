@@ -147,6 +147,10 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     setRepairedImages({});
   };
 
+  // Calculate if all images have been voted on
+  const allVoted = conceptImages.length > 0 && 
+    conceptImages.every(image => Object.keys(votedImages).includes(image.id));
+
   return {
     originalImage,
     conceptImages,
@@ -154,6 +158,7 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     setVotedImages: handleVote,
     repairedImages,
     setRepairedImages,
+    allVoted, // Added the missing property
     loading,
     error,
     promptText,
