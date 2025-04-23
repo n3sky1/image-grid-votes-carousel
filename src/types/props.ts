@@ -13,4 +13,5 @@ export interface OriginalImageSectionProps {
   onEditPrompt: () => void;
   onToggleDataSource: () => void;
   useTestData: boolean;
+  suggestedTags?: string[]; // Added this prop
 }

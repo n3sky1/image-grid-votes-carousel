@@ -8,7 +8,7 @@ import { useAuth } from "./AuthProvider";
 
 interface TagVotingProps {
   asin: string;
-  suggestedTags: string[];
+  suggestedTags?: string[];
 }
 
 interface TagVote {
@@ -16,7 +16,7 @@ interface TagVote {
   votes: number;
 }
 
-const TagVoting = ({ asin, suggestedTags }: TagVotingProps) => {
+const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
   const [tagVotes, setTagVotes] = useState<Record<string, number>>({});
   const { user } = useAuth();
 

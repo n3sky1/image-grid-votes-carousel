@@ -1,4 +1,3 @@
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +13,7 @@ const OriginalImageSection = ({
   onEditPrompt,
   onToggleDataSource,
   useTestData,
+  suggestedTags = [],
 }: OriginalImageSectionProps) => {
   return (
     <div className="flex flex-col space-y-4">
@@ -90,7 +90,7 @@ const OriginalImageSection = ({
         </Button>
       </div>
 
-      <TagVoting asin={originalImage?.id.replace('original-', '') || ''} />
+      <TagVoting asin={originalImage?.id.replace('original-', '') || ''} suggestedTags={suggestedTags} />
     </div>
   );
 };

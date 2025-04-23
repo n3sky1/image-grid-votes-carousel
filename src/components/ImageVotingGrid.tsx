@@ -1,4 +1,3 @@
-
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -32,38 +31,29 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
 
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
 
-  // Handle voting logic
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
-    // Previous vote for this image (if any)
     const prevVote = votedImages[id];
 
-    // Optimistically update UI
     setVotedImages((prev) => ({
       ...prev,
       [id]: vote,
     }));
 
-    // Prepare DB field changes
     const fields: Partial<Record<string, number>> = {};
     if (prevVote && prevVote !== vote) {
-      // Decrement previous vote count
       if (prevVote === "like") fields.votes_up = -1;
       if (prevVote === "dislike") fields.votes_down = -1;
       if (prevVote === "love") fields.hearts = -1;
     }
-    // Increment new vote count
     if (vote === "like") fields.votes_up = (fields.votes_up ?? 0) + 1;
     if (vote === "dislike") fields.votes_down = (fields.votes_down ?? 0) + 1;
     if (vote === "love") fields.hearts = (fields.hearts ?? 0) + 1;
 
-    // Update in Supabase
-    const updates: any = { ...fields };
     await supabase
       .from("concepts")
       .update(updates)
       .eq("concept_id", id);
 
-    // Show toast for feedback
     const voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
     toast(voteText, {
       description: `You ${voteText.toLowerCase()} this image`,
@@ -71,7 +61,6 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
     });
   };
 
-  // Handle Repair action (toggle, independent from vote)
   const handleRepair = async (id: string) => {
     const alreadyMarked = repairedImages[id];
 
@@ -104,7 +93,6 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
     });
   };
 
-  // Handler for retry when there's an error
   const handleRetry = () => {
     toast("Retrying...", {
       description: "Attempting to reload images",
@@ -115,7 +103,6 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
 
   if (loading) return <VotingLoading />;
   
-  // Show the error component with the specific error message
   if (error) {
     return (
       <div className="w-full max-w-6xl mx-auto p-4">
@@ -142,6 +129,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
               onEditPrompt={() => setIsEditingPrompt(true)}
               onToggleDataSource={toggleDataSource}
               useTestData={useTestData}
+              suggestedTags={tagsToUse}
             />
           }
           right={
