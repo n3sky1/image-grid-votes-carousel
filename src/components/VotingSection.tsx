@@ -1,19 +1,17 @@
 
-import { useState, useEffect } from "react";
-import { toast } from "@/components/ui/sonner";
+import { useState } from "react";
 import VotingCompleted from "./VotingCompleted";
 import VotingError from "./VotingError";
 import VotingLoading from "./VotingLoading";
-import RegeneratingOverlay from "./RegeneratingOverlay";
 import OriginalImageSection from "./OriginalImageSection";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import ImageVotingSectionLayout from "./ImageVotingSectionLayout";
 import VotingSidebar from "./VotingSidebar";
-import VotingCompletionHandler from "./VotingCompletionHandler";
 import { useVotingStats } from "@/hooks/useVotingStats";
 import { useAiModel } from "@/hooks/useAiModel";
 import { useImageVoting } from "@/hooks/useImageVoting";
-import { supabase } from "@/integrations/supabase/client";
+import { VotingLayout } from "./voting/VotingLayout";
+import { useVotingActions } from "./voting/VotingActionsHandler";
 
 interface VotingSectionProps {
   asin: string;
@@ -44,110 +42,24 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     showRegeneratingOverlay,
   } = useImageVoting(asin);
 
-  // Add effect to check for winning concept
-  useEffect(() => {
-    const checkWinningConcept = async () => {
-      const { data } = await supabase
-        .from('tshirts')
-        .select('winning_concept_id')
-        .eq('asin', asin)
-        .single();
-      
-      if (data?.winning_concept_id) {
-        toast("Winner Selected!", {
-          description: "A winning concept has been chosen. Moving to next t-shirt.",
-          position: "bottom-right",
-        });
-        if (onVotingCompleted) {
-          onVotingCompleted();
-        }
-      }
-    };
-
-    if (conceptImages.length > 0) {
-      checkWinningConcept();
+  const {
+    handleVote,
+    handleOriginalAction,
+    handleRetry,
+    handlePromptSaved
+  } = useVotingActions({
+    id: asin,
+    onVote: setVotedImages,
+    onOriginalAction: (action) => {
+      handleOriginalAction(action);
+      if (onVotingCompleted) onVotingCompleted();
+    },
+    onRetry: fetchImages,
+    onPromptSaved: (newPrompt: string) => {
+      setPromptText(newPrompt);
+      fetchImages();
     }
-  }, [asin, conceptImages, votedImages, onVotingCompleted]);
-
-  const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
-    try {
-      const currentVote = votedImages[id];
-      
-      await setVotedImages(id, vote);
-      
-      let voteText: string;
-      let voteDescription: string;
-      
-      if (currentVote === vote) {
-        voteText = "Vote removed";
-        voteDescription = "Your previous vote was removed";
-      } else if (currentVote && currentVote !== vote) {
-        voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
-        voteDescription = `Vote changed from ${currentVote} to ${vote}`;
-      } else {
-        voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
-        voteDescription = `You ${voteText.toLowerCase()} this image`;
-      }
-      
-      toast(voteText, {
-        description: voteDescription,
-        position: "bottom-right",
-      });
-    } catch (error) {
-      console.error("Error setting vote:", error);
-      toast("Error", {
-        description: "Failed to save your vote. Please try again.",
-        position: "bottom-right",
-      });
-    }
-  };
-
-  const handleRepair = async (id: string) => {
-    const alreadyMarked = repairedImages[id];
-    setRepairedImages(prev => ({
-      ...prev,
-      [id]: !alreadyMarked
-    }));
-    await supabase
-      .from('concepts')
-      .update({ repair_requested: !alreadyMarked })
-      .eq('concept_id', id);
-
-    toast(`${alreadyMarked ? "Unmarked" : "Marked"} for repair`, {
-      description: `${alreadyMarked ? "Repair unmarked" : "Repair requested"}`,
-      position: 'bottom-right'
-    });
-  };
-
-  const handleOriginalAction = (action: "copyrighted" | "no-design" | "cant-design") => {
-    const actionMessages = {
-      copyrighted: "Marked as Copyrighted!",
-      "no-design": "Marked as No Design!",
-      "cant-design": "Marked as Can't Design!",
-    };
-
-    toast(actionMessages[action], {
-      description: `You selected: ${actionMessages[action].replace("Marked as ", "")}`,
-      position: "bottom-right",
-    });
-    
-    if (onVotingCompleted) {
-      onVotingCompleted();
-    }
-  };
-
-  const handleRetry = () => {
-    toast("Retrying...", {
-      description: "Attempting to reload images",
-      position: "bottom-right"
-    });
-    fetchImages();
-  };
-
-  const handlePromptSaved = (newPrompt: string) => {
-    setPromptText(newPrompt);
-    fetchImages();
-  };
+  });
 
   if (loading) return <VotingLoading />;
   if (error) {
@@ -160,54 +72,49 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
   return (
-    <>
-      <VotingCompletionHandler 
-        allVoted={allVoted} 
-        asin={asin} 
-        onVotingCompleted={onVotingCompleted} 
-      />
-      {showRegeneratingOverlay && <RegeneratingOverlay />}
-      <div className="w-full max-w-6xl mx-auto">
-        <div className="p-4 space-y-8">
-          <ImageVotingSectionLayout
-            left={
-              <OriginalImageSection
-                originalImage={originalImage}
-                promptText={promptText}
-                onOriginalAction={handleOriginalAction}
-                onEditPrompt={() => setIsEditingPrompt(true)}
-                onToggleDataSource={toggleDataSource}
-                useTestData={useTestData}
-                totalReadyCount={totalReadyCount}
-                userCompletedCount={userCompletedCount}
-              />
-            }
-            right={
-              <VotingSidebar
-                votedImages={votedImages}
-                conceptImagesCount={conceptImages.length}
-                useTestData={useTestData}
-                toggleDataSource={toggleDataSource}
-                promptText={promptText}
-                asin={asin}
-                onPromptSaved={handlePromptSaved}
-                isEditingPrompt={isEditingPrompt}
-                setIsEditingPrompt={setIsEditingPrompt}
-                aiRecommendedModel={aiRecommendedModel}
-              />
-            }
-          />
-          <ConceptImagesGrid
-            conceptImages={conceptImages}
-            votedImages={votedImages}
-            repairedImages={repairedImages}
-            onVote={handleVote}
-            onRepair={handleRepair}
+    <VotingLayout
+      showRegeneratingOverlay={showRegeneratingOverlay}
+      allVoted={allVoted}
+      asin={asin}
+      onVotingCompleted={onVotingCompleted}
+    >
+      <ImageVotingSectionLayout
+        left={
+          <OriginalImageSection
             originalImage={originalImage}
+            promptText={promptText}
+            onOriginalAction={handleOriginalAction}
+            onEditPrompt={() => setIsEditingPrompt(true)}
+            onToggleDataSource={toggleDataSource}
+            useTestData={useTestData}
+            totalReadyCount={totalReadyCount}
+            userCompletedCount={userCompletedCount}
           />
-        </div>
-      </div>
-    </>
+        }
+        right={
+          <VotingSidebar
+            votedImages={votedImages}
+            conceptImagesCount={conceptImages.length}
+            useTestData={useTestData}
+            toggleDataSource={toggleDataSource}
+            promptText={promptText}
+            asin={asin}
+            onPromptSaved={handlePromptSaved}
+            isEditingPrompt={isEditingPrompt}
+            setIsEditingPrompt={setIsEditingPrompt}
+            aiRecommendedModel={aiRecommendedModel}
+          />
+        }
+      />
+      <ConceptImagesGrid
+        conceptImages={conceptImages}
+        votedImages={votedImages}
+        repairedImages={repairedImages}
+        onVote={handleVote}
+        onRepair={setRepairedImages}
+        originalImage={originalImage}
+      />
+    </VotingLayout>
   );
 };
 
