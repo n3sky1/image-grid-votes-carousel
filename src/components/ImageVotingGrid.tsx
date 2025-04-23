@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -29,6 +29,19 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
   } = useImageVoting(asin);
 
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
+  const [aiRecommendedModel, setAiRecommendedModel] = useState<string>("");
+
+  useEffect(() => {
+    const fetchModel = async () => {
+      const { data } = await supabase
+        .from("tshirts")
+        .select("ai_recommended_model")
+        .eq("asin", asin)
+        .maybeSingle();
+      setAiRecommendedModel(data?.ai_recommended_model ?? "");
+    };
+    fetchModel();
+  }, [asin]);
 
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     const prevVote = votedImages[id];
@@ -112,8 +125,6 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
   
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
-  const tagsToUse = suggestedTags.length > 0 ? suggestedTags : ["Funny", "Vintage", "Graphic", "Summer"];
-
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="p-4 space-y-8">
@@ -139,7 +150,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
               onPromptSaved={() => {}}
               isEditingPrompt={isEditingPrompt}
               setIsEditingPrompt={setIsEditingPrompt}
-              suggestedTags={tagsToUse}
+              aiRecommendedModel={aiRecommendedModel}
             />
           }
         />

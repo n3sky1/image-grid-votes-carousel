@@ -1,7 +1,9 @@
 
 import VotingProgress from "./VotingProgress";
 import PromptEditor from "./PromptEditor";
-import TagVoting from "./TagVoting";
+// import TagVoting from "./TagVoting";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface VotingSidebarProps {
   votedImages: Record<string, "like" | "dislike" | "love">;
@@ -13,7 +15,8 @@ interface VotingSidebarProps {
   onPromptSaved?: () => void;
   isEditingPrompt: boolean;
   setIsEditingPrompt: (value: boolean) => void;
-  suggestedTags?: string[];
+  aiRecommendedModel: string;
+  // suggestedTags?: string[]; // removed since tags are gone
 }
 
 const VotingSidebar = ({
@@ -24,7 +27,7 @@ const VotingSidebar = ({
   onPromptSaved,
   isEditingPrompt,
   setIsEditingPrompt,
-  suggestedTags = [],
+  aiRecommendedModel,
 }: VotingSidebarProps) => (
   <div className="space-y-4">
     <div>
@@ -38,10 +41,28 @@ const VotingSidebar = ({
       />
     </div>
 
-    {/* Tags are now under Generation Prompt but above Voting Progress */}
-    {suggestedTags.length > 0 && (
-      <TagVoting asin={asin} suggestedTags={suggestedTags} />
-    )}
+    <div className="flex flex-col gap-2 bg-white/70 border border-blue-100 rounded-lg p-4 mb-2">
+      <div>
+        <Label htmlFor="ai-rec-model" className="block mb-1 text-gray-700 font-medium">Used:</Label>
+        <Input
+          id="ai-rec-model"
+          type="text"
+          value={aiRecommendedModel || ""}
+          readOnly
+          className="bg-gray-100 cursor-not-allowed border-gray-200"
+        />
+      </div>
+      <div>
+        <Label htmlFor="tshirt-asin" className="block mb-1 text-gray-700 font-medium">ASIN:</Label>
+        <Input
+          id="tshirt-asin"
+          type="text"
+          value={asin}
+          readOnly
+          className="bg-gray-100 cursor-not-allowed border-gray-200"
+        />
+      </div>
+    </div>
 
     <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImagesCount} />
   </div>
