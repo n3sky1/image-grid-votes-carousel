@@ -21,37 +21,89 @@ export const fetchSampleImages = () => {
 
 export const initializeTshirt = async (asin: string) => {
   console.log("Tshirt doesn't exist, initializing...");
-  const { error: insertError } = await supabase
+  
+  // First, check if there are any existing tshirts for this ASIN that might not be ready
+  const { data: existingData } = await supabase
     .from("tshirts")
-    .insert({
-      asin: asin,
-      original_image_url: "https://m.media-amazon.com/images/I/71zAlj7yDrL._AC_UL1500_.jpg",
-      title: `Demo T-shirt (${asin})`,
-      ready_for_voting: true
-    });
-
-  if (insertError) {
-    console.error("Error initializing tshirt:", insertError);
-    throw new Error("Failed to initialize the database. Please try again.");
-  }
-
-  const conceptUrls = [
-    "https://m.media-amazon.com/images/I/61pDu-GrM6L._AC_UL1500_.jpg",
-    "https://m.media-amazon.com/images/I/61HMbj5KySL._AC_UL1500_.jpg",
-    "https://m.media-amazon.com/images/I/71nfRQUb3uL._AC_UL1500_.jpg"
-  ];
-
-  for (const url of conceptUrls) {
-    await supabase
-      .from("concepts")
+    .select("asin")
+    .eq("asin", asin);
+    
+  // If there's already a record, update it instead of creating a new one
+  if (existingData && existingData.length > 0) {
+    const { error: updateError } = await supabase
+      .from("tshirts")
+      .update({
+        ready_for_voting: true,
+        original_image_url: "https://m.media-amazon.com/images/I/71zAlj7yDrL._AC_UL1500_.jpg",
+        title: `Demo T-shirt (${asin})`,
+        generated_image_description: "A comfortable t-shirt with a modern design, suitable for casual wear."
+      })
+      .eq("asin", asin);
+      
+    if (updateError) {
+      console.error("Error updating tshirt:", updateError);
+      throw new Error("Failed to update the tshirt record. Please try again.");
+    }
+  } else {
+    // Insert a new tshirt record
+    const { error: insertError } = await supabase
+      .from("tshirts")
       .insert({
-        tshirt_asin: asin,
-        concept_url: url,
-        ready_for_voting: true
+        asin: asin,
+        original_image_url: "https://m.media-amazon.com/images/I/71zAlj7yDrL._AC_UL1500_.jpg",
+        title: `Demo T-shirt (${asin})`,
+        ready_for_voting: true,
+        generated_image_description: "A comfortable t-shirt with a modern design, suitable for casual wear."
       });
+
+    if (insertError) {
+      console.error("Error initializing tshirt:", insertError);
+      throw new Error("Failed to initialize the database. Please try again.");
+    }
   }
 
-  console.log("Sample concepts added");
+  // Check for existing concepts
+  const { data: existingConcepts } = await supabase
+    .from("concepts")
+    .select("concept_id")
+    .eq("tshirt_asin", asin);
+    
+  // If we already have concepts, make sure they're ready for voting
+  if (existingConcepts && existingConcepts.length > 0) {
+    const { error: updateConceptsError } = await supabase
+      .from("concepts")
+      .update({
+        ready_for_voting: true
+      })
+      .eq("tshirt_asin", asin);
+      
+    if (updateConceptsError) {
+      console.error("Error updating concepts:", updateConceptsError);
+    }
+  } else {
+    // Insert new sample concepts if none exist
+    const conceptUrls = [
+      "https://m.media-amazon.com/images/I/61pDu-GrM6L._AC_UL1500_.jpg",
+      "https://m.media-amazon.com/images/I/61HMbj5KySL._AC_UL1500_.jpg",
+      "https://m.media-amazon.com/images/I/71nfRQUb3uL._AC_UL1500_.jpg"
+    ];
+
+    for (const url of conceptUrls) {
+      const { error: conceptError } = await supabase
+        .from("concepts")
+        .insert({
+          tshirt_asin: asin,
+          concept_url: url,
+          ready_for_voting: true
+        });
+        
+      if (conceptError) {
+        console.error("Error adding concept:", conceptError);
+      }
+    }
+
+    console.log("Sample concepts added");
+  }
 };
 
 export const fetchSupabaseImages = async (
