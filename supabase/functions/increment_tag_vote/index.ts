@@ -42,10 +42,11 @@ serve(async (req) => {
       )
     }
 
-    // If upsert was successful, now increment the vote count
+    // If upsert was successful, now use RPC call with schema specified
     const { data: updateData, error: updateError } = await supabase.rpc(
       'increment_tag_vote_count',
-      { p_tag_name, p_tshirt_asin }
+      { p_tag_name, p_tshirt_asin },
+      { schema: 'public' } // Explicitly specify the schema to fix mutable search path
     );
 
     if (updateError) {

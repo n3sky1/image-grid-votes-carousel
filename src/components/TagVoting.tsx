@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
   const fetchTagVotes = async () => {
     try {
       const { data, error } = await supabase
-        .rpc('get_tag_votes', { p_tshirt_asin: asin });
+        .rpc('get_tag_votes', { p_tshirt_asin: asin }, { schema: 'public' });
 
       if (error) {
         console.error('Error fetching tag votes:', error);
@@ -59,7 +60,7 @@ const TagVoting = ({ asin, suggestedTags = [] }: TagVotingProps) => {
           p_tag_name: tagName,
           p_tshirt_asin: asin,
           p_user_id: user.id
-        });
+        }, { schema: 'public' });
 
       if (error) {
         console.error('Error voting for tag:', error);
