@@ -67,7 +67,7 @@ const OriginalImageSection = ({
         )}
       </div>
       <div className="w-full flex justify-center">
-        <div className="bg-white/70 border border-blue-100 rounded-lg p-2 text-sm font-bold">
+        <div className="bg-white/70 border border-blue-100 rounded-lg p-2 text-sm font-bold w-full text-center">
           Design Progress {userCompletedCount + 1} of {totalReadyCount}
         </div>
       </div>
