@@ -14,6 +14,7 @@ const Index = () => {
   const [noMoreTshirts, setNoMoreTshirts] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [hasCheckedAvailability, setHasCheckedAvailability] = useState(false);
 
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
@@ -63,9 +64,9 @@ const Index = () => {
       
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
       console.log("User has completed", completedAsins.length, "t-shirts");
-      console.log("Completed ASINs:", completedAsins);
       
       // If we have a current ASIN that hasn't been marked as completed, add it to our list
+      // But make sure it's not already in the list
       if (currentAsin && !completedAsins.includes(currentAsin)) {
         completedAsins.push(currentAsin);
       }
@@ -85,6 +86,7 @@ const Index = () => {
       }
       
       console.log("Total t-shirts available:", totalCount);
+      setHasCheckedAvailability(true);
       
       // If there are no t-shirts at all
       if (!totalCount || totalCount === 0) {
@@ -185,6 +187,7 @@ const Index = () => {
       setAsin("");
       setNoMoreTshirts(false);
       setLoading(true);
+      setHasCheckedAvailability(false);
       
       console.log("Initializing application...");
       await fetchNextAsin();
@@ -200,9 +203,10 @@ const Index = () => {
       loading, 
       isInitializing, 
       noMoreTshirts,
-      userId 
+      userId,
+      hasCheckedAvailability
     });
-  }, [asin, loading, isInitializing, noMoreTshirts, userId]);
+  }, [asin, loading, isInitializing, noMoreTshirts, userId, hasCheckedAvailability]);
 
   if (error) {
     return (
@@ -223,8 +227,8 @@ const Index = () => {
   }
 
   // Only show noMoreTshirts view if we've confirmed there are no more t-shirts
-  // AND we're not in the initial loading state
-  if (noMoreTshirts && !isInitializing) {
+  // AND we're not in the initial loading state AND we have checked availability
+  if (noMoreTshirts && !isInitializing && hasCheckedAvailability) {
     console.log("Rendering 'All Done' view");
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB] flex items-center justify-center p-4">
@@ -249,17 +253,12 @@ const Index = () => {
     );
   }
 
-  console.log("Rendering main view with state:", { 
-    loading, 
-    isInitializing, 
-    asin, 
-    noMoreTshirts 
-  });
-
+  // Show loading state or the voting interface
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
       <main>
-        {loading || isInitializing ? (
+        {/* Only show content when we have verified there are t-shirts to display */}
+        {(loading || isInitializing || !hasCheckedAvailability) ? (
           <div className="flex items-center justify-center min-h-[350px] text-gray-500 text-xl w-full">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
