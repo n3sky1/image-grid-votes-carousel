@@ -164,25 +164,31 @@ export const fetchSupabaseImages = async (
   try {
     console.log("Fetching images for ASIN:", asin);
     
-    // First check if we have a tshirt record for this ASIN
-    const { data: existingTshirt, error: checkError } = await supabase
+    // First check if the t-shirt is ready for voting
+    // This is the critical check we're moving to the beginning
+    const { data: tshirtStatus, error: statusError } = await supabase
       .from("tshirts")
-      .select("asin, ready_for_voting, ai_processing_status")
+      .select("ready_for_voting, ai_processing_status")
       .eq("asin", asin)
       .maybeSingle();
-
-    if (checkError) {
-      console.error("Error checking for tshirt:", checkError);
-      throw new Error("Failed to check if the tshirt exists. Please try again.");
-    }
-
-    // If the tshirt doesn't exist, initialize it
-    if (!existingTshirt) {
-      console.log("Tshirt doesn't exist. Initializing...");
-      await initializeTshirt(asin);
+    
+    if (statusError) {
+      console.error("Error checking tshirt status:", statusError);
+      setError("Failed to check if the t-shirt is ready for voting.");
+      setLoading(false);
+      return;
     }
     
-    // Now fetch the tshirt data
+    // If the tshirt doesn't exist or is not ready for voting, show an error and return early
+    if (!tshirtStatus || !tshirtStatus.ready_for_voting) {
+      console.error("Tshirt is not ready for voting", tshirtStatus);
+      setError(`This t-shirt (ASIN: ${asin}) is not ready for voting. Current status: ${tshirtStatus?.ai_processing_status || 'unknown'}`);
+      setLoading(false);
+      return;
+    }
+    
+    // Only after confirming the t-shirt is ready for voting,
+    // continue with fetching the full details
     const { data: tshirt, error: tshirtError } = await supabase
       .from("tshirts")
       .select("original_image_url, asin, generated_image_description, regenerate, ready_for_voting, ai_processing_status")
@@ -197,16 +203,8 @@ export const fetchSupabaseImages = async (
     }
 
     if (!tshirt) {
-      console.error("No tshirt found after initialization attempts");
+      console.error("No tshirt found after status check");
       setError(`No tshirt found for ASIN: ${asin}.`);
-      setLoading(false);
-      return;
-    }
-
-    // CRITICAL CHECK: If the tshirt is not ready for voting, show appropriate error message and return early
-    if (!tshirt.ready_for_voting) {
-      console.error("Tshirt is not ready for voting", tshirt);
-      setError(`This t-shirt (ASIN: ${asin}) is not ready for voting. Current status: ${tshirt.ai_processing_status || 'unknown'}`);
       setLoading(false);
       return;
     }
@@ -245,34 +243,6 @@ export const fetchSupabaseImages = async (
     }
 
     console.log(`Found ${conceptData?.length || 0} concepts for ASIN ${asin}`);
-    
-    if (conceptData && conceptData.length > 0) {
-      // Log all concept URLs for debugging
-      conceptData.forEach((concept: any, index: number) => {
-        console.log(`Concept ${index + 1} URL:`, concept.concept_url);
-      });
-    } else {
-      console.warn("No concepts found for this ASIN");
-      if (tshirt.ready_for_voting && tshirt.ai_processing_status === 'image_generated') {
-        console.log("Tshirt is ready for voting but has no concepts, trying to create sample concepts");
-        await initializeTshirt(asin); // Try to initialize again to create sample concepts
-        
-        // Try to fetch concepts again
-        const { data: refreshedConcepts, error: refreshError } = await supabase
-          .from("concepts")
-          .select("*")
-          .eq("tshirt_asin", asin)
-          .eq("status", "active");
-          
-        if (refreshError) {
-          console.error("Error fetching refreshed concepts:", refreshError);
-        } else if (refreshedConcepts && refreshedConcepts.length > 0) {
-          // Update the concept data with refreshed data instead of reassigning
-          conceptData = refreshedConcepts;
-          console.log(`Found ${refreshedConcepts.length} concepts after re-initialization`);
-        }
-      }
-    }
     
     // Process repair states
     const repairStates: Record<string, boolean> = {};
