@@ -19,24 +19,62 @@ const Index = () => {
       console.log("Fetching next ASIN, current:", currentAsin);
       setLoading(true);
       setError(null);
+      
+      // Make sure we don't show "No more t-shirts" during fetching
       setNoMoreTshirts(false);
       
       const user = await supabase.auth.getUser();
       if (!user.data.user) {
+        console.log("No authenticated user found");
         setLoading(false);
+        setIsInitializing(false);
         return;
       }
 
-      const { data: completedVotings } = await supabase
+      // Get the list of ASINs the user has already voted on
+      const { data: completedVotings, error: completedError } = await supabase
         .from("completed_votings")
         .select("asin")
         .eq("user_id", user.data.user.id);
+      
+      if (completedError) {
+        console.error("Error fetching completed votings:", completedError);
+      }
       
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
       console.log("Completed ASINs count:", completedAsins.length);
       
       if (currentAsin && !completedAsins.includes(currentAsin)) {
         completedAsins.push(currentAsin);
+      }
+
+      // First check if there are any t-shirts available at all
+      const { count: totalCount, error: countError } = await supabase
+        .from("tshirts")
+        .select("asin", { count: 'exact', head: true })
+        .eq("ready_for_voting", true);
+        
+      if (countError) {
+        console.error("Error fetching t-shirt count:", countError);
+        setError("Unable to check available t-shirts.");
+        setLoading(false);
+        setIsInitializing(false);
+        return;
+      }
+      
+      console.log("Total t-shirts available:", totalCount);
+      
+      // If there are no t-shirts at all or the user has completed all of them
+      if (totalCount === 0 || (completedAsins.length >= totalCount)) {
+        console.log("No more t-shirts available for voting");
+        setNoMoreTshirts(true);
+        setLoading(false);
+        setIsInitializing(false);
+        toast("All done!", {
+          description: "You've completed voting on all available t-shirts.",
+          position: "bottom-right"
+        });
+        return;
       }
 
       // Build the query to fetch the next available t-shirt for voting
@@ -58,6 +96,7 @@ const Index = () => {
         console.error("Error fetching ASIN:", error);
         setError("Unable to load t-shirt data. Please try again later.");
         setLoading(false);
+        setIsInitializing(false);
         return;
       }
       
@@ -66,7 +105,8 @@ const Index = () => {
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
       } else {
-        console.log("No more t-shirts available for voting");
+        console.log("Query returned no t-shirts despite count check showing some available");
+        // This is a fallback in case our count check and actual query don't match
         setNoMoreTshirts(true);
         toast("All done!", {
           description: "You've completed voting on all available t-shirts.",
@@ -84,9 +124,13 @@ const Index = () => {
 
   useEffect(() => {
     const initializeApp = async () => {
+      // Reset everything at the start
       setIsInitializing(true);
       setAsin("");
       setNoMoreTshirts(false);
+      setLoading(true);
+      
+      console.log("Initializing application...");
       await fetchNextAsin();
     };
     
@@ -114,6 +158,7 @@ const Index = () => {
   // Only show noMoreTshirts view if we've confirmed there are no more t-shirts
   // AND we're not in the initial loading state
   if (noMoreTshirts && !isInitializing) {
+    console.log("Rendering 'All Done' view");
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB] flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
@@ -136,6 +181,13 @@ const Index = () => {
       </div>
     );
   }
+
+  console.log("Rendering main view with state:", { 
+    loading, 
+    isInitializing, 
+    asin, 
+    noMoreTshirts 
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB]">
