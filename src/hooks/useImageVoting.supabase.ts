@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { sampleImages } from "@/data/sampleImages";
 import { isValidUUID, generateUUID } from "./useImageVoting.utils";
@@ -83,8 +82,9 @@ export const fetchSupabaseImages = async (
 
     const { data: tshirt, error: tshirtError } = await supabase
       .from("tshirts")
-      .select("original_image_url, asin, generated_image_description, regenerate")
+      .select("original_image_url, asin, generated_image_description, regenerate, ready_for_voting")
       .eq("asin", asin)
+      .eq("ready_for_voting", true)
       .maybeSingle();
 
     if (tshirtError) {
@@ -95,7 +95,7 @@ export const fetchSupabaseImages = async (
     }
 
     if (!tshirt || !tshirt.original_image_url) {
-      setError("No image found for this ASIN.");
+      setError("No image found for this ASIN or not ready for voting.");
       setLoading(false);
       return;
     }
@@ -111,7 +111,8 @@ export const fetchSupabaseImages = async (
     const { data: concepts, error: conceptError } = await supabase
       .from("concepts")
       .select("concept_id, concept_url, repair_requested")
-      .eq("tshirt_asin", asin);
+      .eq("tshirt_asin", asin)
+      .eq("ready_for_voting", true);
 
     if (conceptError) {
       console.error("Error fetching concepts:", conceptError);
@@ -120,7 +121,6 @@ export const fetchSupabaseImages = async (
       return;
     }
 
-    // Set the repaired images state from the fetched data
     const repairStates: Record<string, boolean> = {};
     concepts?.forEach((concept: any) => {
       if (concept.repair_requested) {
