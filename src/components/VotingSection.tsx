@@ -43,7 +43,8 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
     toggleDataSource,
     fetchImages,
     showRegeneratingOverlay,
-    setShowRegeneratingOverlay
+    setShowRegeneratingOverlay,
+    setRegenerating
   } = useImageVoting(asin);
 
   const {
@@ -103,15 +104,33 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
             }, 2000);
           }
           
-          // Check if regenerate flag was set
+          // Check if regenerate flag was set OR if ai_processing_status changed
           if (
             payload.old && 
             payload.new && 
-            !payload.old.regenerate && 
-            payload.new.regenerate
+            (
+              // Classic regeneration flag
+              (!payload.old.regenerate && payload.new.regenerate) ||
+              // Status changed to regeneration related status
+              (payload.old.ai_processing_status !== 'regenerating' && payload.new.ai_processing_status === 'regenerating') ||
+              (payload.old.ai_processing_status !== 'regeneration_requested' && payload.new.ai_processing_status === 'regeneration_requested')
+            )
           ) {
-            console.log("Regeneration flag detected. Showing overlay");
+            console.log("Regeneration detected. Showing overlay and setting regenerating state");
             setShowRegeneratingOverlay(true);
+            setRegenerating(true);
+          }
+          
+          // Check if regeneration completed
+          if (
+            payload.old && 
+            payload.new && 
+            payload.old.ai_processing_status === 'regenerating' && 
+            payload.new.ai_processing_status === 'regeneration_complete'
+          ) {
+            console.log("Regeneration complete detected. Refreshing images");
+            setRegenerating(false);
+            fetchImages();
           }
         }
       )
@@ -149,7 +168,7 @@ const VotingSection = ({ asin, suggestedTags = [], onVotingCompleted }: VotingSe
       supabase.removeChannel(tshirtChangesChannel);
       supabase.removeChannel(conceptChangesChannel);
     };
-  }, [asin, onVotingCompleted, setShowRegeneratingOverlay, fetchImages]);
+  }, [asin, onVotingCompleted, setShowRegeneratingOverlay, fetchImages, setRegenerating]);
 
   if (loading) return <VotingLoading />;
   if (error) {
