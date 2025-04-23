@@ -15,6 +15,17 @@ export const useComments = (conceptId: string) => {
   const queryClient = useQueryClient();
   const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conceptId);
 
+  // Get current user id for ownership checks
+  const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id ?? null);
+    };
+    getUser();
+  }, []);
+
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', conceptId],
     queryFn: async () => {
@@ -43,7 +54,6 @@ export const useComments = (conceptId: string) => {
           .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
         const userLikedComments = new Set(userLikes?.map(like => like.comment_id));
-
         return comments.map(comment => ({
           ...comment,
           likes: comment.comment_likes?.[0]?.count || 0,
@@ -107,11 +117,42 @@ export const useComments = (conceptId: string) => {
     }
   });
 
+  // Edit comment mutation
+  const editCommentMutation = useMutation({
+    mutationFn: async ({ id, content }: { id: string, content: string }) => {
+      const { error } = await supabase
+        .from('comments')
+        .update({ content, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', conceptId] });
+    }
+  });
+
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', conceptId] });
+    }
+  });
+
   return {
     comments,
     isLoading,
     isValidUUID,
+    currentUserId,
     addCommentMutation,
-    toggleLikeMutation
+    toggleLikeMutation,
+    editCommentMutation,
+    deleteCommentMutation
   };
 };

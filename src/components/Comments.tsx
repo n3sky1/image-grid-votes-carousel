@@ -2,6 +2,7 @@
 import { useComments } from "@/hooks/useComments";
 import CommentForm from "./CommentForm";
 import CommentItem from "./CommentItem";
+import React from "react";
 
 interface CommentsProps {
   conceptId: string;
@@ -12,8 +13,11 @@ const Comments = ({ conceptId }: CommentsProps) => {
     comments,
     isLoading,
     isValidUUID,
+    currentUserId,
     addCommentMutation,
-    toggleLikeMutation
+    toggleLikeMutation,
+    editCommentMutation,
+    deleteCommentMutation,
   } = useComments(conceptId);
 
   if (!conceptId || !isValidUUID) {
@@ -41,9 +45,15 @@ const Comments = ({ conceptId }: CommentsProps) => {
             <CommentItem
               key={comment.id}
               comment={comment}
-              onToggleLike={(commentId, isLiked) => 
-                toggleLikeMutation.mutate({ commentId, isLiked })}
+              isMine={currentUserId === comment.user_id}
+              onToggleLike={(commentId, isLiked) =>
+                toggleLikeMutation.mutate({ commentId, isLiked })
+              }
               isLikeLoading={toggleLikeMutation.isPending}
+              onEdit={(id, content) => editCommentMutation.mutate({ id, content })}
+              onDelete={(id) => deleteCommentMutation.mutate(id)}
+              isEditLoading={editCommentMutation.isPending}
+              isDeleteLoading={deleteCommentMutation.isPending}
             />
           ))
         )}
