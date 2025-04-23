@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { ImageData } from "@/types/image";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,7 @@ export const useImageVoting = (asin: string) => {
   const [originalImage, setOriginalImage] = useState<ImageData | null>(null);
   const [conceptImages, setConceptImages] = useState<ImageData[]>([]);
   const [votedImages, setVotedImages] = useState<Record<string, 'like' | 'dislike' | 'love'>>({});
+  const [repairedImages, setRepairedImages] = useState<Record<string, boolean>>({});
   const [allVoted, setAllVoted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,7 @@ export const useImageVoting = (asin: string) => {
       setPromptText(tshirt.generated_image_description || "No description available.");
       const { data: concepts, error: conceptError } = await supabase
         .from("concepts")
-        .select("concept_id, concept_url")
+        .select("concept_id, concept_url, repair_requested")
         .eq("tshirt_asin", asin);
 
       if (conceptError) {
@@ -89,6 +91,15 @@ export const useImageVoting = (asin: string) => {
         setLoading(false);
         return;
       }
+
+      // Set the repaired images state from the fetched data
+      const repairStates: Record<string, boolean> = {};
+      concepts?.forEach((concept: any) => {
+        if (concept.repair_requested) {
+          repairStates[concept.concept_id] = true;
+        }
+      });
+      setRepairedImages(repairStates);
 
       setConceptImages(
         (concepts || []).map((c: any) => ({
@@ -159,6 +170,7 @@ export const useImageVoting = (asin: string) => {
   const toggleDataSource = () => {
     setUseTestData(prev => !prev);
     setVotedImages({});
+    setRepairedImages({});
   };
 
   return {
@@ -166,6 +178,8 @@ export const useImageVoting = (asin: string) => {
     conceptImages,
     votedImages,
     setVotedImages,
+    repairedImages,
+    setRepairedImages,
     allVoted,
     loading,
     error,
