@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "./sampleImageService";
@@ -14,7 +15,7 @@ export const fetchSupabaseImages = async (
   setError: SetState<string | null>,
   setRegenerating: SetState<boolean>,
   prevConceptCountRef: React.MutableRefObject<number>,
-  setVotedImages: any
+  setVotedImages: (id: string, vote: 'like' | 'dislike' | 'love') => Promise<void>
 ) => {
   setLoading(true);
   setError(null);
@@ -66,7 +67,7 @@ export const fetchSupabaseImages = async (
     setConceptData(conceptData, setConceptImages, setRepairedImages, prevConceptCountRef);
 
     // Fetch user's votes
-    await fetchUserVotes(session.user.id);
+    await fetchUserVotes(session.user.id, setVotedImages);
 
   } catch (err) {
     console.error("Unexpected error:", err);
@@ -76,7 +77,7 @@ export const fetchSupabaseImages = async (
   }
   
   // Helper function to fetch user votes
-  async function fetchUserVotes(userId: string) {
+  async function fetchUserVotes(userId: string, setVotedImages: (id: string, vote: 'like' | 'dislike' | 'love') => Promise<void>) {
     const { data: userVotes, error: votesError } = await supabase
       .from('user_votes')
       .select('concept_id, vote_type')
@@ -84,11 +85,20 @@ export const fetchSupabaseImages = async (
 
     if (votesError) {
       console.error("Error fetching user votes:", votesError);
-    } else if (userVotes) {
-      // Instead of using the setVotedImages directly, we'll store the votes
-      // each component should handle their own voting state
+    } else if (userVotes && userVotes.length > 0) {
       console.log("User votes fetched:", userVotes);
-      // This data will be used by components that need it
+      
+      // Initialize votes in the UI state
+      // This should happen asynchronously so we don't block rendering
+      setTimeout(() => {
+        userVotes.forEach(vote => {
+          const voteType = vote.vote_type as 'like' | 'dislike' | 'love';
+          if (vote.concept_id && voteType) {
+            // We're initializing, not modifying, so don't call the backend
+            setVotedImages(vote.concept_id, voteType);
+          }
+        });
+      }, 0);
     }
   }
 };

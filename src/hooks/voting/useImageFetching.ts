@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ImageData } from "@/types/image";
 import { fetchSupabaseImages } from "@/services/imageDataService";
 import { fetchSampleImages } from "@/services/sampleImageService";
@@ -12,6 +12,13 @@ export const useImageFetching = (asin: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const prevConceptCountRef = useRef<number>(0);
+  
+  // Initialize the fetch on mount
+  useEffect(() => {
+    if (asin) {
+      fetchImages(false);
+    }
+  }, [asin]);
 
   const fetchImages = async (
     useTestData: boolean,
@@ -19,33 +26,37 @@ export const useImageFetching = (asin: string) => {
     setRepairedImages: React.Dispatch<React.SetStateAction<RepairedImagesMap>>,
     setRegenerating: React.Dispatch<React.SetStateAction<boolean>>,
   ) => {
-    if (useTestData) {
-      setLoading(true);
-      setError(null);
-      const sample = fetchSampleImages();
-      setOriginalImage(sample.originalImage);
-      setConceptImages(sample.conceptImages);
-      setPromptText(sample.promptText);
-      setLoading(false);
-      return;
-    }
-
-    await fetchSupabaseImages(
-      asin,
-      setOriginalImage,
-      setConceptImages,
-      setPromptText,
-      setRepairedImages,
-      setLoading,
-      setError,
-      setRegenerating,
-      prevConceptCountRef,
-      // We're passing a function that adapts the new setVotedImages to what fetchSupabaseImages expects
-      (votesMap) => {
-        // This converts the old style to the new style
-        // votesMap will be processed in the fetchSupabaseImages function
+    if (!asin) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (useTestData) {
+        const sample = fetchSampleImages();
+        setOriginalImage(sample.originalImage);
+        setConceptImages(sample.conceptImages);
+        setPromptText(sample.promptText);
+      } else {
+        await fetchSupabaseImages(
+          asin,
+          setOriginalImage,
+          setConceptImages,
+          setPromptText,
+          setRepairedImages,
+          setLoading,
+          setError,
+          setRegenerating,
+          prevConceptCountRef,
+          setVotedImages
+        );
       }
-    );
+    } catch (err) {
+      console.error("Error fetching images:", err);
+      setError("Failed to load images. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
