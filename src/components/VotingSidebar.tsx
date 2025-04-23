@@ -1,6 +1,5 @@
 
 import VotingProgress from "./VotingProgress";
-import { Button } from "@/components/ui/button";
 import PromptEditor from "./PromptEditor";
 
 interface VotingSidebarProps {
@@ -18,8 +17,6 @@ interface VotingSidebarProps {
 const VotingSidebar = ({
   votedImages,
   conceptImagesCount,
-  useTestData,
-  toggleDataSource,
   promptText,
   asin,
   onPromptSaved,
@@ -27,7 +24,7 @@ const VotingSidebar = ({
   setIsEditingPrompt,
 }: VotingSidebarProps) => (
   <div className="space-y-4">
-    {isEditingPrompt && (
+    <div>
       <PromptEditor
         asin={asin}
         promptText={promptText}
@@ -36,16 +33,10 @@ const VotingSidebar = ({
           if (onPromptSaved) onPromptSaved();
         }}
       />
-    )}
-    <Button
-      variant={useTestData ? "default" : "outline"}
-      onClick={toggleDataSource}
-      className={useTestData ? "bg-blue-500 hover:bg-blue-600" : "bg-white hover:bg-gray-50"}
-    >
-      {useTestData ? "Using Test Data" : "Use Test Data"}
-    </Button>
+    </div>
     <VotingProgress votedImages={votedImages} conceptImagesCount={conceptImagesCount} />
   </div>
 );
 
 export default VotingSidebar;
+

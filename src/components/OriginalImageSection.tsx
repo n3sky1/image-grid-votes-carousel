@@ -20,15 +20,6 @@ const OriginalImageSection = ({
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-start">
           <h2 className="text-xl font-bold text-gray-800">T-Shirt Design</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onToggleDataSource}
-            className="flex items-center gap-1"
-          >
-            <Database size={16} />
-            {useTestData ? "Use Real Data" : "Use Test Data"}
-          </Button>
         </div>
 
         {originalImage ? (
@@ -45,22 +36,6 @@ const OriginalImageSection = ({
             </CardContent>
           </Card>
         )}
-      </div>
-
-      <div className="bg-white/80 rounded-lg p-5 shadow-sm border border-blue-100 relative group">
-        <div className="text-base font-bold mb-2 text-gray-800 flex justify-between items-center">
-          <span>Generation Prompt</span>
-          <button
-            onClick={onEditPrompt}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
-            aria-label="Edit prompt"
-          >
-            <Edit className="h-4 w-4 text-gray-500" />
-          </button>
-        </div>
-        <div className="text-gray-700 max-h-[150px] overflow-y-auto text-sm">
-          {promptText || "No description available."}
-        </div>
       </div>
 
       <div className="flex gap-2 mt-4">
