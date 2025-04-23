@@ -62,7 +62,7 @@ const ConceptImageModal = ({
                   <img
                     src={image.src}
                     alt={image.alt}
-                    className="absolute inset-0 w-full h-full object-contain scale-125"
+                    className="absolute inset-0 w-full h-full object-contain"
                   />
                   <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md opacity-90 z-20">
                     Concept {conceptIndex}
