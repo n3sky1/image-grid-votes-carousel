@@ -94,7 +94,7 @@ export const initializeTshirt = async (asin: string) => {
         .insert({
           tshirt_asin: asin,
           concept_url: url,
-          status: 'active'  // Using 'status' instead of 'ready_for_voting'
+          status: 'active'  // Using 'status' field, not 'ready_for_voting'
         });
         
       if (conceptError) {
