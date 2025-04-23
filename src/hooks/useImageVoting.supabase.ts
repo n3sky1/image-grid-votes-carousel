@@ -68,12 +68,12 @@ export const initializeTshirt = async (asin: string) => {
     .select("concept_id")
     .eq("tshirt_asin", asin);
     
-  // If we already have concepts, make sure they're ready for voting
+  // If we already have concepts, make sure they're set to active status
   if (existingConcepts && existingConcepts.length > 0) {
     const { error: updateConceptsError } = await supabase
       .from("concepts")
       .update({
-        ready_for_voting: true
+        status: 'active'  // Using 'status' instead of 'ready_for_voting'
       })
       .eq("tshirt_asin", asin);
       
@@ -94,7 +94,7 @@ export const initializeTshirt = async (asin: string) => {
         .insert({
           tshirt_asin: asin,
           concept_url: url,
-          ready_for_voting: true
+          status: 'active'  // Using 'status' instead of 'ready_for_voting'
         });
         
       if (conceptError) {
@@ -164,7 +164,7 @@ export const fetchSupabaseImages = async (
 
     setPromptText(tshirt.generated_image_description || "No description available.");
     
-    // Fix for the TypeScript error - Use a simpler query approach to avoid the excessive type depth
+    // Use a simpler query approach to avoid the excessive type depth
     const { data: concepts, error: conceptError } = await supabase
       .from("concepts")
       .select("*")
@@ -177,11 +177,11 @@ export const fetchSupabaseImages = async (
       return;
     }
 
-    // Filter concepts that are ready for voting in JavaScript instead of in the query
-    const readyForVotingConcepts = concepts?.filter((c: any) => c.ready_for_voting === true) || [];
+    // Filter active concepts in JavaScript instead of in the query
+    const activeConcepts = concepts?.filter((c: any) => c.status === 'active') || [];
 
     const repairStates: Record<string, boolean> = {};
-    readyForVotingConcepts.forEach((concept: any) => {
+    activeConcepts.forEach((concept: any) => {
       if (concept.repair_requested) {
         repairStates[concept.concept_id] = true;
       }
@@ -189,7 +189,7 @@ export const fetchSupabaseImages = async (
     setRepairedImages(repairStates);
 
     setConceptImages(
-      readyForVotingConcepts.map((c: any) => ({
+      activeConcepts.map((c: any) => ({
         id: c.concept_id,
         src: c.concept_url,
         alt: "Concept Design",
@@ -198,7 +198,7 @@ export const fetchSupabaseImages = async (
     );
 
     if (typeof tshirt.regenerate === "boolean") setRegenerating(tshirt.regenerate);
-    prevConceptCountRef.current = readyForVotingConcepts.length;
+    prevConceptCountRef.current = activeConcepts.length;
   } catch (err) {
     console.error("Unexpected error:", err);
     setError("An unexpected error occurred. Please try again later.");
