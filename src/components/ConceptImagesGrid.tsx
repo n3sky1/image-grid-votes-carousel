@@ -72,12 +72,13 @@ const ConceptImagesGrid = ({
   // Display up to 8 images, in a fixed 2 rows by 4 columns grid
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto" style={{gridAutoRows: '1fr'}}>
-      {conceptImages.slice(0, 8).map((image) => (
+      {conceptImages.slice(0, 8).map((image, index) => (
         <GridImageCard
           key={image.id}
           image={image}
           votedImages={votedImages}
           onExpand={setExpandedImageId}
+          index={index}
         />
       ))}
       {expandedImageId && (
