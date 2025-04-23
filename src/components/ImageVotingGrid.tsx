@@ -1,3 +1,4 @@
+
 import { ImageVotingGridProps } from "@/types/props";
 import { useImageVoting } from "@/hooks/useImageVoting";
 import VotingCompleted from "./VotingCompleted";
@@ -126,6 +127,8 @@ const ImageVotingGrid = ({ asin, suggestedTags = [] }: ImageVotingGridProps) => 
   if (allVoted) return <VotingCompleted votedImages={votedImages} />;
 
   const tagsToUse = suggestedTags.length > 0 ? suggestedTags : ["Funny", "Vintage", "Graphic", "Summer"];
+
+  console.log("In ImageVotingGrid, promptText:", promptText);
 
   return (
     <div className="w-full max-w-6xl mx-auto">

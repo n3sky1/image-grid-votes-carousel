@@ -47,6 +47,10 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
   };
 
   useEffect(() => {
+    console.log("Current promptText in useImageVoting:", promptText);
+  }, [promptText]);
+
+  useEffect(() => {
     fetchImages();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asin, useTestData]);
