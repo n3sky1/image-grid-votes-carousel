@@ -33,6 +33,7 @@ export const useVotingRealtime = ({
         (payload: any) => {
           console.log("Tshirt change detected:", payload);
           
+          // Check if a winning concept was selected
           if (
             payload.old && 
             payload.new && 
@@ -47,8 +48,10 @@ export const useVotingRealtime = ({
                 onVotingCompleted();
               }
             }, 2000);
+            return; // Exit early as we're moving to next t-shirt
           }
           
+          // Handle regeneration start
           if (
             payload.old && 
             payload.new && 
@@ -63,6 +66,7 @@ export const useVotingRealtime = ({
             setRegenerating(true);
           }
           
+          // Handle regeneration completion
           if (
             payload.old && 
             payload.new && 
@@ -72,6 +76,24 @@ export const useVotingRealtime = ({
             console.log("Regeneration complete detected. Refreshing images");
             setRegenerating(false);
             fetchImages();
+          }
+
+          // Handle t-shirt becoming unavailable for voting
+          if (
+            payload.old && 
+            payload.new && 
+            payload.old.ready_for_voting === true &&
+            payload.new.ready_for_voting === false &&
+            payload.new.winning_concept_id
+          ) {
+            console.log("Tshirt no longer available for voting because it has a winner");
+            setShowWinningVoteOverlay(true);
+            setTimeout(() => {
+              setShowWinningVoteOverlay(false);
+              if (onVotingCompleted) {
+                onVotingCompleted();
+              }
+            }, 2000);
           }
         }
       )

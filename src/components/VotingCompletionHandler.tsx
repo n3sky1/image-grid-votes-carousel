@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface VotingCompletionHandlerProps {
@@ -13,15 +13,38 @@ const VotingCompletionHandler = ({
   asin,
   onVotingCompleted
 }: VotingCompletionHandlerProps) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+
   useEffect(() => {
-    if (!allVoted || !onVotingCompleted || !asin) {
+    if (!allVoted || !onVotingCompleted || !asin || isProcessing) {
       return;
     }
 
     const recordCompletion = async () => {
       try {
+        setIsProcessing(true);
+        
         const user = await supabase.auth.getUser();
-        if (!user.data.user) return;
+        if (!user.data.user) {
+          setIsProcessing(false);
+          return;
+        }
+
+        // Check if the tshirt has a winning concept already
+        const { data: tshirtData, error: tshirtError } = await supabase
+          .from("tshirts")
+          .select("winning_concept_id")
+          .eq("asin", asin)
+          .maybeSingle();
+          
+        if (tshirtError) {
+          console.error("Error checking tshirt winner:", tshirtError);
+        } else if (tshirtData?.winning_concept_id) {
+          console.log("Tshirt already has a winning concept:", tshirtData.winning_concept_id);
+          onVotingCompleted();
+          setIsProcessing(false);
+          return;
+        }
 
         // Check if this ASIN is already marked as completed
         const { data: existingCompletion, error: checkError } = await supabase
@@ -41,6 +64,7 @@ const VotingCompletionHandler = ({
         if (existingCompletion) {
           console.log("Completion already recorded for this ASIN, skipping...");
           onVotingCompleted();
+          setIsProcessing(false);
           return;
         }
 
@@ -62,11 +86,13 @@ const VotingCompletionHandler = ({
         console.error("Unexpected error in VotingCompletionHandler:", error);
         // Still call onVotingCompleted to move to next t-shirt
         onVotingCompleted();
+      } finally {
+        setIsProcessing(false);
       }
     };
 
     recordCompletion();
-  }, [allVoted, asin, onVotingCompleted]);
+  }, [allVoted, asin, onVotingCompleted, isProcessing]);
 
   return null;
 };
