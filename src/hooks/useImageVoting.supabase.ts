@@ -194,6 +194,8 @@ export const fetchSupabaseImages = async (
     }
 
     console.log("Successfully fetched tshirt:", tshirt);
+    console.log("Original image URL:", tshirt.original_image_url);
+    
     setOriginalImage({
       id: `original-${tshirt.asin}`,
       src: tshirt.original_image_url,
@@ -218,6 +220,16 @@ export const fetchSupabaseImages = async (
     }
 
     console.log(`Found ${concepts?.length || 0} concepts for ASIN ${asin}`);
+    
+    if (concepts && concepts.length > 0) {
+      // Log all concept URLs for debugging
+      concepts.forEach((concept: any, index: number) => {
+        console.log(`Concept ${index + 1} URL:`, concept.concept_url);
+      });
+    } else {
+      console.warn("No concepts found for this ASIN, trying to create sample concepts");
+      await initializeTshirt(asin); // Try to initialize again to create sample concepts
+    }
     
     // Process repair states
     const repairStates: Record<string, boolean> = {};
