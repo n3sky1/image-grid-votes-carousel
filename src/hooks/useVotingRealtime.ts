@@ -87,12 +87,17 @@ export const useVotingRealtime = ({
         (payload: any) => {
           console.log("Concept vote change detected:", payload);
           
-          if (
-            payload.new && 
-            ((payload.new.votes_up >= 2) || (payload.new.hearts >= 1))
-          ) {
-            console.log("Potential winner based on vote count. Refreshing data");
-            fetchImages();
+          // Check for both regular votes and heart votes
+          if (payload.new) {
+            const hasWinningVotes = payload.new.votes_up >= 2;
+            const hasWinningHearts = payload.new.hearts >= 1;
+            
+            if (hasWinningVotes || hasWinningHearts) {
+              console.log("Potential winner based on votes/hearts. Refreshing data");
+              // This will trigger a refresh that will pick up the winning state
+              // since the database trigger will have updated the tshirt's winning_concept_id
+              fetchImages();
+            }
           }
         }
       )
