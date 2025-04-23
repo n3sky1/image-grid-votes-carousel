@@ -55,26 +55,30 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asin, useTestData]);
 
+  // Stop and cleanup any existing polling
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      console.log("Stopping polling interval");
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  };
+
   useEffect(() => {
+    // Clear any existing polling first
+    stopPolling();
+    
+    // Only start polling if regenerating is true and we're not using test data
     if (regenerating && !useTestData) {
+      console.log("Starting polling for regenerated images");
       pollIntervalRef.current = setInterval(async () => {
+        console.log("Polling for new images...");
         await fetchImages();
       }, 5000);
-
-      return () => {
-        if (pollIntervalRef.current) {
-          clearInterval(pollIntervalRef.current);
-          pollIntervalRef.current = null;
-        }
-      };
     }
 
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
-    };
+    // Cleanup function
+    return stopPolling;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regenerating, useTestData, asin]);
 
@@ -83,6 +87,8 @@ export const useImageVoting = (asin: string): UseImageVotingState => {
     const votedCount = Object.keys(votedImages).length;
     if (votedCount >= nonOriginalCount && nonOriginalCount > 0) {
       setAllVoted(true);
+      // Ensure polling stops when all images are voted
+      stopPolling();
     }
   }, [votedImages, conceptImages]);
 

@@ -277,7 +277,16 @@ export const fetchSupabaseImages = async (
       // Don't set an error as the original image is still useful
     }
 
-    if (typeof tshirt.regenerate === "boolean") setRegenerating(tshirt.regenerate);
+    // Only set regenerating to true if the database explicitly has regenerate=true
+    // This prevents unnecessary polling
+    if (typeof tshirt.regenerate === "boolean") {
+      console.log("Setting regenerating state to:", tshirt.regenerate);
+      setRegenerating(tshirt.regenerate);
+    } else {
+      // Default to false if not specified
+      setRegenerating(false);
+    }
+    
     prevConceptCountRef.current = conceptData?.length || 0;
   } catch (err) {
     console.error("Unexpected error:", err);
