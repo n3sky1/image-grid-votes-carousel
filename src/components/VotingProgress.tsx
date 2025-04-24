@@ -1,15 +1,19 @@
+
 import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
+
 interface VotingProgressProps {
   votedImages: Record<string, 'like' | 'dislike' | 'love'>;
   conceptImagesCount: number;
 }
+
 const VotingProgress = ({
   votedImages,
   conceptImagesCount
 }: VotingProgressProps) => {
   const votedCount = Object.keys(votedImages).length;
-  const total = conceptImagesCount + votedCount;
+  const total = conceptImagesCount;
   const percentage = total === 0 ? 0 : votedCount / total * 100;
+  
   return <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
       <div className="flex flex-col">
         <div className="flex justify-between items-center mb-2">
@@ -42,4 +46,5 @@ const VotingProgress = ({
       </div>
     </div>;
 };
+
 export default VotingProgress;
