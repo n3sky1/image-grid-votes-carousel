@@ -12,11 +12,19 @@ export const useImageFetching = (asin: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const prevConceptCountRef = useRef<number>(0);
+  const [votedImagesTemp, setVotedImagesTemp] = useState<VotedImagesMap>({});
+  const [repairedImagesTemp, setRepairedImagesTemp] = useState<RepairedImagesMap>({});
+  const [regeneratingTemp, setRegeneratingTemp] = useState<boolean>(false);
   
   // Initialize the fetch on mount
   useEffect(() => {
     if (asin) {
-      fetchImages(false);
+      const dummySetVotedImages = async (id: string, vote: 'like' | 'dislike' | 'love') => {
+        console.log(`Initializing vote: ${id} - ${vote}`);
+        setVotedImagesTemp(prev => ({ ...prev, [id]: vote }));
+      };
+      
+      fetchImages(false, dummySetVotedImages, setRepairedImagesTemp, setRegeneratingTemp);
     }
   }, [asin]);
 
