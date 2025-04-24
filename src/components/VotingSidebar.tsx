@@ -81,20 +81,7 @@ const VotingSidebar = ({
         conceptImagesCount={conceptImagesCount} 
       />
 
-      {process.env.NODE_ENV === "development" && (
-        <div className="bg-slate-100 p-4 rounded-lg text-xs space-y-2 border border-slate-200">
-          <p className="font-medium">Debug Tools</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleDataSource}
-            className="text-xs w-full"
-          >
-            {useTestData ? "Use Real Data" : "Use Test Data"}
-          </Button>
-          <p>ASIN: {asin}</p>
-        </div>
-      )}
+      {/* Removed debug tools section */}
     </div>
   );
 };
