@@ -30,13 +30,14 @@ const OriginalImageSection = ({
     const asin = originalImage.id.replace('original-', '');
     
     try {
+      // Instead of updating the tshirt directly, we'll mark it as completed with a reason
       const { error } = await supabase
-        .from('tshirts')
-        .update({ 
-          review_problem: problem,
-          ready_for_voting: false 
-        })
-        .eq('asin', asin);
+        .from('completed_votings')
+        .insert({ 
+          asin: asin, 
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          reason: problem 
+        });
 
       if (error) throw error;
 
@@ -47,7 +48,7 @@ const OriginalImageSection = ({
       // Call the original action handler with the problem type
       onOriginalAction(problem);
     } catch (error) {
-      console.error('Error updating tshirt:', error);
+      console.error('Error reporting problem:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
@@ -100,7 +101,7 @@ const OriginalImageSection = ({
       </div>
       <div className="w-full flex justify-center">
         <div className="bg-white border border-gray-200 text-gray-800 rounded-lg p-2 w-full text-center font-sans text-base">
-          Design {1} of {totalReadyCount} to Review
+          Design {userCompletedCount + 1} of {totalReadyCount} to Review
         </div>
       </div>
     </div>
