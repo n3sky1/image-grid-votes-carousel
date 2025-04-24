@@ -48,36 +48,41 @@ const OriginalImageSection = ({
 
         if (tshirtError) {
           console.error("Error updating tshirt:", tshirtError);
-          // Continue with the flow even if tshirt update fails
         }
       } catch (updateError) {
         console.error("Update operation failed:", updateError);
-        // Continue with the flow even if update operation fails
       }
 
       // Always try to record completion regardless of tshirt update result
-      const { error: completedError } = await supabase
-        .from('completed_votings')
-        .insert({ 
-          asin: asin, 
-          user_id: authData.user.id 
-        });
+      try {
+        const { error: completedError } = await supabase
+          .from('completed_votings')
+          .insert({ 
+            asin: asin, 
+            user_id: authData.user.id 
+          });
 
-      if (completedError) {
-        console.error("Error recording completion:", completedError);
+        if (completedError && completedError.code !== '23505') { // Ignore duplicate key error
+          console.error("Error recording completion:", completedError);
+        }
+      } catch (completionError) {
+        console.error("Failed to record completion:", completionError);
       }
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
       });
 
-      // Call the original action handler with the problem type
+      // Always call the original action handler to move to the next t-shirt
       onOriginalAction(problem);
     } catch (error) {
       console.error('Error reporting problem:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
+      
+      // Even in case of error, try to move on
+      onOriginalAction(problem);
     }
   };
 

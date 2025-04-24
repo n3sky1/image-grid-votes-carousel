@@ -26,6 +26,7 @@ const VotingCompletionHandler = ({
         
         const user = await supabase.auth.getUser();
         if (!user.data.user) {
+          console.log("No user found, cannot record completion");
           setIsProcessing(false);
           return;
         }
@@ -78,6 +79,8 @@ const VotingCompletionHandler = ({
 
         if (insertError) {
           console.error("Error recording completion:", insertError);
+        } else {
+          console.log(`Successfully recorded completion for ASIN: ${asin}`);
         }
         
         // Call onVotingCompleted to move to next t-shirt

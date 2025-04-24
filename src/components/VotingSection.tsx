@@ -51,8 +51,12 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
     id: asin,
     onVote: setVotedImages,
     onOriginalAction: (action) => {
-      handleOriginalAction(action);
-      if (onVotingCompleted) onVotingCompleted();
+      // This ensures we always trigger the completion callback
+      // even if there are database update errors
+      if (onVotingCompleted) {
+        console.log(`VotingSection: Completing voting for ${asin} after action: ${action}`);
+        onVotingCompleted();
+      }
     },
     onRetry: fetchImages,
     onPromptSaved: (newPrompt: string) => {

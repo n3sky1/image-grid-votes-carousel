@@ -44,36 +44,41 @@ export const useVotingActions = ({
         throw new Error("Authentication required");
       }
       
-      // Update the tshirt with the review problem
-      const { error: tshirtError } = await supabase
-        .from('tshirts')
-        .update({ 
-          review_problem: action,
-          ready_for_voting: false 
-        })
-        .eq('asin', id);
-        
-      if (tshirtError) {
-        console.error("Error updating tshirt:", tshirtError);
-        // If we can't update the tshirt table, try to at least record the completion
-        await recordCompletion(id, authData.user.id);
-        onOriginalAction(action);
-        return;
+      // Try to update the tshirt with the review problem
+      try {
+        // Update the tshirt with the review problem
+        const { error: tshirtError } = await supabase
+          .from('tshirts')
+          .update({ 
+            review_problem: action,
+            ready_for_voting: false 
+          })
+          .eq('asin', id);
+          
+        if (tshirtError) {
+          console.error("Error updating tshirt:", tshirtError);
+        }
+      } catch (updateError) {
+        console.error("Update operation failed:", updateError);
       }
       
-      // Also insert into completed_votings to track that this user has completed this t-shirt
+      // Always try to record completion regardless of the tshirt update result
       await recordCompletion(id, authData.user.id);
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
       });
 
+      // Always call the onOriginalAction to move to the next t-shirt
       onOriginalAction(action);
     } catch (error) {
       console.error('Error updating tshirt:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
+      
+      // Even if there's an error, try to move to the next t-shirt
+      onOriginalAction(action);
     }
   };
   

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,7 @@ const Index = () => {
       
       const user = await supabase.auth.getUser();
       if (!user.data.user) {
+        console.log("No authenticated user found");
         setLoading(false);
         return;
       }
@@ -110,7 +112,10 @@ const Index = () => {
           <ImageVotingGrid 
             asin={asin} 
             suggestedTags={suggestedTags} 
-            onVotingCompleted={() => fetchNextAsin(asin)}
+            onVotingCompleted={() => {
+              console.log("Voting completed for ASIN:", asin);
+              fetchNextAsin(asin);
+            }}
           />
         )}
       </main>
