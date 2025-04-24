@@ -32,15 +32,10 @@ const VotingSidebar = ({
   setIsEditingPrompt,
   aiRecommendedModel
 }: VotingSidebarProps) => {
-  const [prompt, setPrompt] = useState(promptText);
-
-  const handleSavePrompt = (newPrompt: string) => {
-    onPromptSaved(newPrompt);
-    setIsEditingPrompt(false);
-  };
+  // Remove the local prompt state as it's not needed
+  // We'll use the props directly with PromptEditor
 
   const handleCancelEdit = () => {
-    setPrompt(promptText);
     setIsEditingPrompt(false);
   };
 
@@ -61,9 +56,9 @@ const VotingSidebar = ({
         </div>
         {isEditingPrompt ? (
           <PromptEditor
-            initialPrompt={promptText}
-            onSave={handleSavePrompt}
-            onCancel={handleCancelEdit}
+            asin={asin}
+            promptText={promptText}
+            onPromptSaved={onPromptSaved}
           />
         ) : (
           <p className="text-sm text-gray-700 whitespace-pre-wrap">
