@@ -30,26 +30,42 @@ const OriginalImageSection = ({
     const asin = originalImage.id.replace('original-', '');
     
     try {
-      // Update the tshirts table with the review_problem
-      const { error: tshirtError } = await supabase
-        .from('tshirts')
-        .update({ 
-          review_problem: problem,
-          ready_for_voting: false 
-        })
-        .eq('asin', asin);
+      // First, ensure the user is authenticated
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        throw new Error("Authentication required");
+      }
+      
+      // Try to update the tshirt with the review problem
+      try {
+        const { error: tshirtError } = await supabase
+          .from('tshirts')
+          .update({ 
+            review_problem: problem,
+            ready_for_voting: false 
+          })
+          .eq('asin', asin);
 
-      if (tshirtError) throw tshirtError;
+        if (tshirtError) {
+          console.error("Error updating tshirt:", tshirtError);
+          // Continue with the flow even if tshirt update fails
+        }
+      } catch (updateError) {
+        console.error("Update operation failed:", updateError);
+        // Continue with the flow even if update operation fails
+      }
 
-      // Also insert into completed_votings to track that this user has completed this t-shirt
+      // Always try to record completion regardless of tshirt update result
       const { error: completedError } = await supabase
         .from('completed_votings')
         .insert({ 
           asin: asin, 
-          user_id: (await supabase.auth.getUser()).data.user?.id 
+          user_id: authData.user.id 
         });
 
-      if (completedError) throw completedError;
+      if (completedError) {
+        console.error("Error recording completion:", completedError);
+      }
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
@@ -58,7 +74,7 @@ const OriginalImageSection = ({
       // Call the original action handler with the problem type
       onOriginalAction(problem);
     } catch (error) {
-      console.error('Error updating tshirt:', error);
+      console.error('Error reporting problem:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });

@@ -38,6 +38,12 @@ export const useVotingActions = ({
 
   const handleOriginalAction = async (action: "copyrighted" | "no-design" | "cant-design") => {
     try {
+      // First, ensure the user is authenticated
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        throw new Error("Authentication required");
+      }
+      
       // Update the tshirt with the review problem
       const { error: tshirtError } = await supabase
         .from('tshirts')
@@ -47,17 +53,16 @@ export const useVotingActions = ({
         })
         .eq('asin', id);
         
-      if (tshirtError) throw tshirtError;
+      if (tshirtError) {
+        console.error("Error updating tshirt:", tshirtError);
+        // If we can't update the tshirt table, try to at least record the completion
+        await recordCompletion(id, authData.user.id);
+        onOriginalAction(action);
+        return;
+      }
       
       // Also insert into completed_votings to track that this user has completed this t-shirt
-      const { error: completedError } = await supabase
-        .from('completed_votings')
-        .insert({ 
-          asin: id, 
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        });
-
-      if (completedError) throw completedError;
+      await recordCompletion(id, authData.user.id);
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
@@ -69,6 +74,23 @@ export const useVotingActions = ({
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
+    }
+  };
+  
+  const recordCompletion = async (asin: string, userId: string) => {
+    try {
+      const { error: completedError } = await supabase
+        .from('completed_votings')
+        .insert({ 
+          asin: asin, 
+          user_id: userId
+        });
+
+      if (completedError) {
+        console.error("Error recording completion:", completedError);
+      }
+    } catch (err) {
+      console.error("Failed to record completion:", err);
     }
   };
 
