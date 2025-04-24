@@ -12,7 +12,7 @@ const VotingProgress = ({
 }: VotingProgressProps) => {
   const votedCount = Object.keys(votedImages).length;
   const total = conceptImagesCount;
-  const percentage = total === 0 ? 0 : votedCount / total * 100;
+  const percentage = total === 0 ? 0 : Math.min(votedCount / total * 100, 100);
   
   return <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
       <div className="flex flex-col">
