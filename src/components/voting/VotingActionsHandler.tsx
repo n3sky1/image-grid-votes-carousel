@@ -38,16 +38,24 @@ export const useVotingActions = ({
 
   const handleOriginalAction = async (action: "copyrighted" | "no-design" | "cant-design") => {
     try {
-      // Instead of updating the tshirt directly, we'll mark it as completed with a reason
+      // Update the tshirt with the review problem
       const { error } = await supabase
+        .from('tshirts')
+        .update({ 
+          review_problem: action,
+          ready_for_voting: false 
+        })
+        .eq('asin', id);
+        
+      if (error) throw error;
+      
+      // Also insert into completed_votings to track that this user has completed this t-shirt
+      await supabase
         .from('completed_votings')
         .insert({ 
           asin: id, 
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          reason: action 
+          user_id: (await supabase.auth.getUser()).data.user?.id
         });
-
-      if (error) throw error;
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
@@ -55,7 +63,7 @@ export const useVotingActions = ({
 
       onOriginalAction(action);
     } catch (error) {
-      console.error('Error reporting problem:', error);
+      console.error('Error updating tshirt:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
