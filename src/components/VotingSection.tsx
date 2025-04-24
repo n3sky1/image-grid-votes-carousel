@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useVotingStats } from "@/hooks/useVotingStats";
 import { useAiModel } from "@/hooks/useAiModel";
@@ -9,7 +10,6 @@ import OriginalImageSection from "./OriginalImageSection";
 import VotingSidebar from "./VotingSidebar";
 import ConceptImagesGrid from "./ConceptImagesGrid";
 import { VotingStateHandlers } from "./voting/VotingStateHandlers";
-import VotingHeader from "./VotingHeader";
 
 interface VotingSectionProps {
   asin: string;

@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { ImageData } from "@/types/image";
@@ -14,6 +15,7 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
   const [votingImage, setVotingImage] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
   
+  // Filter out non-original images
   const comparisonImages = images.filter(img => !img.isOriginal);
   
   if (comparisonImages.length === 0) {
@@ -26,18 +28,20 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
   }
 
   const handlePrevious = () => {
-    if (votingImage) return;
+    if (votingImage) return; // Prevent navigation during voting animation
     setCurrentIndex((prev) => (prev === 0 ? comparisonImages.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    if (votingImage) return;
+    if (votingImage) return; // Prevent navigation during voting animation
     setCurrentIndex((prev) => (prev === comparisonImages.length - 1 ? 0 : prev + 1));
   };
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
+    // Set the current image as being voted on
     setVotingImage(id);
     
+    // Wait for animation to complete before removing the image
     if (timeoutRef.current !== null) {
       window.clearTimeout(timeoutRef.current);
     }
@@ -45,10 +49,11 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
     timeoutRef.current = window.setTimeout(() => {
       onVote(id, vote);
       setVotingImage(null);
+      // Auto-adjust the index if needed
       if (currentIndex >= comparisonImages.length - 1) {
         setCurrentIndex(Math.max(0, comparisonImages.length - 2));
       }
-    }, 300);
+    }, 300); // Match the animation duration
   };
 
   const currentImage = comparisonImages[currentIndex];
@@ -57,7 +62,7 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
     <div className="flex flex-col rounded-lg shadow-md bg-white overflow-hidden">
       <div className="text-sm px-4 pt-3 pb-2 border-b">
         <p className="font-medium">{currentImage.alt}</p>
-        <p className="text-gray-500 text-xs">Design {currentIndex + 1} of {comparisonImages.length}</p>
+        <p className="text-gray-500 text-xs">{currentIndex + 1} of {comparisonImages.length}</p>
       </div>
       <div className="relative aspect-video">
         <ImageCard 
@@ -66,6 +71,7 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
           animateExit={votingImage === currentImage.id}
         />
         
+        {/* Navigation arrows */}
         {comparisonImages.length > 1 && (
           <>
             <button 
@@ -88,6 +94,7 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
         )}
       </div>
       
+      {/* Voting controls */}
       <div className="flex justify-center gap-4 p-4 border-t">
         <button
           onClick={() => handleVote(currentImage.id, 'dislike')}
@@ -120,6 +127,7 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
         </button>
       </div>
       
+      {/* Pagination indicators */}
       {comparisonImages.length > 1 && (
         <div className="flex justify-center gap-1 pb-4">
           {comparisonImages.map((_, idx) => (
