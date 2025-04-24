@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ImageData } from "@/types/image";
 import { fetchSampleImages } from "./sampleImageService";
@@ -109,6 +108,7 @@ const fetchTshirtData = async (asin: string) => {
     .from("tshirts")
     .select("ready_for_voting, ai_processing_status, regenerate, original_image_url, ai_image_description, generated_image_description")
     .eq("asin", asin)
+    .order('created_at', { ascending: true })  // Add consistent ordering
     .maybeSingle();
 };
 
