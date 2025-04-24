@@ -30,15 +30,26 @@ const OriginalImageSection = ({
     const asin = originalImage.id.replace('original-', '');
     
     try {
-      // Only insert into completed_votings to track that this user has completed this t-shirt
-      const { error } = await supabase
+      // Update the tshirts table with the review_problem
+      const { error: tshirtError } = await supabase
+        .from('tshirts')
+        .update({ 
+          review_problem: problem,
+          ready_for_voting: false 
+        })
+        .eq('asin', asin);
+
+      if (tshirtError) throw tshirtError;
+
+      // Also insert into completed_votings to track that this user has completed this t-shirt
+      const { error: completedError } = await supabase
         .from('completed_votings')
         .insert({ 
           asin: asin, 
           user_id: (await supabase.auth.getUser()).data.user?.id 
         });
 
-      if (error) throw error;
+      if (completedError) throw completedError;
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
@@ -47,7 +58,7 @@ const OriginalImageSection = ({
       // Call the original action handler with the problem type
       onOriginalAction(problem);
     } catch (error) {
-      console.error('Error reporting problem:', error);
+      console.error('Error updating tshirt:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
