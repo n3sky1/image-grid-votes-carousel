@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { VoteType } from "./types";
 
@@ -49,8 +50,9 @@ export const saveUserVote = async (
         } else {
           console.log(`[saveUserVote] Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
           
-          // Trigger page refresh for love votes
-          window.location.reload();
+          // Instead of a full page refresh, force navigation to root which will load the next t-shirt
+          // This preserves the authentication session
+          window.location.href = '/';
         }
       } catch (completionError) {
         console.error("[saveUserVote] Error in love vote special handling:", completionError);
