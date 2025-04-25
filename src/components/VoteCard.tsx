@@ -13,7 +13,7 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
     // For love votes, show immediate feedback
     if (vote === 'love') {
       toast.success("Finalizing vote", {
-        description: "This will select the design as winner",
+        description: "Moving to next t-shirt...",
       });
     }
     onVote(vote);

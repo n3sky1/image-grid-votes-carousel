@@ -63,7 +63,7 @@ export const switchUserVote = async (
       throw new Error(`Failed to increment new vote count: ${incrementError.message}`);
     }
     
-    // For "love" votes, record completion
+    // For "love" votes, record completion and set as winning concept
     if (newVoteType === 'love') {
       console.log("Love vote detected for concept:", conceptId);
       
@@ -80,6 +80,22 @@ export const switchUserVote = async (
           console.error("Error recording completion:", completionError);
         } else {
           console.log(`Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
+        }
+        
+        // Update the tshirt with the winning concept directly
+        const { error: winningConceptError } = await supabase
+          .from('tshirts')
+          .update({
+            winning_concept_id: conceptId,
+            ready_for_voting: false
+          })
+          .eq('asin', conceptData.tshirt_asin)
+          .is('winning_concept_id', null); // Only update if there's no winner yet
+          
+        if (winningConceptError) {
+          console.error("Error setting winning concept:", winningConceptError);
+        } else {
+          console.log(`Successfully set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
         }
       } catch (completionError) {
         console.error("Error recording completion:", completionError);
