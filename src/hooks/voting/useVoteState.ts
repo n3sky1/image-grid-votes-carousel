@@ -10,13 +10,22 @@ export const useVoteState = (conceptImages: ImageData[]) => {
   const [allVoted, setAllVoted] = useState(false);
 
   useEffect(() => {
-    const nonOriginalCount = conceptImages.length;
-    if (nonOriginalCount === 0) return;
+    // Only consider concepts that are not original images
+    const conceptsToVoteOn = conceptImages.filter(image => !image.isOriginal);
     
-    const votedCount = Object.keys(votedImages).length;
-    const allConceptsVoted = votedCount >= nonOriginalCount;
+    if (conceptsToVoteOn.length === 0) return;
+    
+    // Count how many concepts have votes
+    const votedCount = Object.keys(votedImages).filter(id => 
+      // Make sure the ID exists in our current concepts
+      conceptsToVoteOn.some(concept => concept.id === id)
+    ).length;
+    
+    // All concepts are voted when votedCount equals the number of concepts
+    const allConceptsVoted = votedCount >= conceptsToVoteOn.length;
     
     if (allConceptsVoted !== allVoted) {
+      console.log(`Setting allVoted to ${allConceptsVoted} (${votedCount}/${conceptsToVoteOn.length} concepts voted)`);
       setAllVoted(allConceptsVoted);
     }
   }, [votedImages, conceptImages, allVoted]);

@@ -16,10 +16,13 @@ const VotingCompletionHandler = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    // Only process when all concepts are actually voted on
     if (!allVoted || !onVotingCompleted || !asin || isProcessing) {
       return;
     }
 
+    console.log(`VotingCompletionHandler: All voted for ${asin}, recording completion`);
+    
     const recordCompletion = async () => {
       try {
         setIsProcessing(true);
@@ -87,7 +90,7 @@ const VotingCompletionHandler = ({
         onVotingCompleted();
       } catch (error) {
         console.error("Unexpected error in VotingCompletionHandler:", error);
-        // Still call onVotingCompleted to move to next t-shirt
+        // Still call onVotingCompleted to move to next t-shirt even if there's an error
         onVotingCompleted();
       } finally {
         setIsProcessing(false);
