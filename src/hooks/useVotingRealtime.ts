@@ -49,7 +49,7 @@ export const useVotingRealtime = ({
         console.log("Checking initial regeneration status for ASIN:", asin);
         const { data, error } = await supabase
           .from('tshirts')
-          .select('regenerate')
+          .select('regenerate, ready_for_voting')
           .eq('asin', asin)
           .single();
         
@@ -59,8 +59,9 @@ export const useVotingRealtime = ({
         }
         
         if (data) {
-          console.log("Initial regenerate value:", data.regenerate);
-          // Only check the regenerate flag, not the processing status
+          console.log("Initial regenerate value:", data.regenerate, "Ready for voting:", data.ready_for_voting);
+          
+          // Show overlay if regenerate is true
           if (data.regenerate === true) {
             console.log("T-shirt is currently regenerating on component mount, showing overlay");
             setShowRegeneratingOverlay(true);

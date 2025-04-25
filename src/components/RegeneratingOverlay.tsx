@@ -1,7 +1,27 @@
 
+import { useState, useEffect } from "react";
 import { AlertCircle, Clock } from "lucide-react";
 
 const RegeneratingOverlay = () => {
+  const [seconds, setSeconds] = useState(60);
+  
+  useEffect(() => {
+    // Start a countdown timer from 60 seconds
+    if (seconds <= 0) return;
+    
+    const timer = setInterval(() => {
+      setSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [seconds]);
+  
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
@@ -10,7 +30,7 @@ const RegeneratingOverlay = () => {
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Images regenerating</h3>
             <p className="text-gray-600">
-              Please wait. It should take approximately 60 seconds.
+              Please wait. It should take approximately {seconds > 0 ? seconds : "a few more"} seconds.
             </p>
             <div className="flex items-center justify-center mt-4 text-blue-500">
               <Clock className="w-5 h-5 mr-2" />

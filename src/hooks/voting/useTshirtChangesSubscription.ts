@@ -26,7 +26,7 @@ export const subscribeTshirtChanges = (
         table: 'tshirts',
         filter: `asin=eq.${asin}`,
       },
-      (payload: any) => {
+      async (payload: any) => {
         console.log("Tshirt change detected:", payload);
         
         // Check if a winning concept was selected
@@ -55,6 +55,7 @@ export const subscribeTshirtChanges = (
         if (payload.old && payload.new) {
           // Log regenerate values for debugging
           console.log("Regenerate values - Old:", payload.old.regenerate, "New:", payload.new.regenerate);
+          console.log("Ready for voting values - Old:", payload.old.ready_for_voting, "New:", payload.new.ready_for_voting);
           
           // Case 1: Regeneration started - regenerate field changed from false to true
           if (payload.old.regenerate === false && payload.new.regenerate === true) {
@@ -67,75 +68,70 @@ export const subscribeTshirtChanges = (
           // Case 2: Regeneration completed - regenerate field changed from true to false
           if (payload.old.regenerate === true && payload.new.regenerate === false) {
             console.log("Regenerate flag changed to FALSE. Regeneration completed. Refreshing images.");
-            console.log("T-shirt ready_for_voting (old):", payload.old.ready_for_voting);
-            console.log("T-shirt ready_for_voting (new):", payload.new.ready_for_voting);
             
-            // First update state to hide overlay
+            // Update state to hide overlay immediately
             setRegenerating(false);
             setShowRegeneratingOverlay(false);
+            toast.success("Regeneration completed!");
             
-            // Check auth state before fetching images
-            supabase.auth.getSession().then(({ data, error }) => {
-              console.log("Auth session during regeneration completion:", data.session ? "Active" : "None");
+            try {
+              // Get the current session
+              const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
               
-              if (error) {
-                console.error("Session error:", error);
-                toast.error("Authentication error", { 
-                  description: "Please refresh and log in again." 
-                });
+              if (sessionError) {
+                console.error("Session error during regeneration completion:", sessionError);
                 return;
               }
               
-              if (data.session) {
-                console.log("Valid session found after regeneration, fetching new images");
+              console.log("Session during regeneration completion:", sessionData.session ? "Active" : "None");
+              
+              if (sessionData.session) {
+                console.log("Valid session found, refreshing token and fetching images");
                 
-                // Explicitly refresh the session token before fetching images
-                supabase.auth.refreshSession().then(({ data: refreshData, error: refreshError }) => {
-                  if (refreshError) {
-                    console.error("Failed to refresh session:", refreshError);
-                    return;
-                  }
+                try {
+                  // Refresh the token to ensure it's valid
+                  await supabase.auth.refreshSession();
                   
-                  if (refreshData.session) {
-                    console.log("Session refreshed successfully, now fetching images");
-                    fetchImages();
-                    toast.success("Images regenerated successfully!");
-                  }
-                });
+                  // Fetch the updated images
+                  console.log("Refreshing images after regeneration");
+                  await fetchImages();
+                } catch (refreshError) {
+                  console.error("Error refreshing token or fetching images:", refreshError);
+                }
               } else {
-                console.warn("No active session found after regeneration completed");
+                console.warn("No active session found after regeneration");
                 toast.error("Session expired", { 
                   description: "Please log in again to continue."
                 });
               }
-            });
+            } catch (err) {
+              console.error("Error handling regeneration completion:", err);
+            }
             return;
           }
           
-          // Case 3: Ready for voting changed - check if this is causing navigation issues
+          // Case 3: Ready for voting changed
           if (payload.old.ready_for_voting !== payload.new.ready_for_voting) {
             console.log(`Ready for voting changed from ${payload.old.ready_for_voting} to ${payload.new.ready_for_voting}`);
             
-            // If changed to false, this might be causing navigation issues
-            if (payload.old.ready_for_voting === true && payload.new.ready_for_voting === false) {
+            // Only navigate if changed from true to false and not during regeneration
+            if (payload.old.ready_for_voting === true && payload.new.ready_for_voting === false && !payload.new.regenerate) {
               console.log("T-shirt no longer available for voting, moving to next");
               
-              // Verify session is valid before navigating
-              supabase.auth.getSession().then(({ data }) => {
-                if (data.session) {
-                  setShowWinningVoteOverlay(true);
-                  toast.success("Moving to next t-shirt...");
-                  setTimeout(() => {
-                    setShowWinningVoteOverlay(false);
-                    if (onVotingCompleted) {
-                      console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
-                      onVotingCompleted();
-                    }
-                  }, 500);
-                } else {
-                  console.warn("Session invalid when t-shirt became unavailable for voting");
-                }
-              });
+              // Check session before navigating
+              const { data } = await supabase.auth.getSession();
+              
+              if (data.session) {
+                setShowWinningVoteOverlay(true);
+                toast.success("Moving to next t-shirt...");
+                setTimeout(() => {
+                  setShowWinningVoteOverlay(false);
+                  if (onVotingCompleted) {
+                    console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
+                    onVotingCompleted();
+                  }
+                }, 500);
+              }
             }
           }
         }
