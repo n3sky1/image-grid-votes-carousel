@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [showInstructions, setShowInstructions] = useState(false);
@@ -10,12 +12,14 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-
+  const [noMoreTshirts, setNoMoreTshirts] = useState(false);
+  
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
       console.log("🔍 Starting fetchNextAsin", { currentAsin });
       setLoading(true);
       setError(null);
+      setNoMoreTshirts(false);
       
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData.user) {
@@ -27,7 +31,7 @@ const Index = () => {
 
       const userId = userData.user.id;
 
-      // Detailed logging of completed votings
+      // Fetch user's completed votings
       const { data: completedVotings, error: votingsError } = await supabase
         .from("completed_votings")
         .select("asin")
@@ -40,18 +44,18 @@ const Index = () => {
         return;
       }
 
-      const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
+      // Create a Set of completed ASINs for efficient lookup
+      const completedAsins = new Set(completedVotings?.map(cv => cv.asin) || []);
       
-      // Add current ASIN to completed list if not already there
-      if (currentAsin && !completedAsins.includes(currentAsin)) {
+      // Add current ASIN to completed set if provided
+      if (currentAsin) {
         console.log(`🔢 Adding current ASIN ${currentAsin} to completed list`);
-        completedAsins.push(currentAsin);
+        completedAsins.add(currentAsin);
       }
 
-      console.log(`🔢 Total completed ASINs: ${completedAsins.length}`);
-      console.log(`📋 Completed ASINs: `, completedAsins);
+      console.log(`🔢 Total completed ASINs: ${completedAsins.size}`);
       
-      // Fetch ALL ready t-shirts with more comprehensive logging
+      // Fetch ALL ready t-shirts
       const { data: allReadyTshirts, error: readyError } = await supabase
         .from("tshirts")
         .select("asin, ai_suggested_tags, ready_for_voting")
@@ -66,24 +70,19 @@ const Index = () => {
 
       console.log(`📦 Total ready t-shirts: ${allReadyTshirts?.length || 0}`);
       
-      // Log all ready ASINs for debugging
-      if (allReadyTshirts) {
-        console.log("🔢 All Ready ASINs:", allReadyTshirts.map(t => t.asin));
-      }
-
-      // Filter out completed ASINs
+      // Create an array of t-shirts that haven't been completed
       const availableTshirts = allReadyTshirts?.filter(
-        tshirt => !completedAsins.includes(tshirt.asin)
-      );
+        tshirt => !completedAsins.has(tshirt.asin)
+      ) || [];
       
-      console.log(`🎯 Available t-shirts after filtering: ${availableTshirts?.length || 0}`);
+      console.log(`🎯 Available t-shirts after filtering: ${availableTshirts.length}`);
+      console.log("Available ASINs:", availableTshirts.map(t => t.asin));
 
-      const nextTshirt = availableTshirts && availableTshirts.length > 0 
-        ? availableTshirts[0] 
-        : null;
-      
-      if (nextTshirt) {
+      if (availableTshirts.length > 0) {
+        // Pick the first available t-shirt
+        const nextTshirt = availableTshirts[0];
         console.log("✅ Found next t-shirt for voting:", nextTshirt.asin);
+        
         setAsin(nextTshirt.asin);
         setSuggestedTags(nextTshirt.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
         setError(null);
@@ -94,11 +93,38 @@ const Index = () => {
           position: "bottom-right"
         });
         setError("You've completed voting on all available t-shirts.");
-        setAsin(""); // Clear the ASIN when no more are available
+        setAsin(""); // Clear the ASIN
+        setNoMoreTshirts(true);
       }
     } catch (err) {
       console.error("🚨 Unexpected error in fetchNextAsin:", err);
       setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetCompletedVotings = async () => {
+    try {
+      setLoading(true);
+      
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+      
+      const { error } = await supabase
+        .from("completed_votings")
+        .delete()
+        .eq("user_id", userData.user.id);
+        
+      if (error) {
+        console.error("Error resetting completed votings:", error);
+        toast.error("Failed to reset completed votings");
+      } else {
+        toast.success("Successfully reset your voting progress");
+        fetchNextAsin();
+      }
+    } catch (err) {
+      console.error("Error in resetCompletedVotings:", err);
     } finally {
       setLoading(false);
     }
@@ -127,12 +153,27 @@ const Index = () => {
           <AlertCircle className="text-red-500 w-10 h-10 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-center text-red-700 mb-2">Notice</h1>
           <p className="text-center text-gray-700">{error}</p>
-          <button 
+          
+          {noMoreTshirts && (
+            <div className="mt-6">
+              <p className="text-sm text-gray-600 text-center mb-4">
+                You have reviewed all available t-shirts. If you'd like to review them again, you can reset your progress.
+              </p>
+              <Button 
+                onClick={resetCompletedVotings}
+                className="w-full bg-blue-500 hover:bg-blue-600"
+              >
+                Reset Your Progress
+              </Button>
+            </div>
+          )}
+          
+          <Button 
             onClick={() => fetchNextAsin()}
             className="mt-4 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
           >
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );

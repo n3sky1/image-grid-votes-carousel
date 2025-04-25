@@ -93,25 +93,42 @@ const OriginalImageSection = ({
     }
   };
 
-  // Calculate the user's progress
-  const remainingItems = Math.max(0, totalReadyCount - userCompletedCount);
-  const progressPosition = userCompletedCount + 1; // +1 for current item
+  // Calculate the progress position and remaining items
+  const completedCount = userCompletedCount || 0;
+  const totalCount = totalReadyCount || 0;
+  const position = completedCount + 1; // Current position (1-based)
+  const remaining = Math.max(0, totalCount - completedCount);
   
-  // Determine the appropriate display text based on the state
-  let displayText: string;
+  console.log("Progress stats:", {
+    completedCount, 
+    totalCount, 
+    position, 
+    remaining, 
+    hasOriginalImage: !!originalImage
+  });
   
-  if (totalReadyCount === 0) {
-    // No designs are available at all
+  // Determine the appropriate display text
+  let displayText = "No designs available";
+  
+  if (originalImage) {
+    if (totalCount > 0) {
+      displayText = `Design ${position} of ${totalCount}`;
+      
+      // Debug display text construction
+      console.log("Constructing display text:", {
+        position,
+        totalCount,
+        result: displayText
+      });
+    } else {
+      displayText = "Design available for review";
+    }
+  } else if (totalCount === 0) {
     displayText = "No designs available for review";
-  } else if (remainingItems === 0) {
-    // All designs have been reviewed
+  } else if (remaining === 0) {
     displayText = "All designs reviewed";
-  } else if (!originalImage) {
-    // No current image is available
-    displayText = "No current design to review";
   } else {
-    // There are designs to review - show progress
-    displayText = `Design ${progressPosition} of ${totalReadyCount}`;
+    displayText = `${remaining} designs remaining`;
   }
 
   return (
