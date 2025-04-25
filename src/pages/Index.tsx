@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,14 +13,13 @@ const Index = () => {
 
   const fetchNextAsin = async (currentAsin?: string) => {
     try {
+      console.log("🔍 Starting fetchNextAsin", { currentAsin });
       setLoading(true);
       setError(null);
       
-      console.log("Index: fetchNextAsin called", currentAsin ? `with current ASIN: ${currentAsin}` : "for initial load");
-      
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData.user) {
-        console.log("Index: No authenticated user found");
+        console.error("🚨 No authenticated user found", userError);
         setLoading(false);
         setError("Authentication required. Please log in.");
         return;
@@ -29,75 +27,68 @@ const Index = () => {
 
       const userId = userData.user.id;
 
-      // Get all completed ASINs for this user
+      // Detailed logging of completed votings
       const { data: completedVotings, error: votingsError } = await supabase
         .from("completed_votings")
         .select("asin")
         .eq("user_id", userId);
       
       if (votingsError) {
-        console.error("Index: Error fetching completed votings:", votingsError);
+        console.error("🚨 Error fetching completed votings", votingsError);
         setError("Failed to load voting data. Please try again later.");
         setLoading(false);
         return;
       }
 
-      // Build array of completed ASINs
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
       
-      // Add the current ASIN if provided
+      // Add current ASIN to completed list if not already there
       if (currentAsin && !completedAsins.includes(currentAsin)) {
-        console.log(`Index: Adding current ASIN ${currentAsin} to completed list`);
+        console.log(`🔢 Adding current ASIN ${currentAsin} to completed list`);
         completedAsins.push(currentAsin);
       }
 
-      console.log(`Index: Total ${completedAsins.length} completed ASINs`);
+      console.log(`🔢 Total completed ASINs: ${completedAsins.length}`);
+      console.log(`📋 Completed ASINs: `, completedAsins);
       
-      // Get count of all ready t-shirts
-      const { data: allReadyTshirts, error: countError } = await supabase
+      // Fetch ALL ready t-shirts with more comprehensive logging
+      const { data: allReadyTshirts, error: readyError } = await supabase
         .from("tshirts")
-        .select("asin")
+        .select("asin, ai_suggested_tags, ready_for_voting")
         .eq("ready_for_voting", true);
         
-      if (countError) {
-        console.error("Index: Error fetching all ready tshirts:", countError);
-      } else {
-        console.log(`Index: Found ${allReadyTshirts?.length || 0} total tshirts ready for voting`);
-      }
-
-      // Instead of using a complex "not.in" filter which has issues with large arrays,
-      // fetch a decent number of tshirts and filter them client-side
-      const { data: potentialTshirts, error: queryError } = await supabase
-        .from("tshirts")
-        .select("asin, ai_suggested_tags")
-        .eq("ready_for_voting", true)
-        .order('created_at', { ascending: true })
-        .limit(50);  // Get a batch of potential tshirts
-      
-      if (queryError) {
-        console.error("Index: Error fetching potential tshirts:", queryError);
+      if (readyError) {
+        console.error("🚨 Error fetching all ready tshirts", readyError);
         setError("Failed to load t-shirt data. Please try again later.");
         setLoading(false);
         return;
       }
+
+      console.log(`📦 Total ready t-shirts: ${allReadyTshirts?.length || 0}`);
       
-      // Filter out completed ASINs client-side
-      const availableTshirts = potentialTshirts?.filter(
+      // Log all ready ASINs for debugging
+      if (allReadyTshirts) {
+        console.log("🔢 All Ready ASINs:", allReadyTshirts.map(t => t.asin));
+      }
+
+      // Filter out completed ASINs
+      const availableTshirts = allReadyTshirts?.filter(
         tshirt => !completedAsins.includes(tshirt.asin)
       );
       
-      console.log(`Index: After filtering, found ${availableTshirts?.length || 0} available tshirts`);
-      
-      // Get the first available t-shirt
-      const nextTshirt = availableTshirts && availableTshirts.length > 0 ? availableTshirts[0] : null;
+      console.log(`🎯 Available t-shirts after filtering: ${availableTshirts?.length || 0}`);
+
+      const nextTshirt = availableTshirts && availableTshirts.length > 0 
+        ? availableTshirts[0] 
+        : null;
       
       if (nextTshirt) {
-        console.log("Index: Found next t-shirt for voting:", nextTshirt.asin);
+        console.log("✅ Found next t-shirt for voting:", nextTshirt.asin);
         setAsin(nextTshirt.asin);
         setSuggestedTags(nextTshirt.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
         setError(null);
       } else {
-        console.log("Index: No more t-shirts available for voting");
+        console.warn("🚫 No more t-shirts available for voting");
         toast("All done!", {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
@@ -106,14 +97,13 @@ const Index = () => {
         setAsin(""); // Clear the ASIN when no more are available
       }
     } catch (err) {
-      console.error("Index: Unexpected error:", err);
+      console.error("🚨 Unexpected error in fetchNextAsin:", err);
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Add event listener for vote completion events
   useEffect(() => {
     const handleVoteCompleted = (event: CustomEvent) => {
       console.log("Index: Vote completed event received", event.detail);
@@ -121,13 +111,10 @@ const Index = () => {
       fetchNextAsin(completedAsin);
     };
 
-    // Add event listener with type assertion
     window.addEventListener('voteCompleted', handleVoteCompleted as EventListener);
     
-    // Initial fetch
     fetchNextAsin();
     
-    // Cleanup
     return () => {
       window.removeEventListener('voteCompleted', handleVoteCompleted as EventListener);
     };
@@ -164,11 +151,8 @@ const Index = () => {
             suggestedTags={suggestedTags} 
             onVotingCompleted={() => {
               console.log("Index: Voting completed for ASIN:", asin);
-              // Clear the current ASIN to prevent showing the completion screen
               setAsin("");
-              // Set loading to true to show loading indicator
               setLoading(true);
-              // Fetch the next ASIN
               fetchNextAsin(asin);
             }}
           />
