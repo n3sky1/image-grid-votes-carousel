@@ -62,6 +62,25 @@ export const saveUserVote = async (
             
         if (isWinner) {
           console.log("This vote created a winning concept:", conceptId);
+          
+          // Update the tshirt with winning concept id
+          try {
+            const { error: updateError } = await supabase
+              .from('tshirts')
+              .update({ 
+                winning_concept_id: conceptId,
+                ready_for_voting: false
+              })
+              .eq('asin', conceptData.tshirt_asin);
+              
+            if (updateError) {
+              console.error("Error updating tshirt with winning concept:", updateError);
+            } else {
+              console.log(`Tshirt ${conceptData.tshirt_asin} updated with winning concept ${conceptId}`);
+            }
+          } catch (error) {
+            console.error("Error updating tshirt with winning concept:", error);
+          }
         }
       }
     }

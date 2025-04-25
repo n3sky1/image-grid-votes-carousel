@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown, Heart } from "lucide-r
 import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 interface ImageCarouselProps {
   images: ImageData[];
@@ -96,35 +97,38 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
       
       {/* Voting controls */}
       <div className="flex justify-center gap-4 p-4 border-t">
-        <button
+        <Button
           onClick={() => handleVote(currentImage.id, 'dislike')}
-          className="flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          className="flex items-center gap-2 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Dislike"
           disabled={!!votingImage}
         >
           <ThumbsDown size={18} />
           <span>Dislike</span>
-        </button>
+        </Button>
         
-        <button
+        <Button
           onClick={() => handleVote(currentImage.id, 'like')}
-          className="flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          className="flex items-center gap-2 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Like"
           disabled={!!votingImage}
         >
           <ThumbsUp size={18} />
           <span>Like</span>
-        </button>
+        </Button>
         
-        <button
+        <Button
           onClick={() => handleVote(currentImage.id, 'love')}
-          className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-600 rounded-md hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Love"
           disabled={!!votingImage}
         >
           <Heart size={18} />
-          <span>Love</span>
-        </button>
+          <span>Love (Finalize)</span>
+        </Button>
       </div>
       
       {/* Pagination indicators */}

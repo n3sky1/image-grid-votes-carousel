@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 interface UseVotingRealtimeProps {
   asin: string;
@@ -42,9 +43,13 @@ export const useVotingRealtime = ({
           ) {
             console.log("Winner detected! Showing overlay");
             setShowWinningVoteOverlay(true);
+            toast.success("Winning design selected!", {
+              description: "Moving to next t-shirt..."
+            });
             setTimeout(() => {
               setShowWinningVoteOverlay(false);
               if (onVotingCompleted) {
+                console.log("Calling onVotingCompleted from realtime due to winning concept");
                 onVotingCompleted();
               }
             }, 2000);
@@ -88,9 +93,13 @@ export const useVotingRealtime = ({
           ) {
             console.log("Tshirt no longer available for voting because it has a winner");
             setShowWinningVoteOverlay(true);
+            toast.success("Winning design selected!", {
+              description: "Moving to next t-shirt..."
+            });
             setTimeout(() => {
               setShowWinningVoteOverlay(false);
               if (onVotingCompleted) {
+                console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
                 onVotingCompleted();
               }
             }, 2000);
@@ -118,9 +127,10 @@ export const useVotingRealtime = ({
             const hasWinningHearts = payload.new.hearts >= 1;
             
             if (hasWinningVotes || hasWinningHearts) {
-              console.log("Potential winner based on votes/hearts. Refreshing data");
+              console.log(`Potential winner detected! Hearts: ${payload.new.hearts}, Votes: ${payload.new.votes_up}`);
+              toast.info("Processing winning vote...");
               // This will trigger a refresh that will pick up the winning state
-              // since the database trigger will have updated the tshirt's winning_concept_id
+              // since the database trigger should have updated the tshirt's winning_concept_id
               fetchImages();
             }
           }
