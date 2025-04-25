@@ -93,11 +93,21 @@ const OriginalImageSection = ({
     }
   };
 
-  // Calculate the current item number, accounting for 0-indexing in the display
-  const currentItemNumber = userCompletedCount + 1;
-  const displayText = totalReadyCount > 0 
-    ? `Design ${currentItemNumber} of ${totalReadyCount} to Review`
-    : "No designs available for review";
+  // Calculate remaining t-shirts to review
+  const remainingItems = Math.max(0, totalReadyCount - userCompletedCount);
+  
+  // Calculate the current item number (remaining + 1, unless we've completed all items)
+  const currentItem = remainingItems > 0 ? userCompletedCount + 1 : userCompletedCount;
+  
+  // Create the display text based on remaining items
+  let displayText: string;
+  if (totalReadyCount === 0) {
+    displayText = "No designs available for review";
+  } else if (remainingItems === 0) {
+    displayText = "All designs reviewed";
+  } else {
+    displayText = `Design ${currentItem} of ${totalReadyCount} to Review`;
+  }
 
   return (
     <div className="flex flex-col space-y-4">

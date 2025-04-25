@@ -15,22 +15,36 @@ export const useVotingStats = () => {
         return;
       }
 
-      // Get the count of all ready-for-voting t-shirts
-      const { count: readyCount } = await supabase
+      // First, get the count of ready t-shirts
+      const { count: readyCount, error: readyError } = await supabase
         .from("tshirts")
         .select("asin", { count: "exact", head: true })
         .eq("ready_for_voting", true);
       
-      // Get the user's completed votings count
-      const { count: completedCount } = await supabase
+      if (readyError) {
+        console.error("Error fetching ready count:", readyError);
+        return;
+      }
+      
+      // Next, get the user's completed votings
+      const { data: completedVotings, error: completedError } = await supabase
         .from("completed_votings")
-        .select("id", { count: "exact", head: true })
+        .select("asin")
         .eq("user_id", session.user.id);
       
-      console.log(`Stats: Ready count: ${readyCount}, Completed count: ${completedCount}`);
+      if (completedError) {
+        console.error("Error fetching completed votings:", completedError);
+        return;
+      }
       
-      setTotalReadyCount(readyCount ?? 0);
-      setUserCompletedCount(completedCount ?? 0);
+      // Calculate remaining count (this ensures the numbers make logical sense)
+      const completedCount = completedVotings?.length || 0;
+      const total = readyCount || 0;
+
+      console.log(`Stats: Total ready: ${total}, User completed: ${completedCount}`);
+      
+      setTotalReadyCount(total);
+      setUserCompletedCount(completedCount);
     } catch (err) {
       console.error("Error fetching voting stats:", err);
       setUserCompletedCount(0);
@@ -41,9 +55,9 @@ export const useVotingStats = () => {
   useEffect(() => {
     fetchVotingStats();
     
-    // Set up realtime subscription to update counts when completed_votings changes
+    // Set up realtime subscription to update counts when tables change
     const completedVotingsChannel = supabase
-      .channel('voting-stats')
+      .channel('voting-stats-changes')
       .on(
         'postgres_changes',
         {
@@ -53,6 +67,19 @@ export const useVotingStats = () => {
         },
         () => {
           console.log('Completed votings changed, refreshing stats');
+          fetchVotingStats();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tshirts',
+          filter: "ready_for_voting=eq.true",
+        },
+        () => {
+          console.log('Ready t-shirts changed, refreshing stats');
           fetchVotingStats();
         }
       )
