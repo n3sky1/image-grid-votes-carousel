@@ -10,14 +10,15 @@ interface VoteCardProps {
 
 export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
   const handleVote = (vote: 'like' | 'dislike' | 'love') => {
-    // For love votes, show immediate feedback
+    // For love votes, show immediate feedback and special handling
     if (vote === 'love') {
       toast.success("Love vote submitted!", {
         description: "Moving to next t-shirt...",
         duration: 2000,
       });
       
-      // Call onVote immediately for love votes
+      console.log("VoteCard: Love vote submitted, calling onVote directly");
+      // Call onVote immediately for love votes to trigger transition
       onVote(vote);
     } else {
       // For other votes, just call onVote without toast

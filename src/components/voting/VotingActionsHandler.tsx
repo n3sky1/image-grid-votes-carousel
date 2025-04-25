@@ -20,6 +20,11 @@ export const useVotingActions = ({
 }: VotingActionsHandlerProps) => {
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     try {
+      // For love votes, we need special handling to ensure transition happens
+      if (vote === "love") {
+        console.log(`Submitting love vote for ${id} with special handling for immediate transition`);
+      }
+      
       // Submit the vote
       await onVote(id, vote);
       

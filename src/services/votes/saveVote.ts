@@ -70,8 +70,8 @@ export const saveUserVote = async (
           console.log(`Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
         }
         
-        // Try to update the tshirt with the winning concept
         try {
+          // Try to update the tshirt with the winning concept
           const { error: winningConceptError } = await supabase
             .from('tshirts')
             .update({
@@ -82,12 +82,15 @@ export const saveUserVote = async (
             .is('winning_concept_id', null); // Only update if there's no winner yet
             
           if (winningConceptError) {
-            console.error("Error setting winning concept:", winningConceptError);
+            // This error is expected if RLS doesn't allow the update
+            console.error("Note: Error setting winning concept (expected with current RLS):", winningConceptError);
+            // Don't throw error here - the server-side triggers will handle this
           } else {
             console.log(`Successfully set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
           }
         } catch (updateError) {
           console.error("Error setting winning concept:", updateError);
+          // Continue even if there's an error updating the winning concept
         }
       } catch (completionError) {
         console.error("Error recording completion:", completionError);

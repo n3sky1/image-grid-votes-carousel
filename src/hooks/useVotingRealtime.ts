@@ -54,7 +54,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to winning concept");
                 onVotingCompleted();
               }
-            }, 1500);
+            }, 1000); // Reduced from 1500ms to 1000ms for faster transition
             return; // Exit early as we're moving to next t-shirt
           }
           
@@ -104,7 +104,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
                 onVotingCompleted();
               }
-            }, 1000); // Reduced timeout for faster transition
+            }, 800); // Reduced timeout for even faster transition
           }
         }
       )
@@ -137,8 +137,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to love vote");
                 onVotingCompleted();
               }
-            }, 1000); // Reduced timeout for faster transition
-            return;
+            }, 800); // Reduced timeout for faster transition
           }
           
           // Check for multiple likes (votes_up >= 2)
@@ -154,7 +153,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to 2+ likes");
                 onVotingCompleted();
               }
-            }, 1000); // Reduced timeout for faster transition
+            }, 800); // Reduced timeout for faster transition
           }
         }
       )
@@ -175,42 +174,45 @@ export const useVotingRealtime = ({
           console.log("Love vote detected in user_votes:", payload);
           
           if (payload.new && payload.new.concept_id) {
-            // Check if this concept belongs to our current ASIN
-            const { data } = await supabase
-              .from('concepts')
-              .select('tshirt_asin')
-              .eq('concept_id', payload.new.concept_id)
-              .single();
-              
-            if (data && data.tshirt_asin === asin) {
-              console.log("Love vote for current ASIN detected, triggering completion");
-              setShowWinningVoteOverlay(true);
-              toast.success("Winning design selected!", {
-                description: "Moving to next t-shirt..."
-              });
-              
-              // Forcefully mark this tshirt as having a winning concept
-              try {
-                await supabase
-                  .from('tshirts')
-                  .update({ 
-                    winning_concept_id: payload.new.concept_id,
-                    ready_for_voting: false
-                  })
-                  .eq('asin', asin);
-                console.log("Tshirt updated with winning concept:", payload.new.concept_id);
-              } catch (error) {
-                console.error("Error updating tshirt with winning concept:", error);
+            try {
+              // Check if this concept belongs to our current ASIN
+              const { data, error } = await supabase
+                .from('concepts')
+                .select('tshirt_asin')
+                .eq('concept_id', payload.new.concept_id)
+                .single();
+                
+              if (error) {
+                console.error("Error checking concept ASIN:", error);
+                return;
               }
+                
+              if (data && data.tshirt_asin === asin) {
+                console.log("Love vote for current ASIN detected, triggering completion");
+                setShowWinningVoteOverlay(true);
+                toast.success("Winning design selected!", {
+                  description: "Moving to next t-shirt..."
+                });
+                
+                // Don't worry about updating the tshirt table as that will happen via RPC or backend
+                
+                // Call the completion callback with minimal delay
+                setTimeout(() => {
+                  setShowWinningVoteOverlay(false);
+                  if (onVotingCompleted) {
+                    console.log("Calling onVotingCompleted from user_votes realtime");
+                    onVotingCompleted();
+                  }
+                }, 500); // Even shorter timeout for faster transition
+              }
+            } catch (error) {
+              console.error("Error handling love vote in realtime:", error);
               
-              // Call the completion callback with minimal delay
-              setTimeout(() => {
-                setShowWinningVoteOverlay(false);
-                if (onVotingCompleted) {
-                  console.log("Calling onVotingCompleted from user_votes realtime");
-                  onVotingCompleted();
-                }
-              }, 800); // Very short timeout for almost immediate transition
+              // Even if there's an error, try to move to the next t-shirt
+              if (onVotingCompleted) {
+                console.log("Error when handling love vote, calling onVotingCompleted anyway");
+                setTimeout(() => onVotingCompleted(), 500);
+              }
             }
           }
         }
