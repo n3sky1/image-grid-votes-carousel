@@ -5,64 +5,66 @@ import { supabase } from "@/integrations/supabase/client";
 export const useVotingStats = () => {
   const [userCompletedCount, setUserCompletedCount] = useState<number>(0);
   const [totalReadyCount, setTotalReadyCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchVotingStats = useCallback(async () => {
     try {
       console.log("VotingStats: Starting to fetch voting stats");
-      const { data: { session } } = await supabase.auth.getSession();
+      setLoading(true);
+      
+      // Get the current user session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("VotingStats: Auth session error:", sessionError);
+        return;
+      }
+      
       if (!session?.user) {
         console.log("VotingStats: No authenticated user found");
         setUserCompletedCount(0);
         setTotalReadyCount(0);
+        setLoading(false);
         return;
       }
 
-      // Get ALL t-shirts that are ready for voting
-      const { data: readyTshirts, error: readyError } = await supabase
+      // 1. Get count of ALL t-shirts that are ready for voting
+      const { count: readyCount, error: readyError } = await supabase
         .from("tshirts")
-        .select("asin")
+        .select("asin", { count: 'exact', head: false })
         .eq("ready_for_voting", true);
       
       if (readyError) {
-        console.error("VotingStats: Error fetching ready tshirts:", readyError);
+        console.error("VotingStats: Error fetching ready tshirts count:", readyError);
+        setLoading(false);
         return;
       }
       
-      // Get the user's completed votings
-      const { data: completedVotings, error: completedError } = await supabase
+      // 2. Get count of the user's completed votings
+      const { count: completedCount, error: completedError } = await supabase
         .from("completed_votings")
-        .select("asin")
+        .select("asin", { count: 'exact', head: false })
         .eq("user_id", session.user.id);
       
       if (completedError) {
-        console.error("VotingStats: Error fetching completed votings:", completedError);
+        console.error("VotingStats: Error fetching completed votings count:", completedError);
+        setLoading(false);
         return;
       }
       
-      // Calculate counts
-      const readyTshirtCount = readyTshirts?.length || 0;
-      const completedCount = completedVotings?.length || 0;
+      const actualReadyCount = readyCount || 0;
+      const actualCompletedCount = completedCount || 0;
       
-      // To calculate the real "total", we need the union of ready tshirts and completed votings
-      // because some completed tshirts might no longer be "ready for voting"
-      const completedAsins = new Set(completedVotings?.map(cv => cv.asin) || []);
-      const readyAsins = new Set(readyTshirts?.map(rt => rt.asin) || []);
+      console.log(`VotingStats: Ready tshirt count: ${actualReadyCount}`);
+      console.log(`VotingStats: User completed count: ${actualCompletedCount}`);
       
-      // Find tshirts that are both ready and not completed
-      const remainingAsins = [...readyAsins].filter(asin => !completedAsins.has(asin));
-      
-      // Total is the number of remaining tshirts plus the number of completed votings
-      const totalCount = remainingAsins.length + completedCount;
-      
-      console.log(`VotingStats: Ready tshirts: ${readyTshirtCount}, Completed votings: ${completedCount}`);
-      console.log(`VotingStats: Remaining tshirts: ${remainingAsins.length}, Total count: ${totalCount}`);
-      
-      setTotalReadyCount(totalCount);
-      setUserCompletedCount(completedCount);
+      setTotalReadyCount(actualReadyCount);
+      setUserCompletedCount(actualCompletedCount);
+      setLoading(false);
     } catch (err) {
       console.error("VotingStats: Error fetching voting stats:", err);
       setUserCompletedCount(0);
       setTotalReadyCount(0);
+      setLoading(false);
     }
   }, []);
 
@@ -104,5 +106,10 @@ export const useVotingStats = () => {
     };
   }, [fetchVotingStats]);
 
-  return { userCompletedCount, totalReadyCount, refreshStats: fetchVotingStats };
+  return { 
+    userCompletedCount, 
+    totalReadyCount, 
+    refreshStats: fetchVotingStats,
+    loading 
+  };
 };

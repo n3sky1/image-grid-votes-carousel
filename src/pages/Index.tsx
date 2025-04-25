@@ -19,27 +19,41 @@ const Index = () => {
       
       console.log("Index: fetchNextAsin called", currentAsin ? `with current ASIN: ${currentAsin}` : "for initial load");
       
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
         console.log("Index: No authenticated user found");
+        setLoading(false);
+        setError("Authentication required. Please log in.");
+        return;
+      }
+
+      const userId = userData.user.id;
+
+      // Get all completed ASINs for this user
+      const { data: completedVotings, error: votingsError } = await supabase
+        .from("completed_votings")
+        .select("asin")
+        .eq("user_id", userId);
+      
+      if (votingsError) {
+        console.error("Index: Error fetching completed votings:", votingsError);
+        setError("Failed to load voting data. Please try again later.");
         setLoading(false);
         return;
       }
 
-      const { data: completedVotings } = await supabase
-        .from("completed_votings")
-        .select("asin")
-        .eq("user_id", user.data.user.id);
-      
+      // Build array of completed ASINs
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
+      
+      // Add the current ASIN if provided
       if (currentAsin && !completedAsins.includes(currentAsin)) {
         console.log(`Index: Adding current ASIN ${currentAsin} to completed list`);
         completedAsins.push(currentAsin);
       }
 
-      console.log("Index: Fetching next ASIN, excluding:", completedAsins);
-
-      // Get all tshirts ready for voting
+      console.log(`Index: Total ${completedAsins.length} completed ASINs`);
+      
+      // Get count of all ready t-shirts
       const { data: allReadyTshirts, error: countError } = await supabase
         .from("tshirts")
         .select("asin")
@@ -51,39 +65,44 @@ const Index = () => {
         console.log(`Index: Found ${allReadyTshirts?.length || 0} total tshirts ready for voting`);
       }
 
-      // Build the query to fetch the next available t-shirt for voting
-      let query = supabase
+      // Instead of using a complex "not.in" filter which has issues with large arrays,
+      // fetch a decent number of tshirts and filter them client-side
+      const { data: potentialTshirts, error: queryError } = await supabase
         .from("tshirts")
         .select("asin, ai_suggested_tags")
         .eq("ready_for_voting", true)
-        .order('created_at', { ascending: true });  // Add consistent ordering
+        .order('created_at', { ascending: true })
+        .limit(50);  // Get a batch of potential tshirts
       
-      if (completedAsins.length > 0) {
-        // Use the "not.in" filter for the array of ASINs
-        query = query.not('asin', 'in', completedAsins);
-      }
-      
-      const { data, error } = await query.limit(1).maybeSingle();
-      
-      if (error) {
-        console.error("Index: Error fetching ASIN:", error);
-        setError("Unable to load t-shirt data. Please try again later.");
+      if (queryError) {
+        console.error("Index: Error fetching potential tshirts:", queryError);
+        setError("Failed to load t-shirt data. Please try again later.");
         setLoading(false);
         return;
       }
       
-      if (data && data.asin) {
-        console.log("Index: Found next t-shirt for voting:", data.asin);
-        setAsin(data.asin);
-        setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
-        setError(null); // Clear any previous errors when we successfully find a shirt
+      // Filter out completed ASINs client-side
+      const availableTshirts = potentialTshirts?.filter(
+        tshirt => !completedAsins.includes(tshirt.asin)
+      );
+      
+      console.log(`Index: After filtering, found ${availableTshirts?.length || 0} available tshirts`);
+      
+      // Get the first available t-shirt
+      const nextTshirt = availableTshirts && availableTshirts.length > 0 ? availableTshirts[0] : null;
+      
+      if (nextTshirt) {
+        console.log("Index: Found next t-shirt for voting:", nextTshirt.asin);
+        setAsin(nextTshirt.asin);
+        setSuggestedTags(nextTshirt.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
+        setError(null);
       } else {
         console.log("Index: No more t-shirts available for voting");
         toast("All done!", {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
         });
-        setError("No more t-shirts available for voting");
+        setError("You've completed voting on all available t-shirts.");
         setAsin(""); // Clear the ASIN when no more are available
       }
     } catch (err) {
@@ -119,7 +138,7 @@ const Index = () => {
       <div className="min-h-screen bg-gradient-to-br from-[#fdfcfb] via-[#e2d1c3]/80 to-[#F1F0FB] flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
           <AlertCircle className="text-red-500 w-10 h-10 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-center text-red-700 mb-2">Error</h1>
+          <h1 className="text-xl font-bold text-center text-red-700 mb-2">Notice</h1>
           <p className="text-center text-gray-700">{error}</p>
           <button 
             onClick={() => fetchNextAsin()}
