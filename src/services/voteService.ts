@@ -32,8 +32,6 @@ export const saveUserVote = async (
         concept_id: conceptId,
         user_id: session.user.id,
         vote_type: voteType
-      }, {
-        onConflict: 'user_id,concept_id'
       });
 
     if (voteError) {
@@ -42,46 +40,33 @@ export const saveUserVote = async (
     }
 
     // Call the API endpoint to increment the vote
-    const response = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_concept_vote`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({
-        p_concept_id: conceptId,
-        p_vote_type: voteType
-      })
+    const { error: incrementError } = await supabase.rpc('increment_concept_vote', {
+      p_concept_id: conceptId,
+      p_vote_type: voteType
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to update vote count: ${response.statusText}`);
+    if (incrementError) {
+      throw new Error(`Failed to update vote count: ${incrementError.message}`);
     }
     
-    // For "love" votes, immediately record completion and trigger the completion event
-    // Note: We're no longer trying to update the tshirt table directly from the client
-    // Instead, we'll rely on the database trigger to handle setting the winning concept
+    // For "love" votes, record completion
     if (voteType === 'love') {
-      console.log("Love vote detected for concept:", conceptId);
-      
       try {
         // Record the completion for this user
         const { error: completionError } = await supabase
           .from('completed_votings')
-          .upsert({ 
+          .insert({ 
             asin: conceptData.tshirt_asin,
             user_id: session.user.id
           });
           
         if (completionError) {
           console.error("Error recording completion:", completionError);
-        } else {
-          console.log(`Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
         }
       } catch (completionError) {
         console.error("Error recording completion:", completionError);
       }
-    } 
+    }
   } catch (error) {
     console.error("Error in saveUserVote:", error);
     throw error;
