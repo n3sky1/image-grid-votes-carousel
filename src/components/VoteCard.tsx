@@ -17,9 +17,10 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
         duration: 2000,
       });
       
-      // Remove the delay to immediately call onVote for love votes
+      // Call onVote immediately for love votes
       onVote(vote);
     } else {
+      // For other votes, just call onVote without toast
       onVote(vote);
     }
   };
