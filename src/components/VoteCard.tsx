@@ -10,8 +10,11 @@ interface VoteCardProps {
 
 export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
   const handleVote = (vote: 'like' | 'dislike' | 'love') => {
+    console.log(`VoteCard: User clicked ${vote} button, current vote is ${currentVote}`);
+    
     // For love votes, show immediate feedback and special handling
     if (vote === 'love') {
+      console.log("VoteCard: Love vote detected, showing toast");
       toast.success("Love vote submitted!", {
         description: "Moving to next t-shirt...",
         duration: 2000,
@@ -22,6 +25,7 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
       onVote(vote);
     } else {
       // For other votes, just call onVote without toast
+      console.log(`VoteCard: Regular ${vote} vote, calling onVote`);
       onVote(vote);
     }
   };

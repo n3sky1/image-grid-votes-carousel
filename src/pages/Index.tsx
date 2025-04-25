@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,9 +16,11 @@ const Index = () => {
       setLoading(true);
       setError(null);
       
+      console.log("Index: fetchNextAsin called", currentAsin ? `with current ASIN: ${currentAsin}` : "for initial load");
+      
       const user = await supabase.auth.getUser();
       if (!user.data.user) {
-        console.log("No authenticated user found");
+        console.log("Index: No authenticated user found");
         setLoading(false);
         return;
       }
@@ -31,10 +32,11 @@ const Index = () => {
       
       const completedAsins = completedVotings ? completedVotings.map(cv => cv.asin) : [];
       if (currentAsin && !completedAsins.includes(currentAsin)) {
+        console.log(`Index: Adding current ASIN ${currentAsin} to completed list`);
         completedAsins.push(currentAsin);
       }
 
-      console.log("Fetching next ASIN, excluding:", completedAsins);
+      console.log("Index: Fetching next ASIN, excluding:", completedAsins);
 
       // Build the query to fetch the next available t-shirt for voting
       let query = supabase
@@ -53,18 +55,18 @@ const Index = () => {
       const { data, error } = await query.limit(1).maybeSingle();
       
       if (error) {
-        console.error("Error fetching ASIN:", error);
+        console.error("Index: Error fetching ASIN:", error);
         setError("Unable to load t-shirt data. Please try again later.");
         setLoading(false);
         return;
       }
       
       if (data && data.asin) {
-        console.log("Found next t-shirt for voting:", data.asin);
+        console.log("Index: Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
       } else {
-        console.log("No more t-shirts available for voting");
+        console.log("Index: No more t-shirts available for voting");
         toast("All done!", {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
@@ -72,7 +74,7 @@ const Index = () => {
         setError("No more t-shirts available for voting.");
       }
     } catch (err) {
-      console.error("Unexpected error:", err);
+      console.error("Index: Unexpected error:", err);
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setLoading(false);
@@ -113,7 +115,7 @@ const Index = () => {
             asin={asin} 
             suggestedTags={suggestedTags} 
             onVotingCompleted={() => {
-              console.log("Voting completed for ASIN:", asin);
+              console.log("Index: Voting completed for ASIN:", asin);
               // Clear the current ASIN to prevent showing the completion screen
               setAsin("");
               // Set loading to true to show loading indicator

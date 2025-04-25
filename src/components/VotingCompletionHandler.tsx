@@ -31,12 +31,13 @@ const VotingCompletionHandler = ({
         
         const user = await supabase.auth.getUser();
         if (!user.data.user) {
-          console.error("No user found, cannot record completion");
+          console.error("VotingCompletionHandler: No user found, cannot record completion");
           setIsProcessing(false);
           return;
         }
 
         // Check if the tshirt has a winning concept already
+        console.log(`VotingCompletionHandler: Checking if tshirt ${asin} has a winning concept`);
         const { data: tshirtData, error: tshirtError } = await supabase
           .from("tshirts")
           .select("winning_concept_id")
@@ -44,9 +45,9 @@ const VotingCompletionHandler = ({
           .maybeSingle();
           
         if (tshirtError) {
-          console.error("Error checking tshirt winner:", tshirtError);
+          console.error("VotingCompletionHandler: Error checking tshirt winner:", tshirtError);
         } else if (tshirtData?.winning_concept_id) {
-          console.log("Tshirt already has a winning concept:", tshirtData.winning_concept_id);
+          console.log("VotingCompletionHandler: Tshirt already has a winning concept:", tshirtData.winning_concept_id);
           setCompletionRecorded(true);
           onVotingCompleted();
           setIsProcessing(false);
@@ -54,6 +55,7 @@ const VotingCompletionHandler = ({
         }
 
         // Check if this ASIN is already marked as completed
+        console.log(`VotingCompletionHandler: Checking if ASIN ${asin} is already completed`);
         const { data: existingCompletion, error: checkError } = await supabase
           .from("completed_votings")
           .select("asin")
@@ -64,12 +66,12 @@ const VotingCompletionHandler = ({
         if (checkError && checkError.code !== 'PGRST116') {
           // PGRST116 is the "no rows returned" error, which is expected
           // Only report other types of errors
-          console.error("Error checking completion:", checkError);
+          console.error("VotingCompletionHandler: Error checking completion:", checkError);
         }
         
         // If already completed, don't record again
         if (existingCompletion) {
-          console.log("Completion already recorded for this ASIN, moving to next...");
+          console.log("VotingCompletionHandler: Completion already recorded for this ASIN, moving to next...");
           setCompletionRecorded(true);
           onVotingCompleted();
           setIsProcessing(false);
@@ -77,7 +79,7 @@ const VotingCompletionHandler = ({
         }
 
         // Record the completion - now with proper permissions this should work
-        console.log("Recording completion in database...");
+        console.log("VotingCompletionHandler: Recording completion in database...");
         const { error: insertError } = await supabase
           .from("completed_votings")
           .upsert({
@@ -86,18 +88,20 @@ const VotingCompletionHandler = ({
           });
 
         if (insertError) {
-          console.error("Error recording completion:", insertError);
-          console.log("Error details:", JSON.stringify(insertError));
+          console.error("VotingCompletionHandler: Error recording completion:", insertError);
+          console.log("VotingCompletionHandler: Error details:", JSON.stringify(insertError));
         } else {
-          console.log(`Successfully recorded completion for ASIN: ${asin}`);
+          console.log(`VotingCompletionHandler: Successfully recorded completion for ASIN: ${asin}`);
         }
         
         // Mark as completed and call the callback even if there was an error
+        console.log(`VotingCompletionHandler: Marking as completed and calling onVotingCompleted for ASIN: ${asin}`);
         setCompletionRecorded(true);
         onVotingCompleted();
       } catch (error) {
-        console.error("Unexpected error in VotingCompletionHandler:", error);
+        console.error("VotingCompletionHandler: Unexpected error:", error);
         // Still call onVotingCompleted to move to next t-shirt even if there's an error
+        console.log("VotingCompletionHandler: Calling onVotingCompleted despite error");
         setCompletionRecorded(true);
         onVotingCompleted();
       } finally {

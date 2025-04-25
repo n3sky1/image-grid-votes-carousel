@@ -20,9 +20,11 @@ export const useVotingActions = ({
 }: VotingActionsHandlerProps) => {
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     try {
+      console.log(`VotingActionsHandler: handleVote called for ${id} with vote: ${vote}`);
+      
       // For love votes, we need special handling to ensure transition happens
       if (vote === "love") {
-        console.log(`Submitting love vote for ${id} with special handling for immediate transition`);
+        console.log(`VotingActionsHandler: Submitting love vote for ${id} with special handling for immediate transition`);
       }
       
       // Submit the vote
@@ -30,7 +32,7 @@ export const useVotingActions = ({
       
       // For love votes, we don't show a toast here as it's managed in VoteCard
       if (vote === "love") {
-        console.log("Love vote submitted, transition will be handled in VotingCompletionHandler");
+        console.log("VotingActionsHandler: Love vote submitted, transition will be handled in VotingCompletionHandler");
         return;
       }
       
@@ -41,7 +43,7 @@ export const useVotingActions = ({
         position: "bottom-right",
       });
     } catch (error) {
-      console.error("Error setting vote:", error);
+      console.error("VotingActionsHandler: Error setting vote:", error);
       toast.error("Failed to save vote", {
         description: "Please try again later.",
         position: "bottom-right",
@@ -50,14 +52,17 @@ export const useVotingActions = ({
   };
 
   const handleOriginalAction = async (action: "copyrighted" | "no-design" | "cant-design") => {
+    console.log(`VotingActionsHandler: handleOriginalAction called with action: ${action}`);
     try {
       // First, ensure the user is authenticated
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData.user) {
+        console.error("VotingActionsHandler: Authentication error:", authError);
         throw new Error("Authentication required");
       }
       
       // Update the tshirt with the review problem and mark as not ready for voting
+      console.log(`VotingActionsHandler: Updating tshirt ${id} with problem: ${action}`);
       const { error: tshirtError } = await supabase
         .from('tshirts')
         .update({ 
@@ -67,31 +72,35 @@ export const useVotingActions = ({
         .eq('asin', id);
           
       if (tshirtError) {
-        console.error("Error updating tshirt:", tshirtError);
+        console.error("VotingActionsHandler: Error updating tshirt:", tshirtError);
         throw tshirtError;
       }
       
       // Record completion
+      console.log(`VotingActionsHandler: Recording completion for ASIN: ${id}`);
       await recordCompletion(id, authData.user.id);
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
       });
 
+      console.log(`VotingActionsHandler: Calling onOriginalAction for ${action}`);
       // Call the onOriginalAction immediately
       onOriginalAction(action);
     } catch (error) {
-      console.error('Error updating tshirt:', error);
+      console.error('VotingActionsHandler: Error updating tshirt:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
       
       // Even if there's an error, try to move to the next t-shirt
+      console.log(`VotingActionsHandler: Calling onOriginalAction despite error for ${action}`);
       onOriginalAction(action);
     }
   };
   
   const recordCompletion = async (asin: string, userId: string) => {
+    console.log(`VotingActionsHandler: recordCompletion called for ASIN: ${asin}, userId: ${userId}`);
     try {
       const { error: completedError } = await supabase
         .from('completed_votings')
@@ -101,14 +110,17 @@ export const useVotingActions = ({
         });
 
       if (completedError) {
-        console.error("Error recording completion:", completedError);
+        console.error("VotingActionsHandler: Error recording completion:", completedError);
+      } else {
+        console.log(`VotingActionsHandler: Successfully recorded completion for ASIN: ${asin}`);
       }
     } catch (err) {
-      console.error("Failed to record completion:", err);
+      console.error("VotingActionsHandler: Failed to record completion:", err);
     }
   };
 
   const handleRetry = () => {
+    console.log("VotingActionsHandler: handleRetry called");
     toast("Retrying...", {
       description: "Attempting to reload images",
       position: "bottom-right"
@@ -117,6 +129,7 @@ export const useVotingActions = ({
   };
 
   const handlePromptSaved = (newPrompt: string) => {
+    console.log("VotingActionsHandler: handlePromptSaved called with new prompt");
     onPromptSaved(newPrompt);
   };
 
