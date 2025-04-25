@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { VoteType } from "./types";
 
@@ -49,6 +48,9 @@ export const saveUserVote = async (
           console.error("[saveUserVote] Error recording completion:", completionError);
         } else {
           console.log(`[saveUserVote] Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
+          
+          // Trigger page refresh for love votes
+          window.location.reload();
         }
       } catch (completionError) {
         console.error("[saveUserVote] Error in love vote special handling:", completionError);
