@@ -16,7 +16,16 @@ export const useVotingRealtime = ({
 }: UseVotingRealtimeProps): RealtimeHandlers => {
   const [showWinningVoteOverlay, setShowWinningVoteOverlay] = useState(false);
   
+  // Reset state when ASIN changes
   useEffect(() => {
+    setShowWinningVoteOverlay(false);
+    // Here we're not resetting setShowRegeneratingOverlay or setRegenerating
+    // as those are passed in from parent and should be managed there
+  }, [asin]);
+
+  useEffect(() => {
+    if (!asin) return;
+    
     console.log(`Setting up realtime listeners for ASIN: ${asin}`);
     
     const context = {
@@ -34,6 +43,29 @@ export const useVotingRealtime = ({
     const userVotesChannel = subscribeUserVotes(context);
     const completedVotingsChannel = subscribeCompletedVotings(context);
 
+    // Check if the t-shirt is already in regenerating state when component mounts
+    const checkInitialStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tshirts')
+          .select('regenerate, ai_processing_status')
+          .eq('asin', asin)
+          .single();
+        
+        if (!error && data) {
+          if (data.regenerate === true || ['regeneration_requested', 'regenerating'].includes(data.ai_processing_status)) {
+            console.log("T-shirt already regenerating on component mount, showing overlay");
+            setShowRegeneratingOverlay(true);
+            setRegenerating(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking initial regeneration status:", err);
+      }
+    };
+    
+    checkInitialStatus();
+
     return () => {
       console.log(`Removing realtime listeners for ASIN: ${asin}`);
       supabase.removeChannel(tshirtChannel);
@@ -41,7 +73,7 @@ export const useVotingRealtime = ({
       supabase.removeChannel(userVotesChannel);
       supabase.removeChannel(completedVotingsChannel);
     };
-  }, [asin, onVotingCompleted, setShowRegeneratingOverlay, fetchImages, setRegenerating]);
+  }, [asin, onVotingCompleted, setShowRegeneratingOverlay, setRegenerating, fetchImages]);
   
   return { showWinningVoteOverlay };
 };

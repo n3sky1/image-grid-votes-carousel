@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Edit, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,24 +26,31 @@ const PromptEditor = ({ asin, promptText, onPromptSaved }: PromptEditorProps) =>
   const handleSavePrompt = async () => {
     setSaveLoading(true);
 
-    // Explicitly set regenerate to true and update prompt
-    const { error: updateError } = await supabase
-      .from("tshirts")
-      .update({ 
-        ai_image_description: editValue, 
-        regenerate: true  // Explicitly set regenerate to true
-      })
-      .eq("asin", asin);
+    try {
+      // Explicitly set regenerate to true and update prompt
+      const { error: updateError } = await supabase
+        .from("tshirts")
+        .update({ 
+          ai_image_description: editValue, 
+          regenerate: true,
+          ai_processing_status: 'regeneration_requested'  // Add this to make status change clearly visible
+        })
+        .eq("asin", asin);
 
-    if (updateError) {
-      toast("Error saving prompt", { description: updateError.message, position: "bottom-right" });
-    } else {
-      toast("Updated prompt", { description: "Prompt updated and regeneration started!", position: "bottom-right" });
-      setIsEditing(false);
-      if (onPromptSaved) onPromptSaved(editValue);
-      // Do not reload — let polling mechanism in voting grid pick up new images
+      if (updateError) {
+        toast("Error saving prompt", { description: updateError.message, position: "bottom-right" });
+      } else {
+        toast("Updated prompt", { description: "Prompt updated and regeneration started!", position: "bottom-right" });
+        setIsEditing(false);
+        if (onPromptSaved) onPromptSaved(editValue);
+        // Show regeneration overlay will be handled by the realtime subscription
+      }
+    } catch (err) {
+      console.error("Error saving prompt:", err);
+      toast.error("Failed to save prompt");
+    } finally {
+      setSaveLoading(false);
     }
-    setSaveLoading(false);
   };
 
   const handleCancelEdit = () => {
@@ -74,7 +82,7 @@ const PromptEditor = ({ asin, promptText, onPromptSaved }: PromptEditorProps) =>
               onChange={(e) => setEditValue(e.target.value)}
               className="mb-2"
               disabled={saveLoading}
-              rows={6} // Increased from 4 to 6 to make it 25% larger
+              rows={6}
             />
             <div className="flex gap-2">
               <TooltipProvider>
