@@ -55,7 +55,7 @@ export const saveUserVote = async (
       try {
         console.log("Love vote detected for concept:", conceptId);
         
-        // Record the completion for this user
+        // Record the completion for this user first to ensure it's always recorded
         const { error: completionError } = await supabase
           .from('completed_votings')
           .upsert({ 
@@ -65,27 +65,33 @@ export const saveUserVote = async (
           
         if (completionError) {
           console.error("Error recording completion:", completionError);
+          // Continue even if there's an error - we'll still try to update the tshirt
         } else {
           console.log(`Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
         }
         
-        // Update the tshirt with the winning concept directly
-        const { error: winningConceptError } = await supabase
-          .from('tshirts')
-          .update({
-            winning_concept_id: conceptId,
-            ready_for_voting: false
-          })
-          .eq('asin', conceptData.tshirt_asin)
-          .is('winning_concept_id', null); // Only update if there's no winner yet
-          
-        if (winningConceptError) {
-          console.error("Error setting winning concept:", winningConceptError);
-        } else {
-          console.log(`Successfully set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
+        // Try to update the tshirt with the winning concept
+        try {
+          const { error: winningConceptError } = await supabase
+            .from('tshirts')
+            .update({
+              winning_concept_id: conceptId,
+              ready_for_voting: false
+            })
+            .eq('asin', conceptData.tshirt_asin)
+            .is('winning_concept_id', null); // Only update if there's no winner yet
+            
+          if (winningConceptError) {
+            console.error("Error setting winning concept:", winningConceptError);
+          } else {
+            console.log(`Successfully set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
+          }
+        } catch (updateError) {
+          console.error("Error setting winning concept:", updateError);
         }
       } catch (completionError) {
         console.error("Error recording completion:", completionError);
+        // We'll still succeed even if we couldn't update the tshirt
       }
     }
   } catch (error) {

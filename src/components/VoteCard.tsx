@@ -16,11 +16,11 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
         description: "Moving to next t-shirt...",
       });
       
-      // Add a small delay to allow the toast to be visible before onVote 
-      // potentially navigates away
+      // Add a slightly longer delay to ensure the toast is visible
+      // and the vote is processed before navigating
       setTimeout(() => {
         onVote(vote);
-      }, 300);
+      }, 500);
     } else {
       onVote(vote);
     }

@@ -20,17 +20,25 @@ export const useVotingActions = ({
 }: VotingActionsHandlerProps) => {
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     try {
+      // For love votes, handle special case - we won't show a toast here as it's in VoteCard
+      if (vote === "love") {
+        await onVote(id, vote);
+        // Don't show toast here as we already show it in VoteCard
+        return;
+      }
+      
+      // For other votes, do the standard flow
       await onVote(id, vote);
       
-      let voteText = vote === "like" ? "Liked" : vote === "dislike" ? "Disliked" : "Loved";
+      let voteText = vote === "like" ? "Liked" : "Disliked";
       toast(voteText, {
         description: `You ${voteText.toLowerCase()} this image`,
         position: "bottom-right",
       });
     } catch (error) {
       console.error("Error setting vote:", error);
-      toast("Error", {
-        description: "Failed to save your vote. Please try again.",
+      toast.error("Failed to save vote", {
+        description: "Please try again later.",
         position: "bottom-right",
       });
     }
@@ -44,7 +52,7 @@ export const useVotingActions = ({
         throw new Error("Authentication required");
       }
       
-      // Try to update the tshirt with the review problem
+      // Try to update the tshirt with the review problem and record completion regardless of result
       try {
         // Update the tshirt with the review problem
         const { error: tshirtError } = await supabase
@@ -69,16 +77,20 @@ export const useVotingActions = ({
         description: 'This t-shirt has been marked for review.',
       });
 
-      // Always call the onOriginalAction to move to the next t-shirt
-      onOriginalAction(action);
+      // Always call the onOriginalAction to move to the next t-shirt with small delay
+      setTimeout(() => {
+        onOriginalAction(action);
+      }, 300);
     } catch (error) {
       console.error('Error updating tshirt:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
       
-      // Even if there's an error, try to move to the next t-shirt
-      onOriginalAction(action);
+      // Even if there's an error, try to move to the next t-shirt after a delay
+      setTimeout(() => {
+        onOriginalAction(action);
+      }, 300);
     }
   };
   
@@ -86,7 +98,7 @@ export const useVotingActions = ({
     try {
       const { error: completedError } = await supabase
         .from('completed_votings')
-        .insert({ 
+        .upsert({ 
           asin: asin, 
           user_id: userId
         });

@@ -35,7 +35,7 @@ export const useVoteState = (conceptImages: ImageData[]) => {
     const currentVote = votedImages[id];
     
     try {
-      // Update the UI immediately to show responsiveness, especially important for love votes
+      // Update the UI immediately to show responsiveness
       if (currentVote === vote) {
         // Removing a vote
         const newVotes = { ...votedImages };
