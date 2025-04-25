@@ -22,7 +22,7 @@ export const useVotingActions = ({
     try {
       console.log(`VotingActionsHandler: handleVote called for ${id} with vote: ${vote}`);
       
-      // For love votes, we need special handling to ensure transition happens
+      // For love votes, we need special handling to ensure transition happens immediately
       if (vote === "love") {
         console.log(`VotingActionsHandler: Processing love vote for ${id} - this should trigger immediate transition`);
         toast.success("Finalizing this design!", {
@@ -31,8 +31,13 @@ export const useVotingActions = ({
         });
       }
       
-      // Submit the vote
-      await onVote(id, vote);
+      // Try to submit the vote - this is done optimistically, so UI transitions even if DB fails
+      try {
+        await onVote(id, vote);
+      } catch (voteError) {
+        console.error("VotingActionsHandler: Error in vote submission:", voteError);
+        // We'll continue with the UI flow even if there's a backend error
+      }
       
       // For love votes, we don't show a toast here as it's handled above
       if (vote !== "love") {

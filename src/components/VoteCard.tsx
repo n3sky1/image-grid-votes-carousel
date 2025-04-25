@@ -28,7 +28,7 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
       });
     }
     
-    // Call onVote without delay for all vote types to ensure state changes propagate immediately
+    // Call onVote immediately for any vote type
     onVote(vote);
   };
 

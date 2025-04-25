@@ -10,10 +10,9 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
       onVotingCompleted={() => {
         console.log(`ImageVotingGrid: Voting completed for ASIN ${asin}, calling parent onVotingCompleted immediately`);
         if (onVotingCompleted) {
-          // Call the callback immediately to ensure fast transition
-          setTimeout(() => {
-            onVotingCompleted();
-          }, 200); // Short timeout to ensure UI updates first
+          // We'll call the callback immediately without a delay
+          // This ensures fast transition to the next t-shirt
+          onVotingCompleted();
         }
       }}
     />
