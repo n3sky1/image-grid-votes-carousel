@@ -93,20 +93,20 @@ const OriginalImageSection = ({
     }
   };
 
-  // Calculate remaining t-shirts to review
+  // Calculate remaining t-shirts to review (remaining = total - completed)
   const remainingItems = Math.max(0, totalReadyCount - userCompletedCount);
   
-  // Calculate the current item number (remaining + 1, unless we've completed all items)
-  const currentItem = remainingItems > 0 ? userCompletedCount + 1 : userCompletedCount;
+  // Calculate the current position (current = completed + 1)
+  const currentPosition = userCompletedCount + 1;
   
-  // Create the display text based on remaining items
+  // Create the display text based on availability and counts
   let displayText: string;
   if (totalReadyCount === 0) {
     displayText = "No designs available for review";
   } else if (remainingItems === 0) {
-    displayText = "All designs reviewed";
+    displayText = "No more designs to review";
   } else {
-    displayText = `Design ${currentItem} of ${totalReadyCount} to Review`;
+    displayText = `Design ${currentPosition} of ${totalReadyCount} to Review`;
   }
 
   return (

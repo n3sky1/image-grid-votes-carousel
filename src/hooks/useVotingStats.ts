@@ -15,7 +15,7 @@ export const useVotingStats = () => {
         return;
       }
 
-      // First, get the count of ready t-shirts
+      // Get ALL t-shirts that are ready for voting (regardless of completion status)
       const { count: readyCount, error: readyError } = await supabase
         .from("tshirts")
         .select("asin", { count: "exact", head: true })
@@ -26,7 +26,7 @@ export const useVotingStats = () => {
         return;
       }
       
-      // Next, get the user's completed votings
+      // Get the user's completed votings
       const { data: completedVotings, error: completedError } = await supabase
         .from("completed_votings")
         .select("asin")
@@ -37,11 +37,11 @@ export const useVotingStats = () => {
         return;
       }
       
-      // Calculate remaining count (this ensures the numbers make logical sense)
+      // Calculate counts
       const completedCount = completedVotings?.length || 0;
       const total = readyCount || 0;
 
-      console.log(`Stats: Total ready: ${total}, User completed: ${completedCount}`);
+      console.log(`Stats: Total ready for voting: ${total}, User completed: ${completedCount}`);
       
       setTotalReadyCount(total);
       setUserCompletedCount(completedCount);
