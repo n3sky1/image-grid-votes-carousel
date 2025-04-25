@@ -7,7 +7,12 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
     <VotingSection 
       asin={asin}
       suggestedTags={suggestedTags}
-      onVotingCompleted={onVotingCompleted}
+      onVotingCompleted={() => {
+        console.log(`ImageVotingGrid: Voting completed for ASIN ${asin}, triggering callback`);
+        if (onVotingCompleted) {
+          onVotingCompleted();
+        }
+      }}
     />
   );
 };

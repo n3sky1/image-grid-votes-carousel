@@ -16,12 +16,12 @@ export const useVoteState = (conceptImages: ImageData[]) => {
     if (conceptsToVoteOn.length === 0) return;
     
     // Count how many concepts have votes
+    // We need to filter votedImages to only include IDs that are in our current conceptsToVoteOn
     const votedCount = Object.keys(votedImages).filter(id => 
-      // Make sure the ID exists in our current concepts
       conceptsToVoteOn.some(concept => concept.id === id)
     ).length;
     
-    // All concepts are voted when votedCount equals the number of concepts
+    // All concepts are voted when votedCount equals the number of concepts to vote on
     const allConceptsVoted = votedCount >= conceptsToVoteOn.length;
     
     if (allConceptsVoted !== allVoted) {

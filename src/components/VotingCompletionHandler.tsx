@@ -14,10 +14,11 @@ const VotingCompletionHandler = ({
   onVotingCompleted
 }: VotingCompletionHandlerProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [completionRecorded, setCompletionRecorded] = useState(false);
 
   useEffect(() => {
-    // Only process when all concepts are actually voted on
-    if (!allVoted || !onVotingCompleted || !asin || isProcessing) {
+    // Only process when all concepts are actually voted on and we haven't already processed this completion
+    if (!allVoted || !onVotingCompleted || !asin || isProcessing || completionRecorded) {
       return;
     }
 
@@ -45,6 +46,7 @@ const VotingCompletionHandler = ({
           console.error("Error checking tshirt winner:", tshirtError);
         } else if (tshirtData?.winning_concept_id) {
           console.log("Tshirt already has a winning concept:", tshirtData.winning_concept_id);
+          setCompletionRecorded(true);
           onVotingCompleted();
           setIsProcessing(false);
           return;
@@ -67,6 +69,7 @@ const VotingCompletionHandler = ({
         // If already completed, don't record again
         if (existingCompletion) {
           console.log("Completion already recorded for this ASIN, skipping...");
+          setCompletionRecorded(true);
           onVotingCompleted();
           setIsProcessing(false);
           return;
@@ -86,11 +89,15 @@ const VotingCompletionHandler = ({
           console.log(`Successfully recorded completion for ASIN: ${asin}`);
         }
         
+        // Mark as completed so we don't try to process it again
+        setCompletionRecorded(true);
+        
         // Call onVotingCompleted to move to next t-shirt
         onVotingCompleted();
       } catch (error) {
         console.error("Unexpected error in VotingCompletionHandler:", error);
         // Still call onVotingCompleted to move to next t-shirt even if there's an error
+        setCompletionRecorded(true);
         onVotingCompleted();
       } finally {
         setIsProcessing(false);
@@ -98,7 +105,7 @@ const VotingCompletionHandler = ({
     };
 
     recordCompletion();
-  }, [allVoted, asin, onVotingCompleted, isProcessing]);
+  }, [allVoted, asin, onVotingCompleted, isProcessing, completionRecorded]);
 
   return null;
 };

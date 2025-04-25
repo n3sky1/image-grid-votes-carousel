@@ -37,7 +37,16 @@ export const VotingStateHandlers = ({
       </div>
     );
   }
-  if (allVoted) return <VotingCompleted votedImages={votedImages} />;
+  
+  // We only show the completion component if all concepts have been voted on
+  // and we're not showing any other overlays
+  const showCompletionScreen = allVoted && 
+    !showRegeneratingOverlay && 
+    !showWinningVoteOverlay;
+    
+  if (showCompletionScreen) {
+    return <VotingCompleted votedImages={votedImages} />;
+  }
 
   return (
     <VotingLayout
