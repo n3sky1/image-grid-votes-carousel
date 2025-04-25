@@ -89,6 +89,13 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
     }));
   };
 
+  const handleRegenerationCompleted = async () => {
+    console.log("Regeneration completed, fetching fresh images");
+    setShowRegeneratingOverlay(false);
+    setRegenerating(false);
+    await fetchImages();
+  };
+
   return (
     <>
       <VotingStateHandlers
@@ -103,6 +110,7 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
           refreshStats();
           if (onVotingCompleted) onVotingCompleted();
         }}
+        onRegenerationCompleted={handleRegenerationCompleted}
         onRetry={handleRetry}
       >
         <ImageVotingSectionLayout

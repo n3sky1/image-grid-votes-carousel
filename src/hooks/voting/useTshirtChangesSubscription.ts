@@ -73,29 +73,15 @@ export const subscribeTshirtChanges = (
             setRegenerating(false);
             setShowRegeneratingOverlay(false);
             
-            try {
-              // Get the session and refresh token
-              const { error: refreshError } = await supabase.auth.refreshSession();
-              
-              if (refreshError) {
-                console.error("Error refreshing session:", refreshError);
-                toast.error("Session expired", { 
-                  description: "Please refresh the page to continue."
-                });
-                return;
+            // Fetch the updated images after a short delay to ensure backend processing is complete
+            setTimeout(async () => {
+              try {
+                await fetchImages();
+                toast.success("Images regenerated successfully!");
+              } catch (err) {
+                console.error("Error fetching images after regeneration:", err);
               }
-              
-              // Fetch the updated images
-              console.log("Session refreshed, now fetching updated images");
-              await fetchImages();
-              toast.success("Images regenerated successfully!");
-              
-            } catch (err) {
-              console.error("Error handling regeneration completion:", err);
-              toast.error("Failed to load new images", {
-                description: "Please try refreshing the page."
-              });
-            }
+            }, 1000);
             return;
           }
           
@@ -107,20 +93,15 @@ export const subscribeTshirtChanges = (
             if (payload.old.ready_for_voting === true && payload.new.ready_for_voting === false && !payload.new.regenerate) {
               console.log("T-shirt no longer available for voting, moving to next");
               
-              // We'll check the session before navigating
-              const { data } = await supabase.auth.getSession();
-              
-              if (data.session) {
-                setShowWinningVoteOverlay(true);
-                toast.success("Moving to next t-shirt...");
-                setTimeout(() => {
-                  setShowWinningVoteOverlay(false);
-                  if (onVotingCompleted) {
-                    console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
-                    onVotingCompleted();
-                  }
-                }, 500);
-              }
+              setShowWinningVoteOverlay(true);
+              toast.success("Moving to next t-shirt...");
+              setTimeout(() => {
+                setShowWinningVoteOverlay(false);
+                if (onVotingCompleted) {
+                  console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
+                  onVotingCompleted();
+                }
+              }, 500);
             }
           }
         }

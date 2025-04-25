@@ -6,7 +6,6 @@ import { subscribeTshirtChanges } from './voting/useTshirtChangesSubscription';
 import { subscribeConceptChanges } from './voting/useConceptChangesSubscription';
 import { subscribeUserVotes } from './voting/useUserVotesSubscription';
 import { subscribeCompletedVotings } from './voting/useCompletedVotingsSubscription';
-import { useAuth } from '@/components/AuthProvider';
 import { toast } from '@/components/ui/sonner';
 
 export const useVotingRealtime = ({
@@ -17,13 +16,10 @@ export const useVotingRealtime = ({
   fetchImages
 }: UseVotingRealtimeProps): RealtimeHandlers => {
   const [showWinningVoteOverlay, setShowWinningVoteOverlay] = useState(false);
-  const { refreshSession } = useAuth();
   
   // Reset state when ASIN changes
   useEffect(() => {
     setShowWinningVoteOverlay(false);
-    // Here we're not resetting setShowRegeneratingOverlay or setRegenerating
-    // as those are passed in from parent and should be managed there
   }, [asin]);
 
   useEffect(() => {
@@ -38,10 +34,9 @@ export const useVotingRealtime = ({
       setRegenerating,
       fetchImages: async () => {
         try {
-          await refreshSession();
           await fetchImages();
         } catch (err) {
-          console.error("Error refreshing session and fetching images:", err);
+          console.error("Error fetching images:", err);
         }
       },
       setShowWinningVoteOverlay
@@ -78,40 +73,6 @@ export const useVotingRealtime = ({
             console.log("T-shirt is currently regenerating on component mount, showing overlay");
             setShowRegeneratingOverlay(true);
             setRegenerating(true);
-            
-            // Since regeneration is already in progress, we'll poll until it's complete
-            const pollInterval = setInterval(async () => {
-              const { data: updated, error: pollError } = await supabase
-                .from('tshirts')
-                .select('regenerate')
-                .eq('asin', asin)
-                .single();
-                
-              if (pollError) {
-                console.error("Error polling regeneration status:", pollError);
-                return;
-              }
-                
-              if (updated && updated.regenerate === false) {
-                console.log("Regeneration completed during polling, refreshing data");
-                clearInterval(pollInterval);
-                setShowRegeneratingOverlay(false);
-                setRegenerating(false);
-                
-                try {
-                  await refreshSession();
-                  await fetchImages();
-                  toast.success("Images regenerated successfully!");
-                } catch (err) {
-                  console.error("Error refreshing images after polling:", err);
-                }
-              }
-            }, 5000); // Check every 5 seconds
-            
-            // Safety cleanup - stop polling after 90 seconds max
-            setTimeout(() => {
-              clearInterval(pollInterval);
-            }, 90000);
           } else {
             console.log("T-shirt is not regenerating on component mount");
             setShowRegeneratingOverlay(false);
@@ -132,7 +93,7 @@ export const useVotingRealtime = ({
       supabase.removeChannel(userVotesChannel);
       supabase.removeChannel(completedVotingsChannel);
     };
-  }, [asin, onVotingCompleted, setShowRegeneratingOverlay, setRegenerating, fetchImages, refreshSession]);
+  }, [asin, onVotingCompleted, setShowRegeneratingOverlay, setRegenerating, fetchImages]);
   
   return { showWinningVoteOverlay };
 };

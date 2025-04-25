@@ -17,6 +17,7 @@ export const useImageFetching = (asin: string) => {
   const [repairedImagesTemp, setRepairedImagesTemp] = useState<RepairedImagesMap>({});
   const [regeneratingTemp, setRegeneratingTemp] = useState<boolean>(false);
   const lastFetchTimeRef = useRef<number>(Date.now());
+  const fetchInProgressRef = useRef<boolean>(false);
   
   // Initialize the fetch on mount
   useEffect(() => {
@@ -40,6 +41,12 @@ export const useImageFetching = (asin: string) => {
     
     console.log(`Fetching images for ASIN: ${asin}, test data: ${useTestData}`);
     
+    // Prevent concurrent fetches
+    if (fetchInProgressRef.current) {
+      console.log("Fetch already in progress, skipping");
+      return;
+    }
+    
     // Prevent excessive fetches in short time periods
     const now = Date.now();
     const timeSinceLastFetch = now - lastFetchTimeRef.current;
@@ -47,12 +54,14 @@ export const useImageFetching = (asin: string) => {
       console.log(`Skipping fetch - too soon after last fetch (${timeSinceLastFetch}ms)`);
       return;
     }
-    lastFetchTimeRef.current = now;
-    
-    setLoading(true);
-    setError(null);
     
     try {
+      fetchInProgressRef.current = true;
+      lastFetchTimeRef.current = now;
+      
+      setLoading(true);
+      setError(null);
+      
       if (useTestData) {
         const sample = fetchSampleImages();
         setOriginalImage(sample.originalImage);
@@ -85,6 +94,7 @@ export const useImageFetching = (asin: string) => {
         description: "Please try refreshing the page."
       });
     } finally {
+      fetchInProgressRef.current = false;
       setLoading(false);
     }
   };

@@ -13,6 +13,7 @@ interface VotingStateHandlersProps {
   showWinningVoteOverlay: boolean;
   asin: string;
   onVotingCompleted?: () => void;
+  onRegenerationCompleted?: () => void;
   onRetry: () => void;
   children: React.ReactNode;
 }
@@ -26,10 +27,11 @@ export const VotingStateHandlers = ({
   showWinningVoteOverlay,
   asin,
   onVotingCompleted,
+  onRegenerationCompleted,
   onRetry,
   children
 }: VotingStateHandlersProps) => {
-  if (loading) return <VotingLoading />;
+  if (loading && !showRegeneratingOverlay) return <VotingLoading />;
   if (error) {
     return (
       <div className="w-full max-w-6xl mx-auto p-4">
@@ -54,6 +56,7 @@ export const VotingStateHandlers = ({
         allVoted={allVoted}
         asin={asin}
         onVotingCompleted={onVotingCompleted}
+        onRegenerationCompleted={onRegenerationCompleted}
       >
         {children}
       </VotingLayout>

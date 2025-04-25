@@ -11,6 +11,7 @@ interface VotingLayoutProps {
   allVoted: boolean;
   asin: string;
   onVotingCompleted?: () => void;
+  onRegenerationCompleted?: () => void;
 }
 
 export const VotingLayout = ({
@@ -19,7 +20,8 @@ export const VotingLayout = ({
   showWinningVoteOverlay,
   allVoted,
   asin,
-  onVotingCompleted
+  onVotingCompleted,
+  onRegenerationCompleted
 }: VotingLayoutProps) => {
   return (
     <>
@@ -28,7 +30,7 @@ export const VotingLayout = ({
         asin={asin} 
         onVotingCompleted={onVotingCompleted} 
       />
-      {showRegeneratingOverlay && <RegeneratingOverlay />}
+      {showRegeneratingOverlay && <RegeneratingOverlay onDismiss={onRegenerationCompleted} />}
       {showWinningVoteOverlay && <WinningVoteOverlay />}
       <div className="w-full max-w-6xl mx-auto">
         <div className="p-4 space-y-8">
