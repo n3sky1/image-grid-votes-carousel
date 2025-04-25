@@ -114,6 +114,11 @@ const Index = () => {
             suggestedTags={suggestedTags} 
             onVotingCompleted={() => {
               console.log("Voting completed for ASIN:", asin);
+              // Clear the current ASIN to prevent showing the completion screen
+              setAsin("");
+              // Set loading to true to show loading indicator
+              setLoading(true);
+              // Fetch the next ASIN
               fetchNextAsin(asin);
             }}
           />

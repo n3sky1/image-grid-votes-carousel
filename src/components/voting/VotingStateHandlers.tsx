@@ -38,15 +38,8 @@ export const VotingStateHandlers = ({
     );
   }
   
-  // We only show the completion component if all concepts have been voted on
-  // and we're not showing any other overlays
-  const showCompletionScreen = allVoted && 
-    !showRegeneratingOverlay && 
-    !showWinningVoteOverlay;
-    
-  if (showCompletionScreen) {
-    return <VotingCompleted votedImages={votedImages} />;
-  }
+  // Never show the completion component - we want to immediately navigate to the next ASIN
+  // The VotingCompletionHandler will handle the navigation when all items are voted on
 
   return (
     <VotingLayout
