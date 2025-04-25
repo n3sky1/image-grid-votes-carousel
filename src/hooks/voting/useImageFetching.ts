@@ -18,6 +18,7 @@ export const useImageFetching = (asin: string) => {
   const [regeneratingTemp, setRegeneratingTemp] = useState<boolean>(false);
   const lastFetchTimeRef = useRef<number>(Date.now());
   const fetchInProgressRef = useRef<boolean>(false);
+  const fetchAttemptCountRef = useRef<number>(0);
   
   // Initialize the fetch on mount
   useEffect(() => {
@@ -39,11 +40,14 @@ export const useImageFetching = (asin: string) => {
   ) => {
     if (!asin) return;
     
-    console.log(`Fetching images for ASIN: ${asin}, test data: ${useTestData}`);
+    fetchAttemptCountRef.current += 1;
+    const fetchAttempt = fetchAttemptCountRef.current;
+    
+    console.log(`[Attempt #${fetchAttempt}] Fetching images for ASIN: ${asin}, test data: ${useTestData}`);
     
     // Prevent concurrent fetches
     if (fetchInProgressRef.current) {
-      console.log("Fetch already in progress, skipping");
+      console.log(`[Attempt #${fetchAttempt}] Fetch already in progress, skipping`);
       return;
     }
     
@@ -51,7 +55,7 @@ export const useImageFetching = (asin: string) => {
     const now = Date.now();
     const timeSinceLastFetch = now - lastFetchTimeRef.current;
     if (timeSinceLastFetch < 1000) { // Debounce to 1 second
-      console.log(`Skipping fetch - too soon after last fetch (${timeSinceLastFetch}ms)`);
+      console.log(`[Attempt #${fetchAttempt}] Skipping fetch - too soon after last fetch (${timeSinceLastFetch}ms)`);
       return;
     }
     
@@ -67,7 +71,10 @@ export const useImageFetching = (asin: string) => {
         setOriginalImage(sample.originalImage);
         setConceptImages(sample.conceptImages);
         setPromptText(sample.promptText);
+        setLoading(false);
       } else {
+        console.log(`[Attempt #${fetchAttempt}] Starting real API fetch for images`);
+        
         // Clear existing concepts before fetching new ones
         // This prevents showing stale images while loading
         setConceptImages([]);
@@ -85,17 +92,27 @@ export const useImageFetching = (asin: string) => {
           setVotedImages
         );
         
-        console.log("Images fetched successfully");
+        console.log(`[Attempt #${fetchAttempt}] Images fetched successfully`);
       }
     } catch (err) {
-      console.error("Error fetching images:", err);
+      console.error(`[Attempt #${fetchAttempt}] Error fetching images:`, err);
       setError("Failed to load images. Please try again.");
       toast.error("Failed to load images", {
         description: "Please try refreshing the page."
       });
     } finally {
       fetchInProgressRef.current = false;
+      
+      // Always ensure loading state is turned off
       setLoading(false);
+      
+      // Add another guaranteed check to turn off loading after a delay
+      setTimeout(() => {
+        if (loading) {
+          console.log(`[Attempt #${fetchAttempt}] Force turning off loading state after delay`);
+          setLoading(false);
+        }
+      }, 2000);
     }
   };
 

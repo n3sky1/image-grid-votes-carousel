@@ -93,7 +93,17 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
     console.log("Regeneration completed, fetching fresh images");
     setShowRegeneratingOverlay(false);
     setRegenerating(false);
-    await fetchImages();
+    
+    // Add a slight delay before fetching images to ensure state is updated
+    setTimeout(async () => {
+      try {
+        console.log("Fetching fresh images after regeneration completed callback");
+        await fetchImages();
+        toast.success("Images regenerated successfully!");
+      } catch (err) {
+        console.error("Error fetching images after regeneration completed callback:", err);
+      }
+    }, 300);
   };
 
   return (

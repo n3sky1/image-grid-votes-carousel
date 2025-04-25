@@ -13,7 +13,10 @@ const RegeneratingOverlay = ({ onDismiss }: { onDismiss?: () => void }) => {
     // Start a countdown timer from 60 seconds
     if (seconds <= 0) {
       setShouldShow(false);
-      if (onDismiss) onDismiss();
+      if (onDismiss) {
+        console.log("Timer reached zero, calling onDismiss callback");
+        onDismiss();
+      }
       return;
     }
     
@@ -24,7 +27,10 @@ const RegeneratingOverlay = ({ onDismiss }: { onDismiss?: () => void }) => {
           // Don't hide immediately, give a small delay
           setTimeout(() => {
             setShouldShow(false);
-            if (onDismiss) onDismiss();
+            if (onDismiss) {
+              console.log("Timer reached zero with delay, calling onDismiss callback");
+              onDismiss();
+            }
           }, 1000);
           return 0;
         }
@@ -35,9 +41,11 @@ const RegeneratingOverlay = ({ onDismiss }: { onDismiss?: () => void }) => {
     // Safety timeout: force hide after maximum 90 seconds (60 + 30 extra)
     // This is a fallback in case the backend doesn't send the regenerate=false event
     const safetyTimeout = setTimeout(() => {
-      console.log("RegeneratingOverlay safety timeout reached, force hiding");
+      console.log("RegeneratingOverlay safety timeout reached, force hiding and calling onDismiss");
       setShouldShow(false);
-      if (onDismiss) onDismiss();
+      if (onDismiss) {
+        onDismiss();
+      }
       toast.info("Continuing automatically", {
         description: "The regeneration process may still be running in the background."
       });
@@ -46,6 +54,7 @@ const RegeneratingOverlay = ({ onDismiss }: { onDismiss?: () => void }) => {
     return () => {
       clearInterval(timer);
       clearTimeout(safetyTimeout);
+      console.log("RegeneratingOverlay unmounting, cleanup complete");
     };
   }, [seconds, onDismiss]);
   

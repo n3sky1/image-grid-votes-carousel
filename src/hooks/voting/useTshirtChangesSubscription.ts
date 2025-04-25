@@ -76,6 +76,7 @@ export const subscribeTshirtChanges = (
             // Fetch the updated images after a short delay to ensure backend processing is complete
             setTimeout(async () => {
               try {
+                console.log("Fetching fresh images after regeneration completion");
                 await fetchImages();
                 toast.success("Images regenerated successfully!");
               } catch (err) {
