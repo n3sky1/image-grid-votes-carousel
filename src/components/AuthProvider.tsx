@@ -17,9 +17,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
       }
@@ -27,11 +30,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Initial session check:", currentSession ? "Active" : "None");
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    // Refresh session if needed - in case token is close to expiration
+    const refreshInterval = setInterval(() => {
+      supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+        if (currentSession?.expires_at) {
+          const expiresAt = new Date(currentSession.expires_at * 1000);
+          const now = new Date();
+          const timeLeft = (expiresAt.getTime() - now.getTime()) / 1000 / 60; // minutes
+          
+          if (timeLeft < 5) { // less than 5 minutes left
+            console.log("Session expiring soon, refreshing...");
+            supabase.auth.refreshSession();
+          }
+        }
+      });
+    }, 60000); // Check every minute
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   return (

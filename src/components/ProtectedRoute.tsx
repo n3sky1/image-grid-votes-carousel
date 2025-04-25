@@ -14,6 +14,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
+  console.log("Session found, rendering protected content");
   return <>{children}</>;
 };
 

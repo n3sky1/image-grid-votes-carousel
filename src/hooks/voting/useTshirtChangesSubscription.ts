@@ -64,31 +64,49 @@ export const subscribeTshirtChanges = (
           // Case 2: Regeneration completed - regenerate field changed from true to false
           if (payload.old.regenerate === true && payload.new.regenerate === false) {
             console.log("Regenerate flag changed to FALSE. Regeneration completed. Refreshing images.");
+            
+            // Log the ready_for_voting state to diagnose if it's being changed
+            console.log("T-shirt ready_for_voting (old):", payload.old.ready_for_voting);
+            console.log("T-shirt ready_for_voting (new):", payload.new.ready_for_voting);
+            
             setRegenerating(false);
             setShowRegeneratingOverlay(false);
-            fetchImages();
-            toast.success("Images regenerated successfully!");
+            
+            // Check auth state before fetching images
+            supabase.auth.getSession().then(({ data }) => {
+              console.log("Auth session during regeneration completion:", data.session ? "Active" : "None");
+              
+              if (data.session) {
+                fetchImages();
+                toast.success("Images regenerated successfully!");
+              } else {
+                console.warn("No active session found after regeneration completed");
+                toast.error("Session expired", { 
+                  description: "Please log in again to continue."
+                });
+              }
+            });
             return;
           }
-        }
-
-        // Handle t-shirt becoming unavailable for voting
-        if (
-          payload.old && 
-          payload.new && 
-          payload.old.ready_for_voting === true &&
-          payload.new.ready_for_voting === false 
-        ) {
-          console.log("Tshirt no longer available for voting, moving to next");
-          setShowWinningVoteOverlay(true);
-          toast.success("Moving to next t-shirt...");
-          setTimeout(() => {
-            setShowWinningVoteOverlay(false);
-            if (onVotingCompleted) {
-              console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
-              onVotingCompleted();
+          
+          // Case 3: Ready for voting changed - check if this is causing navigation issues
+          if (payload.old.ready_for_voting !== payload.new.ready_for_voting) {
+            console.log(`Ready for voting changed from ${payload.old.ready_for_voting} to ${payload.new.ready_for_voting}`);
+            
+            // If changed to false, this might be causing navigation issues
+            if (payload.old.ready_for_voting === true && payload.new.ready_for_voting === false) {
+              console.log("T-shirt no longer available for voting, moving to next");
+              setShowWinningVoteOverlay(true);
+              toast.success("Moving to next t-shirt...");
+              setTimeout(() => {
+                setShowWinningVoteOverlay(false);
+                if (onVotingCompleted) {
+                  console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
+                  onVotingCompleted();
+                }
+              }, 500);
             }
-          }, 500);
+          }
         }
       }
     )
