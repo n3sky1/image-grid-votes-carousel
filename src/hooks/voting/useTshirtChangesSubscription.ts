@@ -51,8 +51,11 @@ export const subscribeTshirtChanges = (
           return;
         }
         
-        // UPDATED Regeneration detection logic
+        // Regeneration detection logic
         if (payload.old && payload.new) {
+          // Log regenerate values for debugging
+          console.log("Regenerate values - Old:", payload.old.regenerate, "New:", payload.new.regenerate);
+          
           // Case 1: Regeneration started - regenerate field changed from false to true
           if (payload.old.regenerate === false && payload.new.regenerate === true) {
             console.log("Regenerate flag changed to TRUE. Showing overlay.");
@@ -64,35 +67,45 @@ export const subscribeTshirtChanges = (
           // Case 2: Regeneration completed - regenerate field changed from true to false
           if (payload.old.regenerate === true && payload.new.regenerate === false) {
             console.log("Regenerate flag changed to FALSE. Regeneration completed. Refreshing images.");
-            
-            // Log the ready_for_voting state to diagnose if it's being changed
             console.log("T-shirt ready_for_voting (old):", payload.old.ready_for_voting);
             console.log("T-shirt ready_for_voting (new):", payload.new.ready_for_voting);
             
+            // First update state to hide overlay
             setRegenerating(false);
             setShowRegeneratingOverlay(false);
             
             // Check auth state before fetching images
-            supabase.auth.getSession().then(({ data }) => {
+            supabase.auth.getSession().then(({ data, error }) => {
               console.log("Auth session during regeneration completion:", data.session ? "Active" : "None");
+              
+              if (error) {
+                console.error("Session error:", error);
+                toast.error("Authentication error", { 
+                  description: "Please refresh and log in again." 
+                });
+                return;
+              }
               
               if (data.session) {
                 console.log("Valid session found after regeneration, fetching new images");
-                fetchImages();
-                toast.success("Images regenerated successfully!");
-              } else {
-                console.warn("No active session found after regeneration completed");
-                // Instead of just showing toast, let's try to refresh the session
-                supabase.auth.refreshSession().then(({ data: refreshData }) => {
+                
+                // Explicitly refresh the session token before fetching images
+                supabase.auth.refreshSession().then(({ data: refreshData, error: refreshError }) => {
+                  if (refreshError) {
+                    console.error("Failed to refresh session:", refreshError);
+                    return;
+                  }
+                  
                   if (refreshData.session) {
-                    console.log("Session successfully refreshed");
+                    console.log("Session refreshed successfully, now fetching images");
                     fetchImages();
                     toast.success("Images regenerated successfully!");
-                  } else {
-                    toast.error("Session expired", { 
-                      description: "Please log in again to continue."
-                    });
                   }
+                });
+              } else {
+                console.warn("No active session found after regeneration completed");
+                toast.error("Session expired", { 
+                  description: "Please log in again to continue."
                 });
               }
             });
