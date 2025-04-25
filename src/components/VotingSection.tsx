@@ -19,7 +19,7 @@ interface VotingSectionProps {
 
 const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
-  const { userCompletedCount, totalReadyCount, refreshStats } = useVotingStats();
+  const { userCompletedCount, totalReadyCount, remainingCount, refreshStats } = useVotingStats();
   const aiRecommendedModel = useAiModel(asin);
 
   const {
@@ -116,6 +116,7 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
               useTestData={useTestData}
               totalReadyCount={totalReadyCount}
               userCompletedCount={userCompletedCount}
+              remainingCount={remainingCount}
               refreshStats={refreshStats}
             />
           }

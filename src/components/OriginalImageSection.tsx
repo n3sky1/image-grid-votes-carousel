@@ -12,6 +12,7 @@ import { toast } from "@/components/ui/sonner";
 interface ExtendedOriginalImageSectionProps extends OriginalImageSectionProps {
   totalReadyCount?: number;
   userCompletedCount?: number;
+  remainingCount?: number;
   refreshStats?: () => void;
 }
 
@@ -24,6 +25,7 @@ const OriginalImageSection = ({
   useTestData,
   totalReadyCount = 0,
   userCompletedCount = 0,
+  remainingCount = 0,
   refreshStats,
 }: ExtendedOriginalImageSectionProps) => {
   const handleProblemClick = async (problem: 'copyrighted' | 'no-design' | 'cant-design') => {
@@ -93,42 +95,25 @@ const OriginalImageSection = ({
     }
   };
 
-  // Calculate the progress position and remaining items
-  const completedCount = userCompletedCount || 0;
-  const totalCount = totalReadyCount || 0;
-  const position = completedCount + 1; // Current position (1-based)
-  const remaining = Math.max(0, totalCount - completedCount);
-  
-  console.log("Progress stats:", {
-    completedCount, 
-    totalCount, 
-    position, 
-    remaining, 
-    hasOriginalImage: !!originalImage
-  });
-  
   // Determine the appropriate display text
   let displayText = "No designs available";
   
   if (originalImage) {
-    if (totalCount > 0) {
-      displayText = `Design ${position} of ${totalCount}`;
-      
-      // Debug display text construction
-      console.log("Constructing display text:", {
-        position,
-        totalCount,
-        result: displayText
-      });
+    if (remainingCount > 0) {
+      displayText = `Design ${remainingCount} remaining`;
+      console.log("Using remaining count for display:", remainingCount);
+    } else if (totalReadyCount > 0) {
+      // Only show position if we have actual data
+      displayText = `All designs reviewed`;
     } else {
       displayText = "Design available for review";
     }
-  } else if (totalCount === 0) {
+  } else if (totalReadyCount === 0) {
     displayText = "No designs available for review";
-  } else if (remaining === 0) {
+  } else if (remainingCount === 0) {
     displayText = "All designs reviewed";
   } else {
-    displayText = `${remaining} designs remaining`;
+    displayText = `${remainingCount} designs remaining`;
   }
 
   return (

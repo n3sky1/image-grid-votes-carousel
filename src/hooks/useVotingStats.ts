@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const useVotingStats = () => {
   const [userCompletedCount, setUserCompletedCount] = useState<number>(0);
   const [totalReadyCount, setTotalReadyCount] = useState<number>(0);
+  const [remainingCount, setRemainingCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchVotingStats = useCallback(async () => {
@@ -23,6 +24,7 @@ export const useVotingStats = () => {
         console.log("VotingStats: No authenticated user found");
         setUserCompletedCount(0);
         setTotalReadyCount(0);
+        setRemainingCount(0);
         setLoading(false);
         return;
       }
@@ -58,17 +60,23 @@ export const useVotingStats = () => {
       console.log(`VotingStats: Total ready t-shirts: ${readyAsins.length}`);
       console.log(`VotingStats: User completed count: ${completedAsins.length}`);
       
-      // Calculate the real counts
+      // Calculate the counts
       const actualTotalReady = readyAsins.length;
-      const actualCompleted = completedAsins.length;
+      const actualCompleted = completedVotings?.length || 0;
+      
+      // Calculate how many ready t-shirts the user hasn't voted on yet
+      const remainingAsins = readyAsins.filter(asin => !completedAsins.includes(asin));
+      console.log(`VotingStats: Remaining t-shirts to vote on: ${remainingAsins.length}`);
       
       setTotalReadyCount(actualTotalReady);
       setUserCompletedCount(actualCompleted);
+      setRemainingCount(remainingAsins.length);
       setLoading(false);
     } catch (err) {
       console.error("VotingStats: Error fetching voting stats:", err);
       setUserCompletedCount(0);
       setTotalReadyCount(0);
+      setRemainingCount(0);
       setLoading(false);
     }
   }, []);
@@ -112,7 +120,8 @@ export const useVotingStats = () => {
 
   return { 
     userCompletedCount, 
-    totalReadyCount, 
+    totalReadyCount,
+    remainingCount, 
     refreshStats: fetchVotingStats,
     loading 
   };
