@@ -35,34 +35,27 @@ export const useVoteState = (conceptImages: ImageData[]) => {
     const currentVote = votedImages[id];
     
     try {
-      // For love votes, show immediate success toast
-      if (vote === 'love') {
-        toast.success("Finalizing vote", {
-          description: "Moving to next t-shirt...",
-        });
+      // Update the UI immediately to show responsiveness, especially important for love votes
+      if (currentVote === vote) {
+        // Removing a vote
+        const newVotes = { ...votedImages };
+        delete newVotes[id];
+        setVotedImages(newVotes);
+      } else {
+        // Adding or changing a vote
+        setVotedImages(prev => ({ ...prev, [id]: vote }));
       }
       
       // If voting the same as current vote, remove the vote
       if (currentVote === vote) {
         await removeUserVote(id);
-        setVotedImages(prev => {
-          const newVotes = { ...prev };
-          delete newVotes[id];
-          return newVotes;
-        });
       } 
       // If changing from one vote type to another
       else if (currentVote) {
-        // Update the UI immediately to show responsiveness
-        setVotedImages(prev => ({ ...prev, [id]: vote }));
-        
         await switchUserVote(id, vote, currentVote);
       } 
       // If new vote
       else {
-        // Update the UI immediately to show responsiveness
-        setVotedImages(prev => ({ ...prev, [id]: vote }));
-        
         await saveUserVote(id, vote);
       }
     } catch (error) {

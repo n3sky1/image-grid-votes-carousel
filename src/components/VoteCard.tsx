@@ -15,8 +15,15 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
       toast.success("Finalizing vote", {
         description: "Moving to next t-shirt...",
       });
+      
+      // Add a small delay to allow the toast to be visible before onVote 
+      // potentially navigates away
+      setTimeout(() => {
+        onVote(vote);
+      }, 300);
+    } else {
+      onVote(vote);
     }
-    onVote(vote);
   };
 
   return (

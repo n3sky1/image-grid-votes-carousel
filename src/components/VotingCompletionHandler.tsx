@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "./ui/sonner";
 
 interface VotingCompletionHandlerProps {
   allVoted: boolean;
@@ -68,7 +69,7 @@ const VotingCompletionHandler = ({
         
         // If already completed, don't record again
         if (existingCompletion) {
-          console.log("Completion already recorded for this ASIN, skipping...");
+          console.log("Completion already recorded for this ASIN, moving to next...");
           setCompletionRecorded(true);
           onVotingCompleted();
           setIsProcessing(false);
@@ -78,7 +79,7 @@ const VotingCompletionHandler = ({
         // Record the completion
         const { error: insertError } = await supabase
           .from("completed_votings")
-          .insert({
+          .upsert({
             asin: asin,
             user_id: user.data.user.id
           });

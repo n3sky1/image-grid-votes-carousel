@@ -10,6 +10,7 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
       onVotingCompleted={() => {
         console.log(`ImageVotingGrid: Voting completed for ASIN ${asin}, triggering callback`);
         if (onVotingCompleted) {
+          // Call the callback immediately to ensure next t-shirt loading
           onVotingCompleted();
         }
       }}
