@@ -31,7 +31,7 @@ const VotingCompletionHandler = ({
         
         const user = await supabase.auth.getUser();
         if (!user.data.user) {
-          console.log("No user found, cannot record completion");
+          console.error("No user found, cannot record completion");
           setIsProcessing(false);
           return;
         }
@@ -76,7 +76,8 @@ const VotingCompletionHandler = ({
           return;
         }
 
-        // Record the completion
+        // Record the completion - now with proper permissions this should work
+        console.log("Recording completion in database...");
         const { error: insertError } = await supabase
           .from("completed_votings")
           .upsert({
@@ -86,14 +87,13 @@ const VotingCompletionHandler = ({
 
         if (insertError) {
           console.error("Error recording completion:", insertError);
+          console.log("Error details:", JSON.stringify(insertError));
         } else {
           console.log(`Successfully recorded completion for ASIN: ${asin}`);
         }
         
-        // Mark as completed so we don't try to process it again
+        // Mark as completed and call the callback even if there was an error
         setCompletionRecorded(true);
-        
-        // Call onVotingCompleted to move to next t-shirt
         onVotingCompleted();
       } catch (error) {
         console.error("Unexpected error in VotingCompletionHandler:", error);

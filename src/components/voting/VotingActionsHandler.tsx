@@ -20,17 +20,17 @@ export const useVotingActions = ({
 }: VotingActionsHandlerProps) => {
   const handleVote = async (id: string, vote: "like" | "dislike" | "love") => {
     try {
-      // For love votes, handle special case - we won't show a toast here as it's in VoteCard
+      // Submit the vote
+      await onVote(id, vote);
+      
+      // For love votes, we don't show a toast here as it's managed in VoteCard
       if (vote === "love") {
-        await onVote(id, vote);
-        // Don't show toast here as we already show it in VoteCard
+        console.log("Love vote submitted, transition will be handled in VotingCompletionHandler");
         return;
       }
       
-      // For other votes, do the standard flow
-      await onVote(id, vote);
-      
-      let voteText = vote === "like" ? "Liked" : "Disliked";
+      // For other votes, show standard toast
+      const voteText = vote === "like" ? "Liked" : "Disliked";
       toast(voteText, {
         description: `You ${voteText.toLowerCase()} this image`,
         position: "bottom-right",
@@ -52,45 +52,37 @@ export const useVotingActions = ({
         throw new Error("Authentication required");
       }
       
-      // Try to update the tshirt with the review problem and record completion regardless of result
-      try {
-        // Update the tshirt with the review problem
-        const { error: tshirtError } = await supabase
-          .from('tshirts')
-          .update({ 
-            review_problem: action,
-            ready_for_voting: false 
-          })
-          .eq('asin', id);
+      // Update the tshirt with the review problem and mark as not ready for voting
+      const { error: tshirtError } = await supabase
+        .from('tshirts')
+        .update({ 
+          review_problem: action,
+          ready_for_voting: false 
+        })
+        .eq('asin', id);
           
-        if (tshirtError) {
-          console.error("Error updating tshirt:", tshirtError);
-        }
-      } catch (updateError) {
-        console.error("Update operation failed:", updateError);
+      if (tshirtError) {
+        console.error("Error updating tshirt:", tshirtError);
+        throw tshirtError;
       }
       
-      // Always try to record completion regardless of the tshirt update result
+      // Record completion
       await recordCompletion(id, authData.user.id);
 
       toast.success('Problem reported', {
         description: 'This t-shirt has been marked for review.',
       });
 
-      // Always call the onOriginalAction to move to the next t-shirt with small delay
-      setTimeout(() => {
-        onOriginalAction(action);
-      }, 300);
+      // Call the onOriginalAction immediately
+      onOriginalAction(action);
     } catch (error) {
       console.error('Error updating tshirt:', error);
       toast.error('Error reporting problem', {
         description: 'Please try again later.',
       });
       
-      // Even if there's an error, try to move to the next t-shirt after a delay
-      setTimeout(() => {
-        onOriginalAction(action);
-      }, 300);
+      // Even if there's an error, try to move to the next t-shirt
+      onOriginalAction(action);
     }
   };
   

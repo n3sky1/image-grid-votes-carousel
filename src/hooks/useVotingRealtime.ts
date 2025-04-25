@@ -54,7 +54,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to winning concept");
                 onVotingCompleted();
               }
-            }, 2000);
+            }, 1500);
             return; // Exit early as we're moving to next t-shirt
           }
           
@@ -104,7 +104,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
                 onVotingCompleted();
               }
-            }, 2000);
+            }, 1000); // Reduced timeout for faster transition
           }
         }
       )
@@ -137,7 +137,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to love vote");
                 onVotingCompleted();
               }
-            }, 2000);
+            }, 1000); // Reduced timeout for faster transition
             return;
           }
           
@@ -154,7 +154,7 @@ export const useVotingRealtime = ({
                 console.log("Calling onVotingCompleted from realtime due to 2+ likes");
                 onVotingCompleted();
               }
-            }, 2000);
+            }, 1000); // Reduced timeout for faster transition
           }
         }
       )
@@ -188,13 +188,29 @@ export const useVotingRealtime = ({
               toast.success("Winning design selected!", {
                 description: "Moving to next t-shirt..."
               });
+              
+              // Forcefully mark this tshirt as having a winning concept
+              try {
+                await supabase
+                  .from('tshirts')
+                  .update({ 
+                    winning_concept_id: payload.new.concept_id,
+                    ready_for_voting: false
+                  })
+                  .eq('asin', asin);
+                console.log("Tshirt updated with winning concept:", payload.new.concept_id);
+              } catch (error) {
+                console.error("Error updating tshirt with winning concept:", error);
+              }
+              
+              // Call the completion callback with minimal delay
               setTimeout(() => {
                 setShowWinningVoteOverlay(false);
                 if (onVotingCompleted) {
                   console.log("Calling onVotingCompleted from user_votes realtime");
                   onVotingCompleted();
                 }
-              }, 2000);
+              }, 800); // Very short timeout for almost immediate transition
             }
           }
         }

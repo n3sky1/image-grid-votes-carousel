@@ -8,12 +8,10 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
       asin={asin}
       suggestedTags={suggestedTags}
       onVotingCompleted={() => {
-        console.log(`ImageVotingGrid: Voting completed for ASIN ${asin}, triggering callback`);
+        console.log(`ImageVotingGrid: Voting completed for ASIN ${asin}, triggering callback immediately`);
         if (onVotingCompleted) {
-          // Call the callback immediately to ensure next t-shirt loading
-          setTimeout(() => {
-            onVotingCompleted();
-          }, 100); // Small delay to ensure backend processes are complete
+          // Call the callback immediately without delay
+          onVotingCompleted();
         }
       }}
     />

@@ -12,15 +12,13 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
   const handleVote = (vote: 'like' | 'dislike' | 'love') => {
     // For love votes, show immediate feedback
     if (vote === 'love') {
-      toast.success("Finalizing vote", {
+      toast.success("Love vote submitted!", {
         description: "Moving to next t-shirt...",
+        duration: 2000,
       });
       
-      // Add a slightly longer delay to ensure the toast is visible
-      // and the vote is processed before navigating
-      setTimeout(() => {
-        onVote(vote);
-      }, 500);
+      // Remove the delay to immediately call onVote for love votes
+      onVote(vote);
     } else {
       onVote(vote);
     }
