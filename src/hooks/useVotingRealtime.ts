@@ -21,6 +21,8 @@ export const useVotingRealtime = ({
   const [showWinningVoteOverlay, setShowWinningVoteOverlay] = useState(false);
   
   useEffect(() => {
+    console.log(`Setting up realtime listeners for ASIN: ${asin}`);
+    
     const tshirtChangesChannel = supabase
       .channel('tshirt-changes')
       .on(
@@ -128,7 +130,6 @@ export const useVotingRealtime = ({
             
             if (hasWinningVotes || hasWinningHearts) {
               console.log(`Potential winner detected! Hearts: ${payload.new.hearts}, Votes: ${payload.new.votes_up}`);
-              toast.info("Processing winning vote...");
               // This will trigger a refresh that will pick up the winning state
               // since the database trigger should have updated the tshirt's winning_concept_id
               fetchImages();
@@ -139,6 +140,7 @@ export const useVotingRealtime = ({
       .subscribe();
 
     return () => {
+      console.log(`Removing realtime listeners for ASIN: ${asin}`);
       supabase.removeChannel(tshirtChangesChannel);
       supabase.removeChannel(conceptChangesChannel);
     };

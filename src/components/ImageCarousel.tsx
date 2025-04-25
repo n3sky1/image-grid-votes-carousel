@@ -5,6 +5,7 @@ import { ImageData } from "@/types/image";
 import ImageCard from "./ImageCard";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
+import { toast } from "./ui/sonner";
 
 interface ImageCarouselProps {
   images: ImageData[];
@@ -39,6 +40,13 @@ const ImageCarousel = ({ images, onVote }: ImageCarouselProps) => {
   };
 
   const handleVote = (id: string, vote: 'like' | 'dislike' | 'love') => {
+    // For love votes, show immediate feedback
+    if (vote === 'love') {
+      toast.success("Finalizing this design!", {
+        description: "This design will be selected as winner"
+      });
+    }
+    
     // Set the current image as being voted on
     setVotingImage(id);
     

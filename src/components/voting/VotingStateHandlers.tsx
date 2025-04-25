@@ -1,7 +1,6 @@
 
 import VotingError from "../VotingError";
 import VotingLoading from "../VotingLoading";
-import VotingCompleted from "../VotingCompleted";
 import { VotingLayout } from "./VotingLayout";
 
 interface VotingStateHandlersProps {
@@ -37,9 +36,6 @@ export const VotingStateHandlers = ({
       </div>
     );
   }
-  
-  // Never show the completion component - we want to immediately navigate to the next ASIN
-  // The VotingCompletionHandler will handle the navigation when all items are voted on
 
   return (
     <VotingLayout
