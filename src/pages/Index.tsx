@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import ImageVotingGrid from "@/components/ImageVotingGrid";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,8 +82,24 @@ const Index = () => {
     }
   };
 
+  // Add event listener for vote completion events
   useEffect(() => {
+    const handleVoteCompleted = (event: CustomEvent) => {
+      console.log("Index: Vote completed event received", event.detail);
+      const completedAsin = event.detail?.asin;
+      fetchNextAsin(completedAsin);
+    };
+
+    // Add event listener with type assertion
+    window.addEventListener('voteCompleted', handleVoteCompleted as EventListener);
+    
+    // Initial fetch
     fetchNextAsin();
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('voteCompleted', handleVoteCompleted as EventListener);
+    };
   }, []);
 
   if (error) {

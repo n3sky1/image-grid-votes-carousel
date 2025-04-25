@@ -21,11 +21,20 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
     
     // For love votes, show immediate feedback
     if (vote === 'love') {
-      console.log("VoteCard: Love vote detected, showing toast and triggering transition");
-      toast.success("Love vote submitted!", {
-        description: "Moving to next t-shirt...",
-        duration: 3000, // Longer duration to ensure user sees it during transition
-      });
+      console.log("VoteCard: Love vote detected, showing toast");
+      toast.success("Processing love vote...");
+      
+      // Add an event listener to handle the custom event for vote completed
+      // This ensures we show a success message after the vote is recorded
+      const handleVoteCompleted = () => {
+        toast.success("Love vote recorded!", {
+          description: "Moving to next t-shirt...",
+        });
+        // Remove the event listener once used
+        window.removeEventListener('voteCompleted', handleVoteCompleted);
+      };
+      
+      window.addEventListener('voteCompleted', handleVoteCompleted);
     }
     
     // Call onVote immediately for any vote type

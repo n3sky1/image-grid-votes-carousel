@@ -50,9 +50,14 @@ export const saveUserVote = async (
         } else {
           console.log(`[saveUserVote] Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
           
-          // Instead of a full page refresh, force navigation to root which will load the next t-shirt
-          // This preserves the authentication session
-          window.location.href = '/';
+          // Use history.pushState to avoid a full page reload while changing the URL
+          // This preserves the session state better than window.location methods
+          window.history.pushState({}, '', '/');
+          
+          // Dispatch a custom event to notify the app to load the next t-shirt
+          window.dispatchEvent(new CustomEvent('voteCompleted', { 
+            detail: { asin: conceptData.tshirt_asin } 
+          }));
           
           // Return early to prevent additional processing
           return true;
