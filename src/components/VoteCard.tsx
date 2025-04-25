@@ -12,16 +12,22 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
   const handleVote = (vote: 'like' | 'dislike' | 'love') => {
     console.log(`VoteCard: User clicked ${vote} button, current vote is ${currentVote}`);
     
-    // For love votes, show immediate feedback and special handling
+    // If trying to toggle off the current vote, just pass it through
+    if (vote === currentVote) {
+      console.log(`VoteCard: Toggling off ${vote} vote, calling onVote directly`);
+      onVote(vote);
+      return;
+    }
+    
+    // For love votes, show immediate feedback
     if (vote === 'love') {
-      console.log("VoteCard: Love vote detected, showing toast");
+      console.log("VoteCard: Love vote detected, showing toast and triggering transition");
       toast.success("Love vote submitted!", {
         description: "Moving to next t-shirt...",
-        duration: 2000,
+        duration: 1500,
       });
       
-      console.log("VoteCard: Love vote submitted, calling onVote directly");
-      // Call onVote immediately for love votes to trigger transition
+      // Call onVote with a shorter delay to ensure state changes have time to propagate
       onVote(vote);
     } else {
       // For other votes, just call onVote without toast

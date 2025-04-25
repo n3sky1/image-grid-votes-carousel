@@ -61,7 +61,7 @@ const VotingCompletionHandler = ({
           .select("asin")
           .eq("asin", asin)
           .eq("user_id", user.data.user.id)
-          .single();
+          .maybeSingle();
           
         if (checkError && checkError.code !== 'PGRST116') {
           // PGRST116 is the "no rows returned" error, which is expected
@@ -69,7 +69,7 @@ const VotingCompletionHandler = ({
           console.error("VotingCompletionHandler: Error checking completion:", checkError);
         }
         
-        // If already completed, don't record again
+        // If already completed, don't record again but do navigate
         if (existingCompletion) {
           console.log("VotingCompletionHandler: Completion already recorded for this ASIN, moving to next...");
           setCompletionRecorded(true);
@@ -89,12 +89,11 @@ const VotingCompletionHandler = ({
 
         if (insertError) {
           console.error("VotingCompletionHandler: Error recording completion:", insertError);
-          console.log("VotingCompletionHandler: Error details:", JSON.stringify(insertError));
         } else {
           console.log(`VotingCompletionHandler: Successfully recorded completion for ASIN: ${asin}`);
         }
         
-        // Mark as completed and call the callback even if there was an error
+        // Call the callback regardless if there was an error inserting data
         console.log(`VotingCompletionHandler: Marking as completed and calling onVotingCompleted for ASIN: ${asin}`);
         setCompletionRecorded(true);
         onVotingCompleted();

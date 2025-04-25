@@ -58,10 +58,10 @@ export const saveUserVote = async (
       throw new Error(`Failed to update vote count: ${incrementError.message}`);
     }
     
-    // For "love" votes, record completion and update the tshirt winning_concept_id directly
+    // For "love" votes, record completion immediately to ensure transition
     if (voteType === 'love') {
       try {
-        console.log(`[saveUserVote] Love vote detected for concept: ${conceptId}, processing special handling`);
+        console.log(`[saveUserVote] Love vote detected for concept: ${conceptId}, ensuring completion recording`);
         
         // Record the completion for this user first to ensure it's always recorded
         console.log(`[saveUserVote] Recording completion for ASIN: ${conceptData.tshirt_asin}`);
@@ -74,13 +74,13 @@ export const saveUserVote = async (
           
         if (completionError) {
           console.error("[saveUserVote] Error recording completion:", completionError);
-          // Continue even if there's an error - we'll still try to update the tshirt
         } else {
           console.log(`[saveUserVote] Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
         }
         
         try {
-          // Try to update the tshirt with the winning concept
+          // Try to update the tshirt with the winning concept - this may fail due to permissions
+          // but that's expected and the completion record above will handle the transition
           console.log(`[saveUserVote] Attempting to set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
           const { error: winningConceptError } = await supabase
             .from('tshirts')
@@ -92,23 +92,23 @@ export const saveUserVote = async (
             .is('winning_concept_id', null); // Only update if there's no winner yet
             
           if (winningConceptError) {
-            // This error is expected if RLS doesn't allow the update
-            console.error("[saveUserVote] Note: Error setting winning concept (expected with current RLS):", winningConceptError);
-            // Don't throw error here - the server-side triggers will handle this
+            console.log("[saveUserVote] Note: Error setting winning concept (expected with current RLS):", winningConceptError);
+            // This error is expected due to RLS permissions - the trigger functions will handle this
           } else {
             console.log(`[saveUserVote] Successfully set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
           }
         } catch (updateError) {
           console.error("[saveUserVote] Error setting winning concept:", updateError);
-          // Continue even if there's an error updating the winning concept
+          // Non-critical error, continue execution
         }
       } catch (completionError) {
-        console.error("[saveUserVote] Error recording completion:", completionError);
-        // We'll still succeed even if we couldn't update the tshirt
+        console.error("[saveUserVote] Error in love vote special handling:", completionError);
+        // Non-critical error, continue execution 
       }
     }
     
     console.log(`[saveUserVote] Successfully completed for conceptId: ${conceptId}, voteType: ${voteType}`);
+    return true;
   } catch (error) {
     console.error("[saveUserVote] Error in saveUserVote:", error);
     throw error;
