@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { AlertCircle, Clock } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 const RegeneratingOverlay = () => {
   const [seconds, setSeconds] = useState(60);
@@ -17,7 +18,8 @@ const RegeneratingOverlay = () => {
       setSeconds(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setTimeout(() => setShouldShow(false), 1000); // Hide after reaching 0
+          // Don't hide immediately, give a small delay
+          setTimeout(() => setShouldShow(false), 1000);
           return 0;
         }
         return prev - 1;
@@ -25,9 +27,13 @@ const RegeneratingOverlay = () => {
     }, 1000);
     
     // Safety timeout: force hide after maximum 90 seconds (60 + 30 extra)
+    // This is a fallback in case the backend doesn't send the regenerate=false event
     const safetyTimeout = setTimeout(() => {
       console.log("RegeneratingOverlay safety timeout reached, force hiding");
       setShouldShow(false);
+      toast.info("Continuing automatically", {
+        description: "The regeneration process may still be running in the background."
+      });
     }, 90000);
     
     return () => {
@@ -35,6 +41,11 @@ const RegeneratingOverlay = () => {
       clearTimeout(safetyTimeout);
     };
   }, [seconds]);
+  
+  // When the overlay is unmounted and shown again, reset the timer
+  useEffect(() => {
+    setSeconds(60);
+  }, []);
   
   if (!shouldShow) return null;
   

@@ -4,6 +4,7 @@ import { ImageData } from "@/types/image";
 import { fetchSupabaseImages } from "@/services/imageDataService";
 import { fetchSampleImages } from "@/services/sampleImageService";
 import { VotedImagesMap, RepairedImagesMap } from './types';
+import { toast } from '@/components/ui/sonner';
 
 export const useImageFetching = (asin: string) => {
   const [originalImage, setOriginalImage] = useState<ImageData | null>(null);
@@ -15,6 +16,7 @@ export const useImageFetching = (asin: string) => {
   const [votedImagesTemp, setVotedImagesTemp] = useState<VotedImagesMap>({});
   const [repairedImagesTemp, setRepairedImagesTemp] = useState<RepairedImagesMap>({});
   const [regeneratingTemp, setRegeneratingTemp] = useState<boolean>(false);
+  const lastFetchTimeRef = useRef<number>(Date.now());
   
   // Initialize the fetch on mount
   useEffect(() => {
@@ -36,6 +38,17 @@ export const useImageFetching = (asin: string) => {
   ) => {
     if (!asin) return;
     
+    console.log(`Fetching images for ASIN: ${asin}, test data: ${useTestData}`);
+    
+    // Prevent excessive fetches in short time periods
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTimeRef.current;
+    if (timeSinceLastFetch < 1000) { // Debounce to 1 second
+      console.log(`Skipping fetch - too soon after last fetch (${timeSinceLastFetch}ms)`);
+      return;
+    }
+    lastFetchTimeRef.current = now;
+    
     setLoading(true);
     setError(null);
     
@@ -46,6 +59,10 @@ export const useImageFetching = (asin: string) => {
         setConceptImages(sample.conceptImages);
         setPromptText(sample.promptText);
       } else {
+        // Clear existing concepts before fetching new ones
+        // This prevents showing stale images while loading
+        setConceptImages([]);
+        
         await fetchSupabaseImages(
           asin,
           setOriginalImage,
@@ -58,10 +75,15 @@ export const useImageFetching = (asin: string) => {
           prevConceptCountRef,
           setVotedImages
         );
+        
+        console.log("Images fetched successfully");
       }
     } catch (err) {
       console.error("Error fetching images:", err);
       setError("Failed to load images. Please try again.");
+      toast.error("Failed to load images", {
+        description: "Please try refreshing the page."
+      });
     } finally {
       setLoading(false);
     }

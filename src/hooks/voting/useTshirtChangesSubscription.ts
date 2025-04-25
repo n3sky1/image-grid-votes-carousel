@@ -72,40 +72,29 @@ export const subscribeTshirtChanges = (
             // Update state to hide overlay immediately
             setRegenerating(false);
             setShowRegeneratingOverlay(false);
-            toast.success("Regeneration completed!");
             
             try {
-              // Get the current session
-              const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+              // Get the session and refresh token
+              const { error: refreshError } = await supabase.auth.refreshSession();
               
-              if (sessionError) {
-                console.error("Session error during regeneration completion:", sessionError);
+              if (refreshError) {
+                console.error("Error refreshing session:", refreshError);
+                toast.error("Session expired", { 
+                  description: "Please refresh the page to continue."
+                });
                 return;
               }
               
-              console.log("Session during regeneration completion:", sessionData.session ? "Active" : "None");
+              // Fetch the updated images
+              console.log("Session refreshed, now fetching updated images");
+              await fetchImages();
+              toast.success("Images regenerated successfully!");
               
-              if (sessionData.session) {
-                console.log("Valid session found, refreshing token and fetching images");
-                
-                try {
-                  // Refresh the token to ensure it's valid
-                  await supabase.auth.refreshSession();
-                  
-                  // Fetch the updated images
-                  console.log("Refreshing images after regeneration");
-                  await fetchImages();
-                } catch (refreshError) {
-                  console.error("Error refreshing token or fetching images:", refreshError);
-                }
-              } else {
-                console.warn("No active session found after regeneration");
-                toast.error("Session expired", { 
-                  description: "Please log in again to continue."
-                });
-              }
             } catch (err) {
               console.error("Error handling regeneration completion:", err);
+              toast.error("Failed to load new images", {
+                description: "Please try refreshing the page."
+              });
             }
             return;
           }
@@ -118,7 +107,7 @@ export const subscribeTshirtChanges = (
             if (payload.old.ready_for_voting === true && payload.new.ready_for_voting === false && !payload.new.regenerate) {
               console.log("T-shirt no longer available for voting, moving to next");
               
-              // Check session before navigating
+              // We'll check the session before navigating
               const { data } = await supabase.auth.getSession();
               
               if (data.session) {
