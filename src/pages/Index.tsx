@@ -72,7 +72,8 @@ const Index = () => {
           description: "You've completed voting on all available t-shirts.",
           position: "bottom-right"
         });
-        setError("No more t-shirts available for voting.");
+        setError("No more t-shirts available for voting");
+        setAsin(""); // Clear the ASIN when no more are available
       }
     } catch (err) {
       console.error("Index: Unexpected error:", err);
