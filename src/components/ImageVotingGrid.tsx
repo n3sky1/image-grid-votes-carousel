@@ -8,9 +8,9 @@ const ImageVotingGrid = ({ asin, suggestedTags = [], onVotingCompleted }: ImageV
       asin={asin}
       suggestedTags={suggestedTags}
       onVotingCompleted={() => {
-        console.log(`ImageVotingGrid: Voting completed for ASIN ${asin}, calling parent onVotingCompleted`);
+        console.log(`ImageVotingGrid: Voting completed for ASIN ${asin}, calling parent onVotingCompleted immediately`);
         if (onVotingCompleted) {
-          // Call the callback without delay to ensure immediate transition
+          // Call the callback immediately to ensure fast transition
           onVotingCompleted();
         }
       }}

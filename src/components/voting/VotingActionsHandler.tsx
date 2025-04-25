@@ -24,24 +24,24 @@ export const useVotingActions = ({
       
       // For love votes, we need special handling to ensure transition happens
       if (vote === "love") {
-        console.log(`VotingActionsHandler: Submitting love vote for ${id} with special handling for immediate transition`);
+        console.log(`VotingActionsHandler: Processing love vote for ${id} - this should trigger immediate transition`);
+        toast.success("Finalizing this design!", {
+          description: "Moving to next t-shirt...",
+          duration: 1000,
+        });
       }
       
       // Submit the vote
       await onVote(id, vote);
       
-      // For love votes, we don't show a toast here as it's managed in VoteCard
-      if (vote === "love") {
-        console.log("VotingActionsHandler: Love vote submitted, transition will be handled in VotingCompletionHandler");
-        return;
+      // For love votes, we don't show a toast here as it's handled above
+      if (vote !== "love") {
+        const voteText = vote === "like" ? "Liked" : "Disliked";
+        toast(voteText, {
+          description: `You ${voteText.toLowerCase()} this image`,
+          position: "bottom-right",
+        });
       }
-      
-      // For other votes, show standard toast
-      const voteText = vote === "like" ? "Liked" : "Disliked";
-      toast(voteText, {
-        description: `You ${voteText.toLowerCase()} this image`,
-        position: "bottom-right",
-      });
     } catch (error) {
       console.error("VotingActionsHandler: Error setting vote:", error);
       toast.error("Failed to save vote", {
@@ -73,15 +73,14 @@ export const useVotingActions = ({
           
       if (tshirtError) {
         console.error("VotingActionsHandler: Error updating tshirt:", tshirtError);
-        throw tshirtError;
       }
       
       // Record completion
       console.log(`VotingActionsHandler: Recording completion for ASIN: ${id}`);
       await recordCompletion(id, authData.user.id);
 
-      toast.success('Problem reported', {
-        description: 'This t-shirt has been marked for review.',
+      toast.success('Moving to next t-shirt...', {
+        duration: 1000,
       });
 
       console.log(`VotingActionsHandler: Calling onOriginalAction for ${action}`);
@@ -89,8 +88,9 @@ export const useVotingActions = ({
       onOriginalAction(action);
     } catch (error) {
       console.error('VotingActionsHandler: Error updating tshirt:', error);
-      toast.error('Error reporting problem', {
-        description: 'Please try again later.',
+      toast.error('Moving to next t-shirt', {
+        description: 'Continuing despite error',
+        duration: 1000,
       });
       
       // Even if there's an error, try to move to the next t-shirt

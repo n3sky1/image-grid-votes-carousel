@@ -36,24 +36,6 @@ const VotingCompletionHandler = ({
           return;
         }
 
-        // Check if the tshirt has a winning concept already
-        console.log(`VotingCompletionHandler: Checking if tshirt ${asin} has a winning concept`);
-        const { data: tshirtData, error: tshirtError } = await supabase
-          .from("tshirts")
-          .select("winning_concept_id")
-          .eq("asin", asin)
-          .maybeSingle();
-          
-        if (tshirtError) {
-          console.error("VotingCompletionHandler: Error checking tshirt winner:", tshirtError);
-        } else if (tshirtData?.winning_concept_id) {
-          console.log("VotingCompletionHandler: Tshirt already has a winning concept:", tshirtData.winning_concept_id);
-          setCompletionRecorded(true);
-          onVotingCompleted();
-          setIsProcessing(false);
-          return;
-        }
-
         // Check if this ASIN is already marked as completed
         console.log(`VotingCompletionHandler: Checking if ASIN ${asin} is already completed`);
         const { data: existingCompletion, error: checkError } = await supabase
@@ -78,7 +60,7 @@ const VotingCompletionHandler = ({
           return;
         }
 
-        // Record the completion - now with proper permissions this should work
+        // Record the completion
         console.log("VotingCompletionHandler: Recording completion in database...");
         const { error: insertError } = await supabase
           .from("completed_votings")
@@ -93,8 +75,8 @@ const VotingCompletionHandler = ({
           console.log(`VotingCompletionHandler: Successfully recorded completion for ASIN: ${asin}`);
         }
         
-        // Call the callback regardless if there was an error inserting data
-        console.log(`VotingCompletionHandler: Marking as completed and calling onVotingCompleted for ASIN: ${asin}`);
+        // Call the callback regardless of insert error
+        console.log(`VotingCompletionHandler: Calling onVotingCompleted for ASIN: ${asin}`);
         setCompletionRecorded(true);
         onVotingCompleted();
       } catch (error) {

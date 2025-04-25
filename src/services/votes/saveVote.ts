@@ -61,9 +61,9 @@ export const saveUserVote = async (
     // For "love" votes, record completion immediately to ensure transition
     if (voteType === 'love') {
       try {
-        console.log(`[saveUserVote] Love vote detected for concept: ${conceptId}, ensuring completion recording`);
+        console.log(`[saveUserVote] Love vote detected for concept: ${conceptId}, recording completion`);
         
-        // Record the completion for this user first to ensure it's always recorded
+        // Record the completion for this user to ensure it's always recorded
         console.log(`[saveUserVote] Recording completion for ASIN: ${conceptData.tshirt_asin}`);
         const { error: completionError } = await supabase
           .from('completed_votings')
@@ -78,29 +78,10 @@ export const saveUserVote = async (
           console.log(`[saveUserVote] Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
         }
         
-        try {
-          // Try to update the tshirt with the winning concept - this may fail due to permissions
-          // but that's expected and the completion record above will handle the transition
-          console.log(`[saveUserVote] Attempting to set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
-          const { error: winningConceptError } = await supabase
-            .from('tshirts')
-            .update({
-              winning_concept_id: conceptId,
-              ready_for_voting: false
-            })
-            .eq('asin', conceptData.tshirt_asin)
-            .is('winning_concept_id', null); // Only update if there's no winner yet
-            
-          if (winningConceptError) {
-            console.log("[saveUserVote] Note: Error setting winning concept (expected with current RLS):", winningConceptError);
-            // This error is expected due to RLS permissions - the trigger functions will handle this
-          } else {
-            console.log(`[saveUserVote] Successfully set winning concept ${conceptId} for ASIN: ${conceptData.tshirt_asin}`);
-          }
-        } catch (updateError) {
-          console.error("[saveUserVote] Error setting winning concept:", updateError);
-          // Non-critical error, continue execution
-        }
+        // We'll no longer try to update the tshirt table directly from the client
+        // since this operation fails due to permission issues.
+        // Instead, we'll rely on the realtime subscription to detect concept votes
+        // and transition accordingly.
       } catch (completionError) {
         console.error("[saveUserVote] Error in love vote special handling:", completionError);
         // Non-critical error, continue execution 

@@ -19,21 +19,17 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
       return;
     }
     
-    // For love votes, show immediate feedback
+    // For love votes, show immediate feedback and ensure transition
     if (vote === 'love') {
-      console.log("VoteCard: Love vote detected, showing toast and triggering transition");
+      console.log("VoteCard: Love vote detected, showing toast and triggering immediate transition");
       toast.success("Love vote submitted!", {
         description: "Moving to next t-shirt...",
-        duration: 1500,
+        duration: 1000, // Shorter duration for faster transition
       });
-      
-      // Call onVote with a shorter delay to ensure state changes have time to propagate
-      onVote(vote);
-    } else {
-      // For other votes, just call onVote without toast
-      console.log(`VoteCard: Regular ${vote} vote, calling onVote`);
-      onVote(vote);
     }
+    
+    // Call onVote without delay for all vote types to ensure state changes propagate immediately
+    onVote(vote);
   };
 
   return (
