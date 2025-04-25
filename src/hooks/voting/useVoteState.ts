@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { VotedImagesMap, RepairedImagesMap } from './types';
 import { ImageData } from "@/types/image";
 import { saveUserVote, removeUserVote, switchUserVote } from "@/services/voteService";
+import { toast } from "@/components/ui/sonner";
 
 export const useVoteState = (conceptImages: ImageData[]) => {
   const [votedImages, setVotedImages] = useState<VotedImagesMap>({});
@@ -34,6 +35,13 @@ export const useVoteState = (conceptImages: ImageData[]) => {
     const currentVote = votedImages[id];
     
     try {
+      // For love votes, show immediate success toast
+      if (vote === 'love') {
+        toast.success("Finalizing vote", {
+          description: "Moving to next t-shirt...",
+        });
+      }
+      
       // If voting the same as current vote, remove the vote
       if (currentVote === vote) {
         await removeUserVote(id);
@@ -45,16 +53,35 @@ export const useVoteState = (conceptImages: ImageData[]) => {
       } 
       // If changing from one vote type to another
       else if (currentVote) {
-        await switchUserVote(id, vote, currentVote);
+        // Update the UI immediately to show responsiveness
         setVotedImages(prev => ({ ...prev, [id]: vote }));
+        
+        await switchUserVote(id, vote, currentVote);
       } 
       // If new vote
       else {
-        await saveUserVote(id, vote);
+        // Update the UI immediately to show responsiveness
         setVotedImages(prev => ({ ...prev, [id]: vote }));
+        
+        await saveUserVote(id, vote);
       }
     } catch (error) {
       console.error("Error handling vote:", error);
+      // Revert the optimistic update if there was an error
+      if (currentVote) {
+        setVotedImages(prev => ({ ...prev, [id]: currentVote }));
+      } else {
+        setVotedImages(prev => {
+          const newVotes = { ...prev };
+          delete newVotes[id];
+          return newVotes;
+        });
+      }
+      
+      toast.error("Failed to save vote", {
+        description: "Please try again",
+      });
+      
       throw error;
     }
   };

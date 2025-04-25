@@ -12,8 +12,8 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
   const handleVote = (vote: 'like' | 'dislike' | 'love') => {
     // Show immediate feedback for the love vote
     if (vote === 'love') {
-      toast.success("Finalizing vote...", {
-        description: "This design will be selected as winner",
+      toast.success("Voting complete!", {
+        description: "Moving to the next t-shirt...",
       });
     }
     onVote(vote);

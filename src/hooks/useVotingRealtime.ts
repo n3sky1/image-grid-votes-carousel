@@ -123,16 +123,78 @@ export const useVotingRealtime = ({
         (payload: any) => {
           console.log("Concept vote change detected:", payload);
           
-          // Check for both regular votes and heart votes
-          if (payload.new) {
-            const hasWinningVotes = payload.new.votes_up >= 2;
-            const hasWinningHearts = payload.new.hearts >= 1;
-            
-            if (hasWinningVotes || hasWinningHearts) {
-              console.log(`Potential winner detected! Hearts: ${payload.new.hearts}, Votes: ${payload.new.votes_up}`);
-              // This will trigger a refresh that will pick up the winning state
-              // since the database trigger should have updated the tshirt's winning_concept_id
-              fetchImages();
+          // Check for love vote (hearts >= 1)
+          if (payload.new && payload.new.hearts >= 1) {
+            console.log("Love vote detected! Concept has hearts:", payload.new.hearts);
+            // This will trigger the winning vote overlay and navigate to next t-shirt
+            setShowWinningVoteOverlay(true);
+            toast.success("Winning design selected!", {
+              description: "Moving to next t-shirt..."
+            });
+            setTimeout(() => {
+              setShowWinningVoteOverlay(false);
+              if (onVotingCompleted) {
+                console.log("Calling onVotingCompleted from realtime due to love vote");
+                onVotingCompleted();
+              }
+            }, 2000);
+            return;
+          }
+          
+          // Check for multiple likes (votes_up >= 2)
+          if (payload.new && payload.new.votes_up >= 2) {
+            console.log("Winning votes detected! Concept has likes:", payload.new.votes_up);
+            setShowWinningVoteOverlay(true);
+            toast.success("Winning design selected!", {
+              description: "Moving to next t-shirt..."
+            });
+            setTimeout(() => {
+              setShowWinningVoteOverlay(false);
+              if (onVotingCompleted) {
+                console.log("Calling onVotingCompleted from realtime due to 2+ likes");
+                onVotingCompleted();
+              }
+            }, 2000);
+          }
+        }
+      )
+      .subscribe();
+
+    // Listen for love votes in user_votes table to trigger immediate completion
+    const userVotesChannel = supabase
+      .channel('user-votes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_votes',
+          filter: `vote_type=eq.love`,
+        },
+        async (payload: any) => {
+          console.log("Love vote detected in user_votes:", payload);
+          
+          if (payload.new && payload.new.concept_id) {
+            // Check if this concept belongs to our current ASIN
+            const { data } = await supabase
+              .from('concepts')
+              .select('tshirt_asin')
+              .eq('concept_id', payload.new.concept_id)
+              .single();
+              
+            if (data && data.tshirt_asin === asin) {
+              console.log("Love vote for current ASIN detected, triggering completion");
+              setShowWinningVoteOverlay(true);
+              toast.success("Winning design selected!", {
+                description: "Moving to next t-shirt..."
+              });
+              setTimeout(() => {
+                setShowWinningVoteOverlay(false);
+                if (onVotingCompleted) {
+                  console.log("Calling onVotingCompleted from user_votes realtime");
+                  onVotingCompleted();
+                }
+              }, 2000);
             }
           }
         }
@@ -143,6 +205,7 @@ export const useVotingRealtime = ({
       console.log(`Removing realtime listeners for ASIN: ${asin}`);
       supabase.removeChannel(tshirtChangesChannel);
       supabase.removeChannel(conceptChangesChannel);
+      supabase.removeChannel(userVotesChannel);
     };
   }, [asin, onVotingCompleted, setShowRegeneratingOverlay, fetchImages, setRegenerating]);
   

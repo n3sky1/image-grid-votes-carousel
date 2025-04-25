@@ -2,6 +2,7 @@
 import VotingError from "../VotingError";
 import VotingLoading from "../VotingLoading";
 import { VotingLayout } from "./VotingLayout";
+import VotingCompletionHandler from "../VotingCompletionHandler"; 
 
 interface VotingStateHandlersProps {
   loading: boolean;
@@ -37,15 +38,25 @@ export const VotingStateHandlers = ({
     );
   }
 
+  // Add the VotingCompletionHandler to handle all-voted scenarios
   return (
-    <VotingLayout
-      showRegeneratingOverlay={showRegeneratingOverlay}
-      showWinningVoteOverlay={showWinningVoteOverlay}
-      allVoted={allVoted}
-      asin={asin}
-      onVotingCompleted={onVotingCompleted}
-    >
-      {children}
-    </VotingLayout>
+    <>
+      {/* We need to monitor for "all voted" cases to complete voting */}
+      <VotingCompletionHandler 
+        allVoted={allVoted} 
+        asin={asin}
+        onVotingCompleted={onVotingCompleted}
+      />
+      
+      <VotingLayout
+        showRegeneratingOverlay={showRegeneratingOverlay}
+        showWinningVoteOverlay={showWinningVoteOverlay}
+        allVoted={allVoted}
+        asin={asin}
+        onVotingCompleted={onVotingCompleted}
+      >
+        {children}
+      </VotingLayout>
+    </>
   );
 };

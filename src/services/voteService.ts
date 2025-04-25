@@ -58,84 +58,30 @@ export const saveUserVote = async (
       throw new Error(`Failed to update vote count: ${response.statusText}`);
     }
     
-    // For "love" votes, immediately mark as a winner
+    // For "love" votes, immediately record completion and trigger the completion event
+    // Note: We're no longer trying to update the tshirt table directly from the client
+    // Instead, we'll rely on the database trigger to handle setting the winning concept
     if (voteType === 'love') {
-      console.log("Love vote detected. Marking concept as winner:", conceptId);
+      console.log("Love vote detected for concept:", conceptId);
       
-      // Update the tshirt with winning concept id
       try {
-        const { error: updateError } = await supabase
-          .from('tshirts')
-          .update({ 
-            winning_concept_id: conceptId,
-            ready_for_voting: false
-          })
-          .eq('asin', conceptData.tshirt_asin);
+        // Record the completion for this user
+        const { error: completionError } = await supabase
+          .from('completed_votings')
+          .upsert({ 
+            asin: conceptData.tshirt_asin,
+            user_id: session.user.id
+          });
           
-        if (updateError) {
-          console.error("Error updating tshirt with winning concept:", updateError);
-          // Still continue even if there's an error
+        if (completionError) {
+          console.error("Error recording completion:", completionError);
         } else {
-          console.log(`Tshirt ${conceptData.tshirt_asin} updated with winning concept ${conceptId}`);
-          
-          // Record this as completed
-          try {
-            await supabase
-              .from('completed_votings')
-              .upsert({ 
-                asin: conceptData.tshirt_asin,
-                user_id: session.user.id
-              });
-          } catch (completionError) {
-            console.error("Error recording completion:", completionError);
-          }
+          console.log(`Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
         }
-      } catch (error) {
-        console.error("Error updating tshirt with winning concept:", error);
+      } catch (completionError) {
+        console.error("Error recording completion:", completionError);
       }
-    } else if (voteType === 'like') {
-      // Check if this vote resulted in a winning concept (2+ likes)
-      const { data: updatedConcept } = await supabase
-        .from('concepts')
-        .select('votes_up, tshirt_asin')
-        .eq('concept_id', conceptId)
-        .single();
-        
-      if (updatedConcept && updatedConcept.votes_up >= 2) {
-        console.log("This like vote created a winning concept (2+ likes):", conceptId);
-        
-        // Update the tshirt with winning concept id
-        try {
-          const { error: updateError } = await supabase
-            .from('tshirts')
-            .update({ 
-              winning_concept_id: conceptId,
-              ready_for_voting: false
-            })
-            .eq('asin', updatedConcept.tshirt_asin);
-            
-          if (updateError) {
-            console.error("Error updating tshirt with winning concept:", updateError);
-          } else {
-            console.log(`Tshirt ${updatedConcept.tshirt_asin} updated with winning concept ${conceptId}`);
-            
-            // Record this as completed
-            try {
-              await supabase
-                .from('completed_votings')
-                .upsert({ 
-                  asin: updatedConcept.tshirt_asin,
-                  user_id: session.user.id
-                });
-            } catch (completionError) {
-              console.error("Error recording completion:", completionError);
-            }
-          }
-        } catch (error) {
-          console.error("Error updating tshirt with winning concept:", error);
-        }
-      }
-    }
+    } 
   } catch (error) {
     console.error("Error in saveUserVote:", error);
     throw error;
@@ -259,82 +205,26 @@ export const switchUserVote = async (
       throw new Error(`Failed to increment new vote count: ${incrementResponse.statusText}`);
     }
     
-    // For "love" votes, immediately mark as a winner
+    // For "love" votes, record completion
     if (newVoteType === 'love') {
-      console.log("Love vote detected. Marking concept as winner:", conceptId);
+      console.log("Love vote detected for concept:", conceptId);
       
-      // Update the tshirt with winning concept id
       try {
-        const { error: updateError } = await supabase
-          .from('tshirts')
-          .update({ 
-            winning_concept_id: conceptId,
-            ready_for_voting: false
-          })
-          .eq('asin', conceptData.tshirt_asin);
+        // Record the completion for this user
+        const { error: completionError } = await supabase
+          .from('completed_votings')
+          .upsert({ 
+            asin: conceptData.tshirt_asin,
+            user_id: session.user.id
+          });
           
-        if (updateError) {
-          console.error("Error updating tshirt with winning concept:", updateError);
-          // Still continue even if there's an error
+        if (completionError) {
+          console.error("Error recording completion:", completionError);
         } else {
-          console.log(`Tshirt ${conceptData.tshirt_asin} updated with winning concept ${conceptId}`);
-          
-          // Record this as completed
-          try {
-            await supabase
-              .from('completed_votings')
-              .upsert({ 
-                asin: conceptData.tshirt_asin,
-                user_id: session.user.id
-              });
-          } catch (completionError) {
-            console.error("Error recording completion:", completionError);
-          }
+          console.log(`Successfully recorded completion for ASIN: ${conceptData.tshirt_asin}`);
         }
-      } catch (error) {
-        console.error("Error updating tshirt with winning concept:", error);
-      }
-    } else if (newVoteType === 'like') {
-      // Check if this vote resulted in a winning concept (2+ likes)
-      const { data: updatedConcept } = await supabase
-        .from('concepts')
-        .select('votes_up, tshirt_asin')
-        .eq('concept_id', conceptId)
-        .single();
-        
-      if (updatedConcept && updatedConcept.votes_up >= 2) {
-        console.log("This like vote created a winning concept (2+ likes):", conceptId);
-        
-        // Update the tshirt with winning concept id
-        try {
-          const { error: updateError } = await supabase
-            .from('tshirts')
-            .update({ 
-              winning_concept_id: conceptId,
-              ready_for_voting: false
-            })
-            .eq('asin', updatedConcept.tshirt_asin);
-            
-          if (updateError) {
-            console.error("Error updating tshirt with winning concept:", updateError);
-          } else {
-            console.log(`Tshirt ${updatedConcept.tshirt_asin} updated with winning concept ${conceptId}`);
-            
-            // Record this as completed
-            try {
-              await supabase
-                .from('completed_votings')
-                .upsert({ 
-                  asin: updatedConcept.tshirt_asin,
-                  user_id: session.user.id
-                });
-            } catch (completionError) {
-              console.error("Error recording completion:", completionError);
-            }
-          }
-        } catch (error) {
-          console.error("Error updating tshirt with winning concept:", error);
-        }
+      } catch (completionError) {
+        console.error("Error recording completion:", completionError);
       }
     }
   } catch (error) {
