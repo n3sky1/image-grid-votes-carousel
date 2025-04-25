@@ -55,8 +55,13 @@ export const saveUserVote = async (
           window.history.pushState({}, '', '/');
           
           // Dispatch a custom event to notify the app to load the next t-shirt
+          // Include more detail in the event to help with stats refreshing
           window.dispatchEvent(new CustomEvent('voteCompleted', { 
-            detail: { asin: conceptData.tshirt_asin } 
+            detail: { 
+              asin: conceptData.tshirt_asin,
+              voteType: voteType,
+              conceptId: conceptId
+            } 
           }));
           
           // Return early to prevent additional processing

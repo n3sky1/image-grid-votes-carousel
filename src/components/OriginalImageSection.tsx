@@ -12,6 +12,7 @@ import { toast } from "@/components/ui/sonner";
 interface ExtendedOriginalImageSectionProps extends OriginalImageSectionProps {
   totalReadyCount?: number;
   userCompletedCount?: number;
+  refreshStats?: () => void;
 }
 
 const OriginalImageSection = ({
@@ -23,6 +24,7 @@ const OriginalImageSection = ({
   useTestData,
   totalReadyCount = 0,
   userCompletedCount = 0,
+  refreshStats,
 }: ExtendedOriginalImageSectionProps) => {
   const handleProblemClick = async (problem: 'copyrighted' | 'no-design' | 'cant-design') => {
     if (!originalImage) return;
@@ -64,6 +66,11 @@ const OriginalImageSection = ({
 
         if (completedError && completedError.code !== '23505') { // Ignore duplicate key error
           console.error("Error recording completion:", completedError);
+        } else {
+          // Refresh the statistics when a completion is recorded
+          if (refreshStats) {
+            refreshStats();
+          }
         }
       } catch (completionError) {
         console.error("Failed to record completion:", completionError);
@@ -85,6 +92,12 @@ const OriginalImageSection = ({
       onOriginalAction(problem);
     }
   };
+
+  // Calculate the current item number, accounting for 0-indexing in the display
+  const currentItemNumber = userCompletedCount + 1;
+  const displayText = totalReadyCount > 0 
+    ? `Design ${currentItemNumber} of ${totalReadyCount} to Review`
+    : "No designs available for review";
 
   return (
     <div className="flex flex-col space-y-4">
@@ -132,7 +145,7 @@ const OriginalImageSection = ({
       </div>
       <div className="w-full flex justify-center">
         <div className="bg-white border border-gray-200 text-gray-800 rounded-lg p-2 w-full text-center font-sans text-base">
-          Design {userCompletedCount + 1} of {totalReadyCount} to Review
+          {displayText}
         </div>
       </div>
     </div>

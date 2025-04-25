@@ -19,7 +19,7 @@ interface VotingSectionProps {
 
 const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
-  const { userCompletedCount, totalReadyCount } = useVotingStats();
+  const { userCompletedCount, totalReadyCount, refreshStats } = useVotingStats();
   const aiRecommendedModel = useAiModel(asin);
 
   const {
@@ -51,6 +51,9 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
     id: asin,
     onVote: setVotedImages,
     onOriginalAction: (action) => {
+      // Refresh stats after an original action
+      refreshStats();
+      
       // This ensures we always trigger the completion callback
       // even if there are database update errors
       if (onVotingCompleted) {
@@ -67,7 +70,13 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
 
   const { showWinningVoteOverlay } = useVotingRealtime({
     asin,
-    onVotingCompleted,
+    onVotingCompleted: () => {
+      // Refresh stats when voting is completed
+      refreshStats();
+      if (onVotingCompleted) {
+        onVotingCompleted();
+      }
+    },
     setShowRegeneratingOverlay,
     setRegenerating,
     fetchImages
@@ -90,7 +99,10 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
         showRegeneratingOverlay={showRegeneratingOverlay}
         showWinningVoteOverlay={showWinningVoteOverlay}
         asin={asin}
-        onVotingCompleted={onVotingCompleted}
+        onVotingCompleted={() => {
+          refreshStats();
+          if (onVotingCompleted) onVotingCompleted();
+        }}
         onRetry={handleRetry}
       >
         <ImageVotingSectionLayout
@@ -104,6 +116,7 @@ const VotingSection = ({ asin, onVotingCompleted }: VotingSectionProps) => {
               useTestData={useTestData}
               totalReadyCount={totalReadyCount}
               userCompletedCount={userCompletedCount}
+              refreshStats={refreshStats}
             />
           }
           right={
