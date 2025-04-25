@@ -4,3 +4,9 @@
 
 [realtime.policies."public".concepts]
   enable = true
+
+[realtime.policies."public".user_votes]
+  enable = true
+
+[realtime.policies."public".completed_votings]
+  enable = true
