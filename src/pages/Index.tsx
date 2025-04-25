@@ -39,6 +39,18 @@ const Index = () => {
 
       console.log("Index: Fetching next ASIN, excluding:", completedAsins);
 
+      // Get all tshirts ready for voting
+      const { data: allReadyTshirts, error: countError } = await supabase
+        .from("tshirts")
+        .select("asin")
+        .eq("ready_for_voting", true);
+        
+      if (countError) {
+        console.error("Index: Error fetching all ready tshirts:", countError);
+      } else {
+        console.log(`Index: Found ${allReadyTshirts?.length || 0} total tshirts ready for voting`);
+      }
+
       // Build the query to fetch the next available t-shirt for voting
       let query = supabase
         .from("tshirts")
@@ -47,10 +59,8 @@ const Index = () => {
         .order('created_at', { ascending: true });  // Add consistent ordering
       
       if (completedAsins.length > 0) {
-        // Use the "not.eq" filter for each ASIN in the array
-        for (const completedAsin of completedAsins) {
-          query = query.not('asin', 'eq', completedAsin);
-        }
+        // Use the "not.in" filter for the array of ASINs
+        query = query.not('asin', 'in', completedAsins);
       }
       
       const { data, error } = await query.limit(1).maybeSingle();
@@ -66,6 +76,7 @@ const Index = () => {
         console.log("Index: Found next t-shirt for voting:", data.asin);
         setAsin(data.asin);
         setSuggestedTags(data.ai_suggested_tags || ["Funny", "Vintage", "Graphic", "Summer"]);
+        setError(null); // Clear any previous errors when we successfully find a shirt
       } else {
         console.log("Index: No more t-shirts available for voting");
         toast("All done!", {
