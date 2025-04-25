@@ -19,12 +19,12 @@ export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
       return;
     }
     
-    // For love votes, show immediate feedback and ensure transition
+    // For love votes, show immediate feedback
     if (vote === 'love') {
-      console.log("VoteCard: Love vote detected, showing toast and triggering immediate transition");
+      console.log("VoteCard: Love vote detected, showing toast and triggering transition");
       toast.success("Love vote submitted!", {
         description: "Moving to next t-shirt...",
-        duration: 1000, // Shorter duration for faster transition
+        duration: 3000, // Longer duration to ensure user sees it during transition
       });
     }
     

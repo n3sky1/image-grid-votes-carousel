@@ -53,6 +53,9 @@ export const saveUserVote = async (
           // Instead of a full page refresh, force navigation to root which will load the next t-shirt
           // This preserves the authentication session
           window.location.href = '/';
+          
+          // Return early to prevent additional processing
+          return true;
         }
       } catch (completionError) {
         console.error("[saveUserVote] Error in love vote special handling:", completionError);
