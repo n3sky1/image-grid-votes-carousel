@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 
@@ -39,7 +40,7 @@ export const saveUserVote = async (
       throw new Error("Failed to save vote");
     }
 
-    // Call the API endpoint to increment the vote
+    // Call the RPC function to increment the vote
     const { error: incrementError } = await supabase.rpc('increment_concept_vote', {
       p_concept_id: conceptId,
       p_vote_type: voteType
@@ -94,20 +95,13 @@ export const removeUserVote = async (conceptId: string) => {
       throw new Error("Failed to remove vote");
     }
 
-    // Call the API endpoint
-    const response = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/decrement_concept_vote`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({
-        p_concept_id: conceptId
-      })
+    // Call the API endpoint to decrement the concept vote
+    const { error: decrementError } = await supabase.rpc('decrement_concept_vote', {
+      p_concept_id: conceptId
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to update vote count: ${response.statusText}`);
+    if (decrementError) {
+      throw new Error(`Failed to update vote count: ${decrementError.message}`);
     }
   } catch (error) {
     console.error("Error in removeUserVote:", error);
@@ -156,38 +150,24 @@ export const switchUserVote = async (
       throw new Error("Failed to switch vote");
     }
 
-    // Second, call the decrement function for the old vote type
-    const decrementResponse = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/decrement_concept_vote`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({
-        p_concept_id: conceptId,
-        p_vote_type: oldVoteType
-      })
+    // Second, decrement the old vote type
+    const { error: decrementError } = await supabase.rpc('decrement_concept_vote', {
+      p_concept_id: conceptId,
+      p_vote_type: oldVoteType
     });
 
-    if (!decrementResponse.ok) {
-      throw new Error(`Failed to decrement old vote count: ${decrementResponse.statusText}`);
+    if (decrementError) {
+      throw new Error(`Failed to decrement old vote count: ${decrementError.message}`);
     }
 
-    // Third, call the increment function for the new vote type
-    const incrementResponse = await fetch(`https://hdfxqwkuirbizwqrvtsd.supabase.co/functions/v1/increment_concept_vote`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({
-        p_concept_id: conceptId,
-        p_vote_type: newVoteType
-      })
+    // Third, increment the new vote type
+    const { error: incrementError } = await supabase.rpc('increment_concept_vote', {
+      p_concept_id: conceptId,
+      p_vote_type: newVoteType
     });
 
-    if (!incrementResponse.ok) {
-      throw new Error(`Failed to increment new vote count: ${incrementResponse.statusText}`);
+    if (incrementError) {
+      throw new Error(`Failed to increment new vote count: ${incrementError.message}`);
     }
     
     // For "love" votes, record completion

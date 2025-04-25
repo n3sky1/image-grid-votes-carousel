@@ -1,6 +1,7 @@
 
 import { ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { Button } from "./ui/button";
+import { toast } from "./ui/sonner";
 
 interface VoteCardProps {
   onVote: (vote: 'like' | 'dislike' | 'love') => void;
@@ -9,6 +10,12 @@ interface VoteCardProps {
 
 export const VoteCard = ({ onVote, currentVote }: VoteCardProps) => {
   const handleVote = (vote: 'like' | 'dislike' | 'love') => {
+    // For love votes, show immediate feedback
+    if (vote === 'love') {
+      toast.success("Finalizing vote", {
+        description: "This will select the design as winner",
+      });
+    }
     onVote(vote);
   };
 
