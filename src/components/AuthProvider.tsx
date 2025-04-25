@@ -6,15 +6,22 @@ import { Session, User } from "@supabase/supabase-js";
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  isInitializing: boolean; // Add flag to track initialization state
 }
 
-const AuthContext = createContext<AuthContextType>({ session: null, user: null });
+// Initial context value with isInitializing=true
+const AuthContext = createContext<AuthContextType>({ 
+  session: null, 
+  user: null, 
+  isInitializing: true 
+});
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true); // Track initialization
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -25,6 +32,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        
+        // If we receive any auth event, we're no longer initializing
+        if (isInitializing) {
+          setIsInitializing(false);
+        }
       }
     );
 
@@ -33,6 +45,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Initial session check:", currentSession ? "Active" : "None");
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      
+      // Mark initialization complete after checking session
+      setIsInitializing(false);
     });
 
     // Refresh session if needed - in case token is close to expiration
@@ -55,10 +70,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
       clearInterval(refreshInterval);
     };
-  }, []);
+  }, [isInitializing]);
 
   return (
-    <AuthContext.Provider value={{ session, user }}>
+    <AuthContext.Provider value={{ session, user, isInitializing }}>
       {children}
     </AuthContext.Provider>
   );

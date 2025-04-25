@@ -77,12 +77,22 @@ export const subscribeTshirtChanges = (
               console.log("Auth session during regeneration completion:", data.session ? "Active" : "None");
               
               if (data.session) {
+                console.log("Valid session found after regeneration, fetching new images");
                 fetchImages();
                 toast.success("Images regenerated successfully!");
               } else {
                 console.warn("No active session found after regeneration completed");
-                toast.error("Session expired", { 
-                  description: "Please log in again to continue."
+                // Instead of just showing toast, let's try to refresh the session
+                supabase.auth.refreshSession().then(({ data: refreshData }) => {
+                  if (refreshData.session) {
+                    console.log("Session successfully refreshed");
+                    fetchImages();
+                    toast.success("Images regenerated successfully!");
+                  } else {
+                    toast.error("Session expired", { 
+                      description: "Please log in again to continue."
+                    });
+                  }
                 });
               }
             });
@@ -96,15 +106,23 @@ export const subscribeTshirtChanges = (
             // If changed to false, this might be causing navigation issues
             if (payload.old.ready_for_voting === true && payload.new.ready_for_voting === false) {
               console.log("T-shirt no longer available for voting, moving to next");
-              setShowWinningVoteOverlay(true);
-              toast.success("Moving to next t-shirt...");
-              setTimeout(() => {
-                setShowWinningVoteOverlay(false);
-                if (onVotingCompleted) {
-                  console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
-                  onVotingCompleted();
+              
+              // Verify session is valid before navigating
+              supabase.auth.getSession().then(({ data }) => {
+                if (data.session) {
+                  setShowWinningVoteOverlay(true);
+                  toast.success("Moving to next t-shirt...");
+                  setTimeout(() => {
+                    setShowWinningVoteOverlay(false);
+                    if (onVotingCompleted) {
+                      console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
+                      onVotingCompleted();
+                    }
+                  }, 500);
+                } else {
+                  console.warn("Session invalid when t-shirt became unavailable for voting");
                 }
-              }, 500);
+              });
             }
           }
         }
