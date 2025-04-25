@@ -51,35 +51,24 @@ export const subscribeTshirtChanges = (
           return;
         }
         
-        // Enhanced regeneration detection
-        if (payload.new) {
-          // Case 1: Regenerate flag changes from false to true
-          if (payload.old?.regenerate === false && payload.new.regenerate === true) {
-            console.log("Regenerate flag changed to true. Showing overlay.");
+        // UPDATED Regeneration detection logic
+        if (payload.old && payload.new) {
+          // Case 1: Regeneration started - regenerate field changed from false to true
+          if (payload.old.regenerate === false && payload.new.regenerate === true) {
+            console.log("Regenerate flag changed to TRUE. Showing overlay.");
             setShowRegeneratingOverlay(true);
             setRegenerating(true);
             return;
           }
           
-          // Case 2: AI processing status changed to regeneration related values
-          if (payload.old?.ai_processing_status !== payload.new.ai_processing_status) {
-            if (['regeneration_requested', 'regenerating'].includes(payload.new.ai_processing_status)) {
-              console.log(`AI processing status changed to ${payload.new.ai_processing_status}. Showing overlay.`);
-              setShowRegeneratingOverlay(true);
-              setRegenerating(true);
-              return;
-            }
-            
-            // Case 3: Regeneration completed
-            if (payload.old?.ai_processing_status === 'regenerating' && 
-                payload.new.ai_processing_status === 'regeneration_complete') {
-              console.log("Regeneration complete. Refreshing images and hiding overlay.");
-              setRegenerating(false);
-              setShowRegeneratingOverlay(false);
-              fetchImages();
-              toast.success("Images regenerated successfully!");
-              return;
-            }
+          // Case 2: Regeneration completed - regenerate field changed from true to false
+          if (payload.old.regenerate === true && payload.new.regenerate === false) {
+            console.log("Regenerate flag changed to FALSE. Regeneration completed. Refreshing images.");
+            setRegenerating(false);
+            setShowRegeneratingOverlay(false);
+            fetchImages();
+            toast.success("Images regenerated successfully!");
+            return;
           }
         }
 

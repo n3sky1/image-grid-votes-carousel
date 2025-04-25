@@ -43,18 +43,19 @@ export const useVotingRealtime = ({
     const userVotesChannel = subscribeUserVotes(context);
     const completedVotingsChannel = subscribeCompletedVotings(context);
 
-    // Check if the t-shirt is already in regenerating state when component mounts
+    // Check if the t-shirt is already regenerating when component mounts
     const checkInitialStatus = async () => {
       try {
         const { data, error } = await supabase
           .from('tshirts')
-          .select('regenerate, ai_processing_status')
+          .select('regenerate')
           .eq('asin', asin)
           .single();
         
         if (!error && data) {
-          if (data.regenerate === true || ['regeneration_requested', 'regenerating'].includes(data.ai_processing_status)) {
-            console.log("T-shirt already regenerating on component mount, showing overlay");
+          // Only check the regenerate flag, not the processing status
+          if (data.regenerate === true) {
+            console.log("T-shirt is currently regenerating on component mount, showing overlay");
             setShowRegeneratingOverlay(true);
             setRegenerating(true);
           }
