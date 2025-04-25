@@ -1,15 +1,11 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
-
-interface UseVotingRealtimeProps {
-  asin: string;
-  onVotingCompleted?: () => void;
-  setShowRegeneratingOverlay: (show: boolean) => void;
-  setRegenerating: (regenerating: boolean) => void;
-  fetchImages: () => void;
-}
+import { UseVotingRealtimeProps, RealtimeHandlers } from './voting/useVotingRealtime.types';
+import { subscribeTshirtChanges } from './voting/useTshirtChangesSubscription';
+import { subscribeConceptChanges } from './voting/useConceptChangesSubscription';
+import { subscribeUserVotes } from './voting/useUserVotesSubscription';
+import { subscribeCompletedVotings } from './voting/useCompletedVotingsSubscription';
 
 export const useVotingRealtime = ({
   asin,
@@ -17,239 +13,31 @@ export const useVotingRealtime = ({
   setShowRegeneratingOverlay,
   setRegenerating,
   fetchImages
-}: UseVotingRealtimeProps) => {
+}: UseVotingRealtimeProps): RealtimeHandlers => {
   const [showWinningVoteOverlay, setShowWinningVoteOverlay] = useState(false);
   
   useEffect(() => {
     console.log(`Setting up realtime listeners for ASIN: ${asin}`);
     
-    const tshirtChangesChannel = supabase
-      .channel('tshirt-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tshirts',
-          filter: `asin=eq.${asin}`,
-        },
-        (payload: any) => {
-          console.log("Tshirt change detected:", payload);
-          
-          // Check if a winning concept was selected
-          if (
-            payload.old && 
-            payload.new && 
-            payload.old.winning_concept_id === null && 
-            payload.new.winning_concept_id !== null
-          ) {
-            console.log("Winner detected! Showing overlay and triggering transition");
-            setShowWinningVoteOverlay(true);
-            toast.success("Winning design selected!", {
-              description: "Moving to next t-shirt..."
-            });
-            setTimeout(() => {
-              setShowWinningVoteOverlay(false);
-              if (onVotingCompleted) {
-                console.log("Calling onVotingCompleted from realtime due to winning concept");
-                onVotingCompleted();
-              }
-            }, 500); // Faster transition
-            return; // Exit early as we're moving to next t-shirt
-          }
-          
-          // Handle regeneration start
-          if (
-            payload.old && 
-            payload.new && 
-            (
-              (!payload.old.regenerate && payload.new.regenerate) ||
-              (payload.old.ai_processing_status !== 'regenerating' && payload.new.ai_processing_status === 'regenerating') ||
-              (payload.old.ai_processing_status !== 'regeneration_requested' && payload.new.ai_processing_status === 'regeneration_requested')
-            )
-          ) {
-            console.log("Regeneration detected. Showing overlay and setting regenerating state");
-            setShowRegeneratingOverlay(true);
-            setRegenerating(true);
-          }
-          
-          // Handle regeneration completion
-          if (
-            payload.old && 
-            payload.new && 
-            payload.old.ai_processing_status === 'regenerating' && 
-            payload.new.ai_processing_status === 'regeneration_complete'
-          ) {
-            console.log("Regeneration complete detected. Refreshing images");
-            setRegenerating(false);
-            fetchImages();
-          }
+    const context = {
+      asin,
+      onVotingCompleted,
+      setShowRegeneratingOverlay,
+      setRegenerating,
+      fetchImages,
+      setShowWinningVoteOverlay
+    };
 
-          // Handle t-shirt becoming unavailable for voting
-          if (
-            payload.old && 
-            payload.new && 
-            payload.old.ready_for_voting === true &&
-            payload.new.ready_for_voting === false 
-          ) {
-            console.log("Tshirt no longer available for voting, moving to next");
-            setShowWinningVoteOverlay(true);
-            toast.success("Moving to next t-shirt...");
-            setTimeout(() => {
-              setShowWinningVoteOverlay(false);
-              if (onVotingCompleted) {
-                console.log("Calling onVotingCompleted from realtime due to t-shirt no longer available");
-                onVotingCompleted();
-              }
-            }, 500); // Faster transition
-          }
-        }
-      )
-      .subscribe();
-      
-    const conceptChangesChannel = supabase
-      .channel('concept-votes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'concepts',
-          filter: `tshirt_asin=eq.${asin}`,
-        },
-        (payload: any) => {
-          console.log("Concept vote change detected:", payload);
-          
-          // Check for love vote (hearts >= 1)
-          if (payload.new && payload.new.hearts >= 1) {
-            console.log("Love vote detected in concepts table! Concept has hearts:", payload.new.hearts);
-            setShowWinningVoteOverlay(true);
-            toast.success("Winning design selected!", {
-              description: "Moving to next t-shirt..."
-            });
-            setTimeout(() => {
-              setShowWinningVoteOverlay(false);
-              if (onVotingCompleted) {
-                console.log("Calling onVotingCompleted from realtime due to love vote");
-                onVotingCompleted();
-              }
-            }, 500); // Faster transition
-          }
-          
-          // Check for multiple likes (votes_up >= 2)
-          if (payload.new && payload.new.votes_up >= 2) {
-            console.log("Winning votes detected! Concept has likes:", payload.new.votes_up);
-            setShowWinningVoteOverlay(true);
-            toast.success("Winning design selected!", {
-              description: "Moving to next t-shirt..."
-            });
-            setTimeout(() => {
-              setShowWinningVoteOverlay(false);
-              if (onVotingCompleted) {
-                console.log("Calling onVotingCompleted from realtime due to 2+ likes");
-                onVotingCompleted();
-              }
-            }, 500); // Faster transition
-          }
-        }
-      )
-      .subscribe();
-
-    // High priority: Listen for love votes in user_votes table to trigger immediate completion
-    const userVotesChannel = supabase
-      .channel('user-votes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'user_votes',
-          filter: `vote_type=eq.love`,
-        },
-        async (payload: any) => {
-          console.log("Love vote detected in user_votes table:", payload);
-          
-          if (payload.new && payload.new.concept_id) {
-            try {
-              // Check if this concept belongs to our current ASIN
-              const { data, error } = await supabase
-                .from('concepts')
-                .select('tshirt_asin')
-                .eq('concept_id', payload.new.concept_id)
-                .single();
-                
-              if (error) {
-                console.error("Error checking concept ASIN:", error);
-                return;
-              }
-                
-              if (data && data.tshirt_asin === asin) {
-                console.log("Love vote for current ASIN detected, triggering immediate completion");
-                setShowWinningVoteOverlay(true);
-                toast.success("Winning design selected!", {
-                  description: "Moving to next t-shirt..."
-                });
-                
-                // Call the completion callback immediately
-                setTimeout(() => {
-                  setShowWinningVoteOverlay(false);
-                  if (onVotingCompleted) {
-                    console.log("Calling onVotingCompleted from user_votes realtime");
-                    onVotingCompleted();
-                  }
-                }, 300); // Very short timeout for immediate transition
-              }
-            } catch (error) {
-              console.error("Error handling love vote in realtime:", error);
-              
-              // Even if there's an error, try to move to the next t-shirt
-              if (onVotingCompleted) {
-                console.log("Error when handling love vote, calling onVotingCompleted anyway");
-                setTimeout(() => onVotingCompleted(), 300);
-              }
-            }
-          }
-        }
-      )
-      .subscribe();
-      
-    // Also listen for completion records directly
-    const completedVotingsChannel = supabase
-      .channel('completed-votings')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'completed_votings',
-          filter: `asin=eq.${asin}`,
-        },
-        (payload: any) => {
-          console.log("Completion record detected in completed_votings for current ASIN:", payload);
-          
-          // Check if this is for our current ASIN
-          if (payload.new && payload.new.asin === asin) {
-            console.log("Completion for current ASIN detected, triggering immediate completion");
-            setShowWinningVoteOverlay(true);
-            toast.success("Moving to next t-shirt...");
-            
-            // Call the completion callback immediately
-            setTimeout(() => {
-              setShowWinningVoteOverlay(false);
-              if (onVotingCompleted) {
-                console.log("Calling onVotingCompleted from completed_votings realtime");
-                onVotingCompleted();
-              }
-            }, 300); // Very short timeout for immediate transition
-          }
-        }
-      )
-      .subscribe();
+    // Subscribe to all relevant channels
+    const tshirtChannel = subscribeTshirtChanges(context);
+    const conceptChannel = subscribeConceptChanges(context);
+    const userVotesChannel = subscribeUserVotes(context);
+    const completedVotingsChannel = subscribeCompletedVotings(context);
 
     return () => {
       console.log(`Removing realtime listeners for ASIN: ${asin}`);
-      supabase.removeChannel(tshirtChangesChannel);
-      supabase.removeChannel(conceptChangesChannel);
+      supabase.removeChannel(tshirtChannel);
+      supabase.removeChannel(conceptChannel);
       supabase.removeChannel(userVotesChannel);
       supabase.removeChannel(completedVotingsChannel);
     };
